@@ -21,31 +21,31 @@ body {
     background-size: cover; 
 }
 
-
-/* Container for the Stats Section */
-/*#compare-team-stats {
-    background: rgba(22, 28, 40, 0.85); 
-    border: 1px solid #414a6b;
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 800px;
-    margin: 40px auto;
-    text-align: center;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9); 
-}*/
-
 /* Headings */
 h1, h2 {
     color: #d4af37; /* Gold-inspired headings to give it a luxurious, victorious look */
     margin-bottom: 15px;
     font-weight: 700;
     font-size: 2em;
+    display: none;
 }
 
 /* Flex Container for Tables */
 .table-container {
     display: flex; /* Ensure the tables are displayed side by side */
     justify-content: space-between; /* Optional: evenly space the tables */
+    
+}
+
+#not-in-a-game {
+    color: #d4af37; /* Gold-inspired headings to give it a luxurious, victorious look */
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 2em;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 /* Ensure tables have equal size */
@@ -221,6 +221,7 @@ button:hover {
     display: flex;
     flex-direction: column;
     width: 80%;
+    display: none;
 }
 
 /* Animations for the Container */

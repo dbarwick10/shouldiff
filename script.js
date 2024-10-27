@@ -2,23 +2,6 @@
 // Global variable to cache all game data
 let cachedGameData = null;
 
-// Actually get the data
-
-// async function getLiveData() {
-//     const url = "https://127.0.0.1:2999/liveclientdata/allgamedata";
-//     try {
-//       const response = await fetch(url);
-//       if (!response.ok) {
-//         //throw new Error(Response status: ${response.status});
-//       }
-  
-//       const json = await response.json();
-//       console.log(json);
-//     } catch (error) {
-//       console.error(error.message);
-//     }
-//   }
-
 async function getLiveData() {
     // If cached data exists, return it
     if (cachedGameData) {
@@ -29,17 +12,16 @@ async function getLiveData() {
         // Fetch the data from allgamedata.json for testing
         //const response = await fetch('allgamedata.json');
         
-        const response = await axios.get("https://127.0.0.1:2999/liveclientdata/allgamedata")//, {
-        //     method: "GET",
-        //     mode: "cors",
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //       "access-control-allow-origin": "https://127.0.0.1:2999"
-        //     },
-        // });
-        console.log('asldkjhasdlkf',response)
+         const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+              headers: {
+                "Content-Type": "application/json",
+              },
+          });
+
+        //console.log('asldkjhasdlkf',response)
         if (response.ok) {
             cachedGameData = await response.json(); // Store data in memory
+            //console.log('gameData', cachedGameData)
             return cachedGameData;
         } else {
             console.error('Error fetching data:', response.statusText);
@@ -47,20 +29,62 @@ async function getLiveData() {
         }
     } catch (error) {
         console.error('Request failed:', error);
+        notInAGame();
         return null;
     }
 }
 
-// async function getLiveData() {
-//     const response = await fetch('https://127.0.0.1:2999/liveclientdata/allgamedata');
-//     if (!response.ok) {
-//         throw new Error(`Response status ${response.status}`, { cause: response });
-//    }
-//    const data = await response.json();
-//    console.log('asdfdsaf', data)
-//    return { data, response };
+// async function notInAGame() {
+//     const notInGame = document.getElementById('not-in-a-game');
+//     const parents = document.getElementsByClassName('parent');
+//     const titles = document.getElementsByClassName('title');
+
+//     notInGame.innerHTML = `Start a game and refresh this page so you can ff!`;
+
+//     // Hide each title
+//     for (let i = 0; i < titles.length; i++) {
+//         titles[i].style.display = 'none';
+//     }
+
+//     // Hide each parent
+//     for (let i = 0; i < parents.length; i++) {
+//         parents[i].style.display = 'none';
+//     }
 // }
 
+async function InAGame() {
+    const notInGame = document.getElementById('not-in-a-game');
+    const parents = document.getElementsByClassName('parent');
+    const titles = document.getElementsByClassName('title');
+
+    //notInGame.innerHTML = `Start a game and refresh this page so you can ff!`;
+
+    // Hide each title
+    for (let i = 0; i < titles.length; i++) {
+        titles[i].style.display = 'flex';
+    }
+
+    // Hide each parent
+    for (let i = 0; i < parents.length; i++) {
+        parents[i].style.display = 'flex';
+    }
+}
+
+async function getGameMode() {
+    try {
+        const allGameData = await getLiveData(); // Use cached game data
+        const gameMode = allGameData.gameData.gameMode; // Get game mode
+
+        if (gameMode) {
+            console.log('game mode:', gameMode)
+            return gameMode
+        } else {
+            return null; // Return null if player is not found
+        }} catch (error) {
+            console.error('Error fetching active player or player list:', error);
+            return null; // Return null on error
+    }
+}
 
 async function getActivePlayerTeam() {
     try {
@@ -92,7 +116,7 @@ function displayTeamStats(teamStats, teamTableId) {
         console.error(`Element with id #${teamTableId} not found.`);
         return;
     }
-
+    InAGame();
     teamTable.innerHTML = '';  // Clear existing content
 
     // Calculate totals for the team
@@ -216,9 +240,9 @@ async function getGameTime() {
 
 async function getGameTimeSeconds() {
     const gameTimeData = await getLiveData(); 
-    const time = gameTimeData.gameData.gameTime
+    const gameTimeInSeconds = gameTimeData.gameData.gameTime
     
-    return time
+    return gameTimeInSeconds
 }
 
 // Calculate kills
@@ -729,7 +753,7 @@ async function getChaosElder() {
 
 // Calculate win probability based on differences
 async function calculateWinProbability() {
-    const activePlayerTeam = getActivePlayerTeam();
+    const activePlayerTeam = await getActivePlayerTeam();
 
     const orderkills = await getOrderKills();
     const chaosKills = await getChaosKills();
@@ -839,16 +863,16 @@ async function calculateWinProbability() {
     };
     
      // Log the values
-     console.log('Active Player Team:', activePlayerTeam);
-     console.log('Order Kills:', orderkills, 'Chaos Kills:', chaosKills);
-     console.log('Total Kills:', totalKills, 'Kills Ratio:', killsRatio);
-     console.log('Order Deaths:', orderDeaths, 'Chaos Deaths:', chaosDeaths);
-     console.log('Total Deaths:', totalDeaths, 'Deaths Ratio:', deathsRatio);
-     console.log('Order Gold:', orderGold, 'Chaos Gold:', chaosGold);
-     console.log('Total Gold:', totalGold, 'Gold Ratio:', goldRatio);
+    //  console.log('Active Player Team:', activePlayerTeam);
+    //  console.log('Order Kills:', orderkills, 'Chaos Kills:', chaosKills);
+    //  console.log('Total Kills:', totalKills, 'Kills Ratio:', killsRatio);
+    //  console.log('Order Deaths:', orderDeaths, 'Chaos Deaths:', chaosDeaths);
+    //  console.log('Total Deaths:', totalDeaths, 'Deaths Ratio:', deathsRatio);
+    //  console.log('Order Gold:', orderGold, 'Chaos Gold:', chaosGold);
+    //  console.log('Total Gold:', totalGold, 'Gold Ratio:', goldRatio);
      
      // Log the weights
-     console.log('Weights:', weights);
+     //console.log('Weights:', weights);
 
     // Calculate weighted sum for win probability
 const winScore = (
@@ -882,23 +906,23 @@ barons taken / total barons in game */
     const winProbability = 1 - opposingTeamProbability; // Ensure they add up to 1
 
         //console.log('activeplayer:', activePlayerName);
-        console.log('activeteam:', await getActivePlayerTeam());
-        console.log('killR:', killsRatio * weights.kills);
-        console.log('assistR:', assistsRatio * weights.assists);
-        console.log('deathR:', deathsRatio * weights.deaths);
-        console.log('csR:', cSRatio * weights.cs);
-        console.log('lvlR:', levelsRatio * weights.levels);
-        console.log('goldR:', goldRatio * weights.gold);
-        console.log('totalturrR:', turretTotalRatio * weights.turret);
-        console.log('outerturrR:', turretOuterRatio * weights.outerTurrent);
-        console.log('innerturrR:', turretInnerRatio * weights.innerTurrent);
-        console.log('inhibturrR:', turretInhibRatio * weights.inhibTurrent);
-        console.log('nexturrR:', turretNexusRatio * weights.nexusTurrent);
-        console.log('dragR:', dragonRatio * weights.dragon);
-        console.log('dsoulR:', dragonSoul * weights.dragonSoul);
-        console.log("win prob:", winProbability);
+    //     console.log('activeteam:', await getActivePlayerTeam());
+    //     console.log('killR:', killsRatio * weights.kills);
+    //     console.log('assistR:', assistsRatio * weights.assists);
+    //     console.log('deathR:', deathsRatio * weights.deaths);
+    //     console.log('csR:', cSRatio * weights.cs);
+    //     console.log('lvlR:', levelsRatio * weights.levels);
+    //     console.log('goldR:', goldRatio * weights.gold);
+    //     console.log('totalturrR:', turretTotalRatio * weights.turret);
+    //     console.log('outerturrR:', turretOuterRatio * weights.outerTurrent);
+    //     console.log('innerturrR:', turretInnerRatio * weights.innerTurrent);
+    //     console.log('inhibturrR:', turretInhibRatio * weights.inhibTurrent);
+    //     console.log('nexturrR:', turretNexusRatio * weights.nexusTurrent);
+    //     console.log('dragR:', dragonRatio * weights.dragon);
+    //     console.log('dsoulR:', dragonSoul * weights.dragonSoul);
+    //     console.log("win prob:", winProbability);
 
-    console.log('opposingteam win prob:', opposingTeamProbability)
+    // console.log('opposingteam win prob:', opposingTeamProbability)
 
     // Return the active team's win probability
     return ((await getActivePlayerTeam() === 'ORDER' ? winProbability : opposingTeamProbability) * 100).toFixed(2); // Return as percentage
@@ -906,7 +930,20 @@ barons taken / total barons in game */
 
 async function shouldForfeit() {
     const winProbability = await calculateWinProbability();
-    if (winProbability <= 10) {
+    const gameMode = await getGameMode();
+    const gameTime = await getGameTime();
+    const gameTimeInSeconds = await getGameTimeSeconds();
+
+    if (gameMode === 'CLASSIC' &&                        //classic summoners rift
+        gameTimeInSeconds < 900) {                         //ff at 15
+        return `You literaly cannot FF at ${gameTime}`
+    } else if ((gameMode === 'ULTBOOK' ||                //ultimate spellbook and aram
+        gameMode === 'ARAM') &&
+        gameTimeInSeconds < 480) {                       //ff at 8? need to look up
+        return `You literaly cannot FF at ${gameTime}`
+    } else if (gameMode === 'TUTORIAL' || gameMode === 'PRACTICETOOL'){                 //tutorial easter egg
+        return "This is a learning tool, please keep practicing so you don't have to surrender more games"
+    } else if (winProbability <= 10) {
         return "Go next"
     } else if(winProbability <= 40 && winProbability > 10) {
         return "It will be a struggle, but it's possible"
