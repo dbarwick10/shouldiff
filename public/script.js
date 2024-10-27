@@ -34,23 +34,24 @@ async function getLiveData() {
     }
 }
 
-// async function notInAGame() {
-//     const notInGame = document.getElementById('not-in-a-game');
-//     const parents = document.getElementsByClassName('parent');
-//     const titles = document.getElementsByClassName('title');
+async function notInAGame() {
+    const notInGame = document.getElementById('not-in-a-game');
+    const parents = document.getElementsByClassName('parent');
+    const titles = document.getElementsByClassName('title');
 
-//     notInGame.innerHTML = `Start a game and refresh this page so you can ff!`;
+    notInGame.innerHTML = `Start a game and refresh this page so you can ff!
+    If you are in a game, shit's broke, yo.`;
 
-//     // Hide each title
-//     for (let i = 0; i < titles.length; i++) {
-//         titles[i].style.display = 'none';
-//     }
+    // Hide each title
+    for (let i = 0; i < titles.length; i++) {
+        titles[i].style.display = 'none';
+    }
 
-//     // Hide each parent
-//     for (let i = 0; i < parents.length; i++) {
-//         parents[i].style.display = 'none';
-//     }
-// }
+    // Hide each parent
+    for (let i = 0; i < parents.length; i++) {
+        parents[i].style.display = 'none';
+    }
+}
 
 async function InAGame() {
     const notInGame = document.getElementById('not-in-a-game');
