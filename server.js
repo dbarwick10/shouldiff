@@ -2,6 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
 import https from 'https';
+import path from 'path'; // Import the path module
+import { fileURLToPath } from 'url'; // Import for getting the current file's path
+import { dirname } from 'path'; // Import dirname to resolve __dirname
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = 3000;
