@@ -2,16 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
 import https from 'https';
-import path from 'path'; // Import the path module
-import { fileURLToPath } from 'url'; // Import for getting the current file's path
-import { dirname } from 'path'; // Import dirname to resolve __dirname
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all routes
 app.use(cors());
@@ -24,13 +24,13 @@ const httpsAgent = new https.Agent({
 // Proxy endpoint to access League client data
 app.get('/liveclientdata/allgamedata', async (req, res) => {
     try {
-        // Fetch data from the League client, using the HTTPS agent to ignore SSL verification
+        // Note: This URL only works locally; it will fail on Render since Render can’t access your local League client.
         const response = await fetch('https://127.0.0.1:2999/liveclientdata/allgamedata', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
-            agent: httpsAgent, // Use the agent here
+            agent: httpsAgent,
         });
 
         if (!response.ok) {
