@@ -7,24 +7,24 @@ async function getLiveData() {
     if (cachedGameData) {
         return cachedGameData;
     }
-
+    console.log('hello')
     try {
         // Fetch the data from allgamedata.json for testing
-        //const response = await fetch('allgamedata.json');
+        const response = await fetch('allgamedata.json');
         
-         const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-              headers: {
-                "Content-Type": "application/json",
-              },
-          });
+        //  const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+        //       headers: {
+        //         "Content-Type": "application/json",
+        //       },
+        //   });
 
-        //console.log('asldkjhasdlkf',response)
+        console.log('asldkjhasdlkf',response)
         if (response.ok) {
             cachedGameData = await response.json(); // Store data in memory
-            //console.log('gameData', cachedGameData)
+            console.log('gameData', cachedGameData)
             return cachedGameData;
         } else {
-            console.error('Error fetching data:', response.statusText);
+            console.error('Error fetching data:', response.status, response.statusText);
             return null;
         }
     } catch (error) {
@@ -39,8 +39,7 @@ async function notInAGame() {
     const parents = document.getElementsByClassName('parent');
     const titles = document.getElementsByClassName('title');
 
-    notInGame.innerHTML = `Start a game and refresh this page so you can ff!
-    If you are in a game, shit's broke, yo.`;
+    notInGame.innerHTML = `Start a game and refresh this page so you can ff! <button id="refresh-button" onclick="refreshPage()">Refresh</button>`;
 
     // Hide each title
     for (let i = 0; i < titles.length; i++) {
@@ -58,14 +57,12 @@ async function InAGame() {
     const parents = document.getElementsByClassName('parent');
     const titles = document.getElementsByClassName('title');
 
-    //notInGame.innerHTML = `Start a game and refresh this page so you can ff!`;
-
-    // Hide each title
+    // Show each title
     for (let i = 0; i < titles.length; i++) {
         titles[i].style.display = 'flex';
     }
 
-    // Hide each parent
+    // show each parent
     for (let i = 0; i < parents.length; i++) {
         parents[i].style.display = 'flex';
     }
@@ -942,8 +939,8 @@ async function shouldForfeit() {
         gameMode === 'ARAM') &&
         gameTimeInSeconds < 480) {                       //ff at 8? need to look up
         return `You literaly cannot FF at ${gameTime}`
-    } else if (gameMode === 'TUTORIAL' || gameMode === 'PRACTICETOOL'){                 //tutorial easter egg
-        return "This is a learning tool, please keep practicing so you don't have to surrender more games"
+    } else if (gameMode === 'TUTORIAL'){                 //tutorial easter egg
+        return "This is a tutorial, please keep practicing so you don't have to surrender more games"
     } else if (winProbability <= 10) {
         return "Go next"
     } else if(winProbability <= 40 && winProbability > 10) {
@@ -1008,6 +1005,7 @@ async function updateAllStatsInDOM() {
     <div class="win-container">
     <div class="stat-entry"><p class="stat-name">Win Probability:</p><p class="team-value">${winProbability}%</p></div>
     <div class="should-ff-text">${ffText}</div>
+    <button id="refresh-button" onclick="refreshPage()">Refresh</button>
     </div>
     </div>
     `;
@@ -1032,6 +1030,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAllStatsInDOM();
 });
 
+function refreshPage() {
+    location.reload(); // Refresh the current page
+}
 /* document.addEventListener('DOMContentLoaded', function() {
     // Get the refresh button element
     const refreshButton = document.getElementById('refresh-button');

@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Enable CORS for all routes
 app.use(cors());
@@ -24,14 +24,17 @@ const httpsAgent = new https.Agent({
 // Proxy endpoint to access League client data
 app.get('/liveclientdata/allgamedata', async (req, res) => {
     try {
-        // Note: This URL only works locally; it will fail on Render since Render can’t access your local League client.
+
         const response = await fetch('https://127.0.0.1:2999/liveclientdata/allgamedata', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            agent: httpsAgent,
-        });
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    agent: httpsAgent,
+
+    // You can omit the agent for HTTP
+});
+
 
         if (!response.ok) {
             console.error('Error fetching data from League client:', response.status, response.statusText);
@@ -62,6 +65,6 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-    console.log(`Proxy server running on http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Proxy server running on http://localhost:${PORT}`);
 });

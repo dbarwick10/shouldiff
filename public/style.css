@@ -34,7 +34,7 @@ h1, h2 {
 .table-container {
     display: flex; /* Ensure the tables are displayed side by side */
     justify-content: space-between; /* Optional: evenly space the tables */
-    
+    width: 100%;
 }
 
 #not-in-a-game {
@@ -139,14 +139,12 @@ button {
     background: #414a6b;
     border: 2px solid #7289da;
     color: #d4af37;
-    padding: 10px 20px 30px 20px;
+    padding: 10px 20px 10px 20px;
     border-radius: 5px;
     text-align: center;
-    max-height: 25%;
     font-size: 1.1em;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(114, 137, 218, 0.5);
     transition: all 0.3s ease-in-out;
 }
 
@@ -193,7 +191,7 @@ button:hover {
     border-radius: 10px;
     padding-left: 4%;
     padding-right: 4%;
-    gap: 100px;
+    gap: 25px;
 }
 
 .should-ff-test {
@@ -258,4 +256,65 @@ button:hover {
 /* Add a subtle glowing effect on hover */
 button:hover, p:hover {
     text-shadow: 0 0 1px #f0f0f0, 0 0 1px #d4af37;
+}
+
+/* Base styles remain the same */
+
+@media (max-width: 768px) {
+    /* Reduce font sizes for smaller screens */
+    body {
+        font-size: 14px;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+    }
+
+    /* Stack tables vertically */
+    .table-container {
+        flex-direction: column;
+        align-items: center; /* Center the tables on the page */
+    }
+
+    /* Reduce table width */
+    table {
+        width: 90%; /* Allow tables to fit within the smaller screen */
+        margin: 10px 0;
+    }
+
+    /* Adjust button size and padding */
+    button {
+        font-size: 1em;
+        padding: 8px 15px;
+    }
+
+    /* Stats container adjustments */
+    .stats-container, .win-container {
+        width: 90%; /* Fit the container to screen width */
+        gap: 5px;
+        flex-direction: column; /* Stack stats vertically */
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further reduce font sizes for very small screens */
+    body {
+        font-size: 12px;
+    }
+
+    h1, h2 {
+        font-size: 1.2em;
+    }
+
+    /* Reduce padding in tables and cells */
+    th, td {
+        padding: 6px;
+    }
+
+    /* Adjust button size */
+    button {
+        font-size: 0.9em;
+        padding: 6px 12px;
+    }
 }

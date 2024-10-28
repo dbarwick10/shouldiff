@@ -12,6 +12,7 @@ function createWindow() {
             nodeIntegration: true,
             contextIsolation: false,
 			webSecurity: false,
+            allowRunningInsecureContent: true,
         },
     });
 
@@ -25,8 +26,9 @@ app.whenReady().then(() => {
     createWindow();
 
     // Start server.js as a child process
+    //const server = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', `node ${path.join(process.cwd(), 'server.js')}`]);
     const server = spawn('node', [path.join(process.cwd(), 'server.js')]);
-
+    
     server.stdout.on('data', (data) => {
         console.log(`Server output: ${data}`);
     });
