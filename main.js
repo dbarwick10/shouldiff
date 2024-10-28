@@ -5,8 +5,8 @@ app.commandLine.appendSwitch('ignore-certificate-errors');
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1250,
+        height: 650,
 		icon: "shouldiff_app\\Icon\\leeg.ico",
         webPreferences: {
             nodeIntegration: true,
@@ -17,34 +17,35 @@ function createWindow() {
     });
 
     win.loadFile(path.join('public', 'index.html'));
-	win.setMenu(null)
+	//win.setMenu(null)
 }
 
 
 
-app.whenReady().then(() => {
-    createWindow();
 
-    // Start server.js as a child process
-    //const server = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', `node ${path.join(process.cwd(), 'server.js')}`]);
-    const server = spawn('node', [path.join(process.cwd(), 'server.js')]);
+    app.whenReady().then(() => {
+        createWindow();
     
-    server.stdout.on('data', (data) => {
-        console.log(`Server output: ${data}`);
-    });
+        // Start server.js as a child process and log output to the console
+        //const server = spawn('cmd.exe', ['/c', 'start', 'cmd.exe', '/k', `node ${path.join(app.getAppPath(), 'server.js')}`]);
 
-    server.stderr.on('data', (data) => {
-        console.error(`Server error: ${data}`);
+        const server = spawn('node', [path.join(app.getAppPath(), 'server.js')], {
+            stdio: 'pipe', // Pipe stdout and stderr
+        });
+    
+        // Log server output
+        server.stdout.on('data', (data) => {
+            console.log(`Server output: ${data}`);
+        });
+    
+        server.stderr.on('data', (data) => {
+            console.error(`Server error: ${data}`);
+        });
+    
+        app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        });
     });
-
-    server.on('close', (code) => {
-        console.log(`Server process exited with code ${code}`);
-    });
-
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
-});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
