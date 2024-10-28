@@ -5,8 +5,8 @@ app.commandLine.appendSwitch('ignore-certificate-errors');
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 1250,
-        height: 650,
+        width: 1366,
+        height: 768,  
 		icon: "shouldiff_app\\Icon\\leeg.ico",
         webPreferences: {
             nodeIntegration: true,

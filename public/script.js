@@ -10,25 +10,25 @@ async function getLiveData() {
     console.log('hello')
     try {
         // Fetch the data from allgamedata.json for testing
-        const response = await fetch('allgamedata.json');
+        //const response = await fetch('allgamedata.json');
         
-        //  const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-        //       headers: {
-        //         "Content-Type": "application/json",
-        //       },
-        //   });
+         const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+              headers: {
+                "Content-Type": "application/json",
+              },
+          });
 
-        console.log('asldkjhasdlkf',response)
+        //console.log('asldkjhasdlkf',response)
         if (response.ok) {
             cachedGameData = await response.json(); // Store data in memory
-            console.log('gameData', cachedGameData)
+            //console.log('gameData', cachedGameData)
             return cachedGameData;
         } else {
             console.error('Error fetching data:', response.status, response.statusText);
             return null;
         }
     } catch (error) {
-        console.error('Request failed:', error);
+        //console.error('Request failed:', error);
         notInAGame();
         return null;
     }
