@@ -2,7 +2,7 @@
 // Global variable to cache all game data
 let cachedGameData = null;
 let lastFetchTime = null;
-let refreshTime = 5000;
+let refreshTime = 1000;
 const FETCH_INTERVAL_MS = refreshTime;
 
 async function getLiveData() {
@@ -23,11 +23,10 @@ async function getLiveData() {
               },
           });
 
-        //console.log('asldkjhasdlkf',response)
         if (response.ok) {
             
             const newData = await response.json();
-            console.log("Fetched data:", newData); // Log the new data
+            //console.log("Fetched data:", newData); // Log the new data
             
             cachedGameData = newData;
             lastFetchTime = currentTime;
@@ -443,89 +442,108 @@ const inhibitorTimers = {
     ORDER: { 1: null, 2: null, 3: null },
     CHAOS: { 1: null, 2: null, 3: null }
 };
-
-// Calculate inhibitors taken
+const activeCountdowns = {
+    ORDER: { 1: null, 2: null, 3: null },
+    CHAOS: { 1: null, 2: null, 3: null }
+};
 async function getInhibitorsKilled(team, num1, num2) {
     const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers;
+    const allPlayers = gameData.allPlayers; 
     const currentTime = await getGameTimeSeconds();
 
     if (!allPlayers || !gameData.events || !gameData.events.Events) {
         console.error('Required data not found in game data');
-        return { count: 0, inhibitorNumber: null }; // Return an object
+        return { count: 0, inhibitorNumber: null };
     }
 
     const teamPlayers = allPlayers
         .filter(player => player.team === team)
-        .map(player => player.riotIdGameName);
+        .map(player => player.riotIdGameName); 
 
-    // Initialize the inhibitor number variable
     let inhibitorNumber = null;
 
-    // Find the latest InhibKilled event
+    // Reverse search for the most recent InhibKilled event
     const inhibEvent = [...gameData.events.Events].reverse().find(event =>
         event.EventName === "InhibKilled" &&
         (currentTime - event.EventTime <= 180) &&
-        teamPlayers.includes(event.KillerName)
+        (
+            teamPlayers.includes(event.KillerName) ||
+        event.KillerName.includes("Minion_T" + num1 + "00")
+        )
     );
 
-    // If an inhibitor is destroyed
     if (inhibEvent) {
-        console.log('Inhibitor Event Found:', inhibEvent);
+        const inhibKilled = inhibEvent.InhibKilled;
         
-        const inhibKilled = inhibEvent.InhibKilled; // e.g., "Barracks_T2_C1"
-        const parts = inhibKilled.split("_");
-
-        if (parts.length > 2) {
-            inhibitorNumber = parseInt(parts[2].slice(1), 10); // Get the inhibitor number
-
-            if (!isNaN(inhibitorNumber)) {
-                const respawnTime = currentTime + 300; // 5 minutes respawn timer
-                inhibitorTimers[team][inhibitorNumber] = respawnTime;
-                startInhibitorRespawnCountdown(team, inhibitorNumber); // Start the countdown
-            } else {
-                console.error('Parsed inhibitor number is NaN:', parts);
-            }
-        } else {
-            console.warn('Inhibitor event does not have expected parts:', inhibKilled);
+        // Create a unique identifier based on the type of inhibitor
+        if (
+            inhibKilled === `Barracks_T${num2}_C1` ||
+            inhibKilled === `Barracks_T${num2}_L1` ||
+            inhibKilled === `Barracks_T${num2}_R1`
+        ) {
+            // Use the full name as the unique identifier
+            inhibitorNumber = inhibKilled; // Use the entire string as the unique identifier
+            const respawnTime = inhibEvent.EventTime + 300; // Respawn in 300 seconds
+            inhibitorTimers[team][inhibitorNumber] = respawnTime;
+            startInhibitorRespawnCountdown(team, inhibitorNumber);
         }
     }
 
-    // Count how many inhibitors have been destroyed, excluding respawned ones
-    const teamInhibitors = gameData.events.Events.filter(event =>
-        event.EventName === "InhibKilled" &&
-        (
-            event.InhibKilled === "Barracks_T" + num2 + "_C1" ||
-            event.InhibKilled === "Barracks_T" + num2 + "_L1" ||
-            event.InhibKilled === "Barracks_T" + num2 + "_R1"
-        ) &&
-        (
-            teamPlayers.includes(event.KillerName) ||
-            event.KillerName.includes("Minion_T" + num1 + "00")
-        ) &&
-        !inhibitorTimers[team][parseInt(event.InhibKilled.split("_")[2].slice(1), 10)] // Exclude respawned inhibitors
-    ).length;
+    // Use a Set to count only unique inhibitors that are destroyed and not yet respawned
+    const uniqueInhibitors = new Set();
+    gameData.events.Events.forEach(event => {
+        const isDestroyed = event.EventName === "InhibKilled";
+        const respawnTime = inhibitorTimers[team][event.InhibKilled];
+        const hasNotRespawned = respawnTime && respawnTime > currentTime;
 
-    console.log(`Inhibitors Destroyed: ${teamInhibitors}`);
-    return { count: teamInhibitors, inhibitorNumber: null }; // Return both values
+        if (
+            isDestroyed &&
+            (event.InhibKilled === `Barracks_T${num2}_C1` ||
+             event.InhibKilled === `Barracks_T${num2}_L1` ||
+             event.InhibKilled === `Barracks_T${num2}_R1`) &&
+            teamPlayers.includes(event.KillerName) &&
+            hasNotRespawned
+        ) {
+            uniqueInhibitors.add(event.InhibKilled); // Use the entire string as the unique identifier
+        }
+    });
+
+    return { count: uniqueInhibitors.size, inhibitorNumber };
 }
 
-// Function to start a countdown for inhibitor respawn
+
 async function startInhibitorRespawnCountdown(team, inhibitorNumber) {
-    const respawnTime = inhibitorTimers[team][inhibitorNumber];
-    const countdownInterval = setInterval(async () => {
-        const currentTime = await getGameTimeSeconds();
-        const timeLeft = respawnTime - currentTime;
+    // Clear any existing countdown for this inhibitor
+    if (activeCountdowns[team][inhibitorNumber]) {
+        clearInterval(activeCountdowns[team][inhibitorNumber]);
+    }
+
+    const respawnTime = Math.floor(inhibitorTimers[team][inhibitorNumber]).toFixed(0); // This should be set to currentTime + 300
+
+    // Start a new countdown
+    activeCountdowns[team][inhibitorNumber] = setInterval(async () => {
+        const currentTime = Math.floor(await getGameTimeSeconds()).toFixed(0);
+        const timeLeft = Math.floor(respawnTime - currentTime).toFixed(0); // Calculate remaining time
+
+        console.log(`Current Time: ${currentTime}, Respawn Time: ${respawnTime}, Time Left: ${timeLeft}`);
 
         if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            console.log(`Inhibitor ${inhibitorNumber} for team ${team} has respawned!`);
-            inhibitorTimers[team][inhibitorNumber] = null; // Reset the timer
-        } else {
-            console.log(`Inhibitor ${inhibitorNumber} for team ${team} will respawn in ${timeLeft} seconds.`);
-        }
-    }, 10000); // Update every second
+            clearInterval(activeCountdowns[team][inhibitorNumber]);
+            activeCountdowns[team][inhibitorNumber] = null;
+            //console.log(`Inhibitor ${inhibitorNumber} for team ${team} has respawned!`);
+            // Reset the timer
+            inhibitorTimers[team][inhibitorNumber] = null;
+        } 
+        // else {
+        //     if (Math.floor(timeLeft) % 10 === 0 || timeLeft <= 5) { // Log every 10 seconds and the last 5 seconds
+        //         console.log(`Inhibitor ${inhibitorNumber} for team ${team} will respawn in ${timeLeft.toFixed(2)} seconds.`);
+        //     }
+        // }
+    }, 1000); // Update every second
 }
+
+
+
 
 
 
@@ -1018,27 +1036,27 @@ async function calculateWinProbability() {
         const winProbability = Math.min(1, earlyWinScore);
         const opposingTeamProbability = 1 - winProbability;
 
-        console.log('Early Game');
-        console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
-        console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
+        // console.log('Early Game');
+        // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
+        // console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
         return (winProbability * 100).toFixed(2);
     } else if (gameTime < 1800) {
         const winProbability = Math.min(1, midWinScore);
         const opposingTeamProbability = 1 - winProbability;
 
-        console.log('Mid Game');
-        console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
-        console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
+        // console.log('Mid Game');
+        // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
+        // console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
         return (winProbability * 100).toFixed(2);
     } else if (gameTime >= 1800) {
         const winProbability = Math.min(1, lateWinScore);
         const opposingTeamProbability = 1 - winProbability;
 
-        console.log('Late Game');
-        console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
-        console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
+        // console.log('Late Game');
+        // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
+        // console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
         return (winProbability * 100).toFixed(2);
     }
@@ -1175,8 +1193,8 @@ async function autoRefresh() {
     const gameData = await getLiveData();
 
     clearTimeout(timeoutId); 
-    console.log("Auto-refresh triggered");
-    console.log("Memory usage:", performance.memory.usedJSHeapSize);
+    // console.log("Auto-refresh triggered");
+    // console.log("Memory usage:", performance.memory.usedJSHeapSize);
 
      if (gameData) {
         await gameInformation(); // Call your function to update stats based on new data
