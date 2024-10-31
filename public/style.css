@@ -61,7 +61,7 @@ table {
 
 /* Table Header and Cell Styling */
 th, td {
-    padding: 8px; /* Add padding for better spacing */
+    padding: 6px; /* Add padding for better spacing */
     text-align: left; /* Align text to the left */
 }
 
@@ -167,35 +167,64 @@ button:hover {
 
 .stats-container {
     display: flex;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Adjust width as needed */
-    gap: 10px;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: calc(5px + 0.5vw); 
     text-align: center;
-    width: 60%;
-    border: 1px solid #414a6b;
-    border-radius: 10px;
-    padding: 20px;/* Ensures it takes the full width of the parent */
-    /*margin-right: 20px; /* Add margin to separate from table */
-    padding-left: 5%;
-    padding-right: 3%;
-}
-.stats-win-container{
-    display: flex;
     width: 100%;
+    border: 1px solid #414a6b;
+    border-radius: 5px;
+    padding: 8px; 
 }
 
 .win-container {
     display: flex;
     flex-direction: row;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Adjust width as needed */
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
     text-align: center;
     align-items: center;
-    width: 40%;
+    width: 100%;
     border: 1px solid #414a6b;
-    border-radius: 10px;
-    padding-left: 4%;
-    padding-right: 4%;
+    border-radius: 5px;
+    padding: 8px; 
     gap: 25px;
 }
+
+.stats-win-container{
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* .stats-win-container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    width: 100%;
+}
+
+.stats-container, .win-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border: 1px solid #414a6b;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
+
+    width: 90%; 
+    gap: 10px;
+    margin-bottom: 20px; 
+}
+
+.stats-container {
+    gap: calc(5px + 0.5vw); 
+    padding: calc(10px + 1vw);
+    padding-left: calc(5% + 1vw);
+    padding-right: calc(3% + 0.5vw);
+} */
+
+
 
 .should-ff-test {
     width: 50%;
@@ -223,8 +252,8 @@ button:hover {
     flex-direction: column;
     width: 95%;
     display: none;
-    padding-left: 2.5%;
-    padding-right: 2.5%;
+    padding-left: 10%;
+    padding-right: 5%;
 }
 
 /* Animations for the Container */
