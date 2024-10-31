@@ -101,35 +101,48 @@ tr:hover td {
 }
 
 /* Set fixed column widths for both tables to ensure they are identical */
-#order-list th:nth-child(6), #chaos-list th:nth-child(6),
-#order-list td:nth-child(6), #chaos-list td:nth-child(6) {
-    width: 15%; /* Gold */
+#order-list th:nth-child(1),
+#chaos-list th:nth-child(1),
+#order-list td:nth-child(1),
+#chaos-list td:nth-child(1) {
+    width: 27%; /* Player */
 }
 
-#order-list th:nth-child(5), #chaos-list th:nth-child(5),
-#order-list td:nth-child(5), #chaos-list td:nth-child(5) {
-    width: 15%; /* Gold */
+#order-list th:nth-child(2),
+#chaos-list th:nth-child(2),
+#order-list td:nth-child(2),
+#chaos-list td:nth-child(2) {
+    width: 17%; /* Champion */
 }
 
-#order-list th:nth-child(4), #chaos-list th:nth-child(4),
-#order-list td:nth-child(4), #chaos-list td:nth-child(4) {
-    width: 15%; /* CS */
+#order-list th:nth-child(3),
+#chaos-list th:nth-child(3),
+#order-list td:nth-child(3),
+#chaos-list td:nth-child(3) {
+    width: 14%; /* K/D/A */
 }
 
-#order-list th:nth-child(3), #chaos-list th:nth-child(3),
-#order-list td:nth-child(3), #chaos-list td:nth-child(3) {
-    width: 15%; /* K/D/A */
+#order-list th:nth-child(4),
+#chaos-list th:nth-child(4),
+#order-list td:nth-child(4),
+#chaos-list td:nth-child(4) {
+    width: 14%; /* CS */
 }
 
-#order-list th:nth-child(2), #chaos-list th:nth-child(2),
-#order-list td:nth-child(2), #chaos-list td:nth-child(2) {
-    width: 15%; /* Champion */
+#order-list th:nth-child(5),
+#chaos-list th:nth-child(5),
+#order-list td:nth-child(5),
+#chaos-list td:nth-child(5) {
+    width: 14%; /* Gold */
 }
 
-#order-list th:nth-child(1), #chaos-list th:nth-child(1),
-#order-list td:nth-child(1), #chaos-list td:nth-child(1) {
-    width: 25%; /* Player */
+#order-list th:nth-child(6),
+#chaos-list th:nth-child(6),
+#order-list td:nth-child(6),
+#chaos-list td:nth-child(6) {
+    width: 14%; /* Gold */
 }
+
 
 /* Ensure tables do not stretch beyond a certain width */
 table {
@@ -165,80 +178,56 @@ button:hover {
     font-weight: bold;
 }*/
 
-.stats-container {
+.middle-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 250px;
+    padding: 0 5px;
+    gap: 5px;
+    justify-content: center;
+}
+
+.stats-win-container {
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+    gap: 5px;
+    flex: 2;
+}
+
+.stats-container,
+.chart-container {
     display: flex;
     justify-content: center;
     grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: calc(5px + 0.5vw); 
+    gap: calc(5px + 0.5vw);
     text-align: center;
     width: 100%;
     border: 1px solid #414a6b;
     border-radius: 5px;
-    padding: 8px; 
-}
-
-.win-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-    text-align: center;
-    align-items: center;
-    width: 100%;
-    border: 1px solid #414a6b;
-    border-radius: 5px;
-    padding: 8px; 
-    gap: 25px;
-}
-
-.stats-win-container{
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    justify-content: center;
-}
-
-/* .stats-win-container {
-    display: flex;
-    flex-direction: column; 
-    align-items: center;
-    width: 100%;
-}
-
-.stats-container, .win-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    border: 1px solid #414a6b;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-
-    width: 90%; 
-    gap: 10px;
-    margin-bottom: 20px; 
+    padding: 10px 6px;
 }
 
 .stats-container {
-    gap: calc(5px + 0.5vw); 
-    padding: calc(10px + 1vw);
-    padding-left: calc(5% + 1vw);
-    padding-right: calc(3% + 0.5vw);
-} */
-
-
-
-.should-ff-test {
-    width: 50%;
+    height: 45%;
 }
 
-.stat-entry {
+.chart-container {
+    height: 55%
+}
+
+.probability-container {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-
-.team-value {
-    font-weight: bold;
+    text-align: center;
+    width: 25%;
+    border: 1px solid #414a6b;
+    border-radius: 5px;
+    padding: 8px;
+    gap: 25px;
+    flex: 1;
 }
 
 .stat-name {
@@ -292,63 +281,3 @@ button:hover, p:hover {
     text-shadow: 0 0 1px #f0f0f0, 0 0 1px #d4af37;
 }
 
-/* Base styles remain the same */
-
-@media (max-width: 768px) {
-    /* Reduce font sizes for smaller screens */
-    body {
-        font-size: 14px;
-    }
-
-    h1, h2 {
-        font-size: 1.5em;
-    }
-
-    /* Stack tables vertically */
-    .table-container {
-        flex-direction: column;
-        align-items: center; /* Center the tables on the page */
-    }
-
-    /* Reduce table width */
-    table {
-        width: 90%; /* Allow tables to fit within the smaller screen */
-        margin: 10px 0;
-    }
-
-    /* Adjust button size and padding */
-    button {
-        font-size: 1em;
-        padding: 8px 15px;
-    }
-
-    /* Stats container adjustments */
-    .stats-container, .win-container {
-        width: 90%; /* Fit the container to screen width */
-        gap: 5px;
-        flex-direction: column; /* Stack stats vertically */
-        padding: 15px;
-    }
-}
-
-@media (max-width: 480px) {
-    /* Further reduce font sizes for very small screens */
-    body {
-        font-size: 12px;
-    }
-
-    h1, h2 {
-        font-size: 1.2em;
-    }
-
-    /* Reduce padding in tables and cells */
-    th, td {
-        padding: 6px;
-    }
-
-    /* Adjust button size */
-    button {
-        font-size: 0.9em;
-        padding: 6px 12px;
-    }
-}

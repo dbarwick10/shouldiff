@@ -601,7 +601,7 @@ async function getBaron(team) {
         teamPlayers.includes(event.KillerName)
     );
     
-    return teamBaron ? baronEvent.EventTime : null;
+    return teamBaron ? teamBaron.EventTime : null;
 }
 
 // Calculate Elder taken
@@ -686,7 +686,7 @@ async function countAlivePlayers(events) {
             }
         }
     });
-
+    console.log(aliveCount)
     return aliveCount;
 }
 
@@ -1099,7 +1099,7 @@ async function shouldForfeit() {
     } else if (winProbability <= 10) {
         return "Go next"
     } else if(winProbability <= 40 && winProbability > 10) {
-        return "It will be a struggle, but it's possible"
+        return `It will be a struggle with a win probability at ${winProbability}%, but it's possible`
     } else if (winProbability >= 40 && winProbability < 60) {
         return "It's a close one"
     } else if (winProbability >= 60 && winProbability < 80) {
@@ -1107,7 +1107,7 @@ async function shouldForfeit() {
     } else if (winProbability >= 80 && winProbability < 95) {
         return "You should win, just don't throw"
     } else if (winProbability >= 95) {
-        return "For sure winning"
+        return `Your victory is near with a <strong>${winProbability}%</strong> chance of winning. Just don't throw.`
     } 
 }
 
@@ -1186,27 +1186,32 @@ async function updateAllStatsInDOM() {
 
 
     const statsHtml = `
-    <div class="stats-win-container">
-    <div class="stats-container">
-        <div class="stat-entry"><p class="team-value">${orderkills}</p><p class="stat-name">Kills</p><p class="team-value">${chaosKills}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderdeaths}</p><p class="stat-name">Deaths</p><p class="team-value">${chaosdeaths}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderAssists}</p><p class="stat-name">Assists</p><p class="team-value">${chaosAssists}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderCS}</p><p class="stat-name">CS</p><p class="team-value">${chaosCS}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderGold}</p><p class="stat-name">Gold</p><p class="team-value">${chaosGold}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderTurret}</p><p class="stat-name">Turrets</p><p class="team-value">${chaosTurret}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderInhibitor}</p><p class="stat-name">Inhibitors</p><p class="team-value">${chaosInhibitor}</p></div>        
-        <div class="stat-entry"><p class="team-value">${orderDragon}</p><p class="stat-name">Dragons</p><p class="team-value">${chaosDragon}</p></div>
-        ${dragonSoulHTML}
-        ${baronHTML}
-        ${elderBuffHTML}
-    </div>
-    <div class="win-container">
-    <div class="stat-entry"><p class="stat-name">Your team has a </p><p class="team-value">${winProbability}%</p> <p class="stat-name">of winning</p></div>
-    <div class="should-ff-text">${ffText}</div>
-    
-    </div>
+    <div class="middle-container">
+        <div class="stats-win-container">
+            <div class="stats-container">
+                <div class="stat-entry"><p class="team-value">${orderkills}</p><p class="stat-name">Kills</p><p class="team-value">${chaosKills}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderdeaths}</p><p class="stat-name">Deaths</p><p class="team-value">${chaosdeaths}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderAssists}</p><p class="stat-name">Assists</p><p class="team-value">${chaosAssists}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderCS}</p><p class="stat-name">CS</p><p class="team-value">${chaosCS}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderGold}</p><p class="stat-name">Gold</p><p class="team-value">${chaosGold}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderTurret}</p><p class="stat-name">Turrets</p><p class="team-value">${chaosTurret}</p></div>
+                <div class="stat-entry"><p class="team-value">${orderInhibitor}</p><p class="stat-name">Inhibitors</p><p class="team-value">${chaosInhibitor}</p></div>        
+                <div class="stat-entry"><p class="team-value">${orderDragon}</p><p class="stat-name">Dragons</p><p class="team-value">${chaosDragon}</p></div>
+                ${dragonSoulHTML}
+                ${baronHTML}
+                ${elderBuffHTML}
+            </div>
+            <div class="chart-container">
+                <p>WIN PROBABILITY CHART PLACEHOLDER</p>
+            </div>
+        </div>
+        <div class="probability-container">
+                <div class="should-ff-text">${ffText}</div>
+        </div> 
     </div>
     `;
+    //<div class="stat-entry"><p class="stat-name">Your team has a </p><p class="team-value">${winProbability}%</p> <p class="stat-name">of winning</p></div>
+
     //<button id="refresh-button" onclick="refreshPage()">Refresh</button>  <--- removed button, using auto refresh
 updateTeamStatsInDOM(statsHtml);
 
