@@ -2,7 +2,7 @@
 // Global variable to cache all game data
 let cachedGameData = null;
 let lastFetchTime = null;
-let refreshTime = 1000;
+let refreshTime = 100000;
 const FETCH_INTERVAL_MS = refreshTime;
 
 async function getLiveData() {
@@ -15,13 +15,13 @@ async function getLiveData() {
     }
     try {
         // Fetch the data from allgamedata.json for testing
-        //const response = await fetch('/test/allgamedata.json');
+        const response = await fetch('/test/allgamedata.json');
         
-         const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-              headers: {
-                "Content-Type": "application/json",
-              },
-          });
+        // const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        // });
 
         if (response.ok) {
             
@@ -422,7 +422,7 @@ async function getTurretsKilled(team, num1, num2) {
             event.TurretKilled === "Turret_T" + num2 + "_C_02_A"
             ) &&
             (
-                teamPlayers.includes(event.KillerName) ||
+            teamPlayers.includes(event.KillerName) ||
             event.KillerName.includes("Minion_T" + num1 + "00")
             )
         )
@@ -446,6 +446,7 @@ const activeCountdowns = {
     ORDER: { 1: null, 2: null, 3: null },
     CHAOS: { 1: null, 2: null, 3: null }
 };
+
 async function getInhibitorsKilled(team, num1, num2) {
     const gameData = await getLiveData();
     const allPlayers = gameData.allPlayers; 
@@ -525,7 +526,7 @@ async function startInhibitorRespawnCountdown(team, inhibitorNumber) {
         const currentTime = Math.floor(await getGameTimeSeconds()).toFixed(0);
         const timeLeft = Math.floor(respawnTime - currentTime).toFixed(0); // Calculate remaining time
 
-        console.log(`Current Time: ${currentTime}, Respawn Time: ${respawnTime}, Time Left: ${timeLeft}`);
+        //console.log(`Current Time: ${currentTime}, Respawn Time: ${respawnTime}, Time Left: ${timeLeft}`);
 
         if (timeLeft <= 0) {
             clearInterval(activeCountdowns[team][inhibitorNumber]);
@@ -1062,6 +1063,18 @@ async function calculateWinProbability() {
     }
 }
 
+async function getGameEnd() {
+    const gameData = await getLiveData();
+    const isGameEnded = [...gameData.events.Events].reverse().find(event =>
+        event.EventName === "GameEnd"
+    );
+
+    console.log(isGameEnded ? isGameEnded.Result : null);
+    return isGameEnded ? isGameEnded.Result : null
+
+}
+getGameEnd();
+
 async function shouldForfeit() {
     const winProbability = await calculateWinProbability();
     const gameMode = await getGameMode();
@@ -1077,7 +1090,7 @@ async function shouldForfeit() {
         return `You literaly cannot FF at ${gameTime}. Wait until 10m`
     } else if ((gameMode === 'TUTORIAL' ||
         gameMode === 'PRACTICETOOL')
-    ){                 //tutorial easter egg
+    ){                 //tutorial & practice tool easter egg
         return "This is a tutorial, please keep practicing so you don't have to surrender more games"
     } else if (winProbability <= 10) {
         return "Go next"
