@@ -1065,20 +1065,20 @@ async function calculateWinProbability() {
 
 async function getGameEnd() {
     const gameData = await getLiveData();
-    const isGameEnded = [...gameData.events.Events].reverse().find(event =>
+    const gameEnded = [...gameData.events.Events].reverse().find(event =>
         event.EventName === "GameEnd"
     );
 
-    console.log(isGameEnded ? isGameEnded.Result : null);
-    return isGameEnded ? isGameEnded.Result : null
+    //console.log(gameEnded ? gameEnded.Result : null);
+    return gameEnded ? gameEnded.Result : null;
 
 }
-getGameEnd();
 
 async function shouldForfeit() {
     const winProbability = await calculateWinProbability();
     const gameMode = await getGameMode();
     const gameTime = await getGameTime();
+    const gameResult = await getGameEnd();
     const gameTimeInSeconds = await getGameTimeSeconds();
 
     if (gameMode === 'CLASSIC' &&                        //classic summoners rift
@@ -1088,7 +1088,11 @@ async function shouldForfeit() {
         gameMode === 'ARAM') &&
         gameTimeInSeconds < 600) {                       //ff at 10
         return `You literaly cannot FF at ${gameTime}. Wait until 10m`
-    } else if ((gameMode === 'TUTORIAL' ||
+    } else if (gameResult === 'Lose') {
+        return "Game Over: You Lost."
+    } else if (gameResult === 'Win') {
+        return "Game Over: You Won!"
+    }   else if ((gameMode === 'TUTORIAL' ||
         gameMode === 'PRACTICETOOL')
     ){                 //tutorial & practice tool easter egg
         return "This is a tutorial, please keep practicing so you don't have to surrender more games"
@@ -1104,7 +1108,7 @@ async function shouldForfeit() {
         return "You should win, just don't throw"
     } else if (winProbability >= 95) {
         return "For sure winning"
-    }
+    } 
 }
 
 async function analysis() {
@@ -1154,6 +1158,32 @@ async function updateAllStatsInDOM() {
     const winProbability = await calculateWinProbability();
         //console.log('Calculated Win Probability:', winProbability);
     const ffText = await shouldForfeit();
+    const dragonSoulHTML = 
+    orderDragon > 3 || chaosDragon > 3 
+        ? `<div class="stat-entry">
+            <p class="team-value">${orderDragon > 3 ? dragonSoul : '-'}</p>
+            <p class="stat-name">Dragon Soul</p>
+            <p class="team-value">${chaosDragon > 3 ? dragonSoul : '-'}</p>
+        </div>`
+        : '';
+    const baronHTML =
+    orderBaronBuff || chaosBaronBuff
+        ? `<div class="stat-entry">
+            <p class="team-value">${orderBaronBuff ? orderBaronBuffTimer : '-'}</p>
+            <p class="stat-name">Baron Buff</p>
+            <p class="team-value">${chaosBaronBuff ? chaosBaronBuffTimer : '-'}</p>
+          </div>`
+        : '';
+    const elderBuffHTML =
+    orderElderBuff || chaosElderBuff
+        ?  `<div class="stat-entry">
+            <p class="team-value">${orderElderBuff ? orderElderBuffTimer : '-'}</p>
+            <p class="stat-name">Elder Buff</p>
+            <p class="team-value">${chaosElderBuff ? chaosElderBuffTimer : '-'}</p>
+          </div>`
+        : '';
+
+
 
     const statsHtml = `
     <div class="stats-win-container">
@@ -1166,9 +1196,9 @@ async function updateAllStatsInDOM() {
         <div class="stat-entry"><p class="team-value">${orderTurret}</p><p class="stat-name">Turrets</p><p class="team-value">${chaosTurret}</p></div>
         <div class="stat-entry"><p class="team-value">${orderInhibitor}</p><p class="stat-name">Inhibitors</p><p class="team-value">${chaosInhibitor}</p></div>        
         <div class="stat-entry"><p class="team-value">${orderDragon}</p><p class="stat-name">Dragons</p><p class="team-value">${chaosDragon}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderDragon > 3 ? dragonSoul : 'No'}</p><p class="stat-name">Dragon Soul</p><p class="team-value">${chaosDragon > 3 ? dragonSoul : 'No'}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderBaronBuff ? orderBaronBuffTimer : 'No'}</p><p class="stat-name">Baron Buff</p><p class="team-value">${chaosBaronBuff ? chaosBaronBuffTimer : 'No'}</p></div>
-        <div class="stat-entry"><p class="team-value">${orderElderBuff ? orderElderBuffTimer : 'No'}</p><p class="stat-name">Elder Buff</p><p class="team-value">${chaosElderBuff ? chaosElderBuffTimer : 'No'}</p></div>
+        ${dragonSoulHTML}
+        ${baronHTML}
+        ${elderBuffHTML}
     </div>
     <div class="win-container">
     <div class="stat-entry"><p class="stat-name">Your team has a </p><p class="team-value">${winProbability}%</p> <p class="stat-name">of winning</p></div>
