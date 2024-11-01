@@ -777,7 +777,7 @@ async function multiKills(team) {
             const killStreak = event.KillStreak; // Get the kill streak from the event
 
             teamMultiKills.push({ killer, eventTime, killStreak });
-            console.log(`${team} team multikill by ${killer} at ${eventTime} with a kill streak of ${killStreak}`);
+            //console.log(`${team} team multikill by ${killer} at ${eventTime} with a kill streak of ${killStreak}`);
         }
     }
 
@@ -1221,7 +1221,8 @@ async function updateAllStatsInDOM() {
                 ${elderBuffHTML}
             </div>
             <div class="chart-container">
-                <p>WIN PROBABILITY CHART PLACEHOLDER</p>
+                <p>PLACEHOLDER FOR WIN PROBABILITY CHART</p>
+                <canvas id="myChart" width="800" height="400"></canvas>
             </div>
         </div>
         <div class="probability-container">
@@ -1273,3 +1274,4 @@ async function autoRefresh() {
 }
 
 autoRefresh();
+
