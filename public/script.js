@@ -254,7 +254,7 @@ async function getGameTimeSeconds() {
 }
 
 // Calculate kills
-async function getKills(team) {
+async function getKills(teamOrPlayerName) {
     const gameData = await getLiveData(); 
     const allPlayers = gameData.allPlayers; 
 
@@ -262,16 +262,22 @@ async function getKills(team) {
         console.error('No players found in game data');
         return;
     }
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.scores.kills;
+    } else {
     const teamKills = allPlayers
-        .filter(player => player.team === team) 
+        .filter(player => player.team === teamOrPlayerName) 
         .reduce((total, player) => total + player.scores.kills, 0); 
 
     return teamKills;
+    }
 }
 
 //get levels
-async function getLevels(team) {
+async function getLevels(teamOrPlayerName) {
     const gameData = await getLiveData();
     const allPlayers = gameData.allPlayers; 
 
@@ -279,16 +285,23 @@ async function getLevels(team) {
         console.error('No players found in game data');
         return;
     }
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
-    const teamLevels = allPlayers
-        .filter(player => player.team === team) 
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.level;
+    } else {
+    const teamKills = allPlayers
+        .filter(player => player.team === teamOrPlayerName) 
         .reduce((total, player) => total + player.level, 0); 
 
-    return teamLevels;
+    return teamKills;
+    }
+    
 }
 
 // Calculate deaths difference
-async function getDeaths(team) {
+async function getDeaths(teamOrPlayerName) {
     const gameData = await getLiveData(); // Assuming this returns the full game data
     const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
 
@@ -297,15 +310,23 @@ async function getDeaths(team) {
         return;
     }
     
-    const teamDeaths = allPlayers
-        .filter(player => player.team === team)
-        .reduce((total, player) => total + player.scores.deaths, 0);
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
-    return teamDeaths;
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.scores.deaths;
+    } else {
+    const teamKills = allPlayers
+        .filter(player => player.team === teamOrPlayerName) 
+        .reduce((total, player) => total + player.scores.deaths, 0); 
+
+    return teamKills;
+    }
+    
 }
 
 // Calculate assists difference
-async function getAssists(team) {
+async function getAssists(teamOrPlayerName) {
     const gameData = await getLiveData(); // Assuming this returns the full game data
     const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
 
@@ -313,16 +334,25 @@ async function getAssists(team) {
         console.error('No players found in game data');
         return;
     } 
-    
-    const teamAssists = allPlayers
-        .filter(player => player.team === team)
-        .reduce((total, player) => total + player.scores.assists, 0);
-   
-    return teamAssists;
+
+    // Check if it's a player or a team by searching for a player match
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
+
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.scores.assists;
+    } else {
+        // Otherwise, assume it's a team and calculate total assists for that team
+        const teamAssists = allPlayers
+            .filter(player => player.team === teamOrPlayerName)
+            .reduce((total, player) => total + player.scores.assists, 0);
+
+        return teamAssists;
+    }
 }
 
 // Calculate CS difference
-async function getCS(team) {
+async function getCS(teamOrPlayerName) {
     const gameData = await getLiveData(); // Assuming this returns the full game data
     const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
 
@@ -331,15 +361,23 @@ async function getCS(team) {
         return;
     }
     
-    const teamCS = allPlayers
-        .filter(player => player.team === team)
-        .reduce((total, player) => total + player.scores.creepScore, 0);
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
-    return teamCS;
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.scores.creepScore;
+    } else {
+        // Otherwise, assume it's a team and calculate total assists for that team
+        const teamAssists = allPlayers
+            .filter(player => player.team === teamOrPlayerName)
+            .reduce((total, player) => total + player.scores.creepScore, 0);
+
+        return teamAssists;
+    }
 }
 
 // Calculate total gold difference
-async function getGold(team) {
+async function getGold(teamOrPlayerName) {
     const gameData = await getLiveData(); // Assuming this returns the full game data
     const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
 
@@ -348,11 +386,19 @@ async function getGold(team) {
         return;
     }
 
-    const teamGold = allPlayers
-        .filter(player => player.team === team)
-        .reduce((total, player) => total + calculateTotalGold(player), 0);
+    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
-    return teamGold;
+    if (specificPlayer) {
+        // Return assists for the specific player
+        return specificPlayer.calculateTotalGold(player);
+    } else {
+        // Otherwise, assume it's a team and calculate total assists for that team
+        const teamAssists = allPlayers
+            .filter(player => player.team === teamOrPlayerName)
+            .reduce((total, player) => total + calculateTotalGold(player), 0);
+
+        return teamAssists;
+    }
 }
 
 // Calculate turrets taken
