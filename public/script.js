@@ -652,7 +652,7 @@ async function countAlivePlayers(events) {
     const gameData = await getLiveData();
     const allPlayers = gameData.allPlayers;
     const currentTime = await getGameTimeSeconds(); // Current game time in seconds
-    const playerDeathTimes = {};
+    const playerDeathTimes = {}; // Track the death timer for each player
     const aliveCount = { order: 5, chaos: 5 }; // Assume full teams initially
 
     // Map each player to their team and level
@@ -664,6 +664,7 @@ async function countAlivePlayers(events) {
         };
     });
 
+    // Process each kill event to calculate death timers
     events.forEach(event => {
         if (event.EventName === "ChampionKill") {
             const victim = event.VictimName;
@@ -677,101 +678,73 @@ async function countAlivePlayers(events) {
             // Calculate death timer
             const deathDuration = calculateDeathTimer(victimLevel, killMinute);
             playerDeathTimes[victim] = event.EventTime + deathDuration;
-
-            // Update team counts based on current time and respawn times
-            if (playerDeathTimes[victim] > currentTime) {
-                aliveCount[victimTeam]--;
-            } else {
-                aliveCount[victimTeam]++;
-            }
         }
     });
-    console.log(aliveCount)
-    return aliveCount;
-}
 
-// async function pentaKill() {
-//     const gameData = await getLiveData(); 
-//     const allPlayers = gameData.allPlayers; 
-//     const currentTime = await getGameTimeSeconds();
-//     const activePlayer = gameData.activePlayer.riotIdGameName;
-
-//     if (!allPlayers) {
-//         console.error('No players found in game data');
-//         return false; 
-//     }
-// }
-
-async function multiKills() {
-    // Fetch live game data
-    const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers; 
-    const currentTime = await getGameTimeSeconds(); // Ensure this is set correctly
-    console.log(`Current Time: ${currentTime}`); // Debugging current time
-    const activePlayer = gameData.activePlayer.riotIdGameName; // Get the active player's name
-    const events = gameData.events.Events || []; // Adjusting to the new data structure
-
-    // Sort events by EventTime
-    events.sort((a, b) => a.EventTime - b.EventTime);
-
-    // Object to track kills by player
-    const killTracker = {};
-
-    // Helper function to log kill messages
-    function logKillMessage(killer, killType) {
-        if (killer === activePlayer) {
-            console.log(`${killer} (active player) achieved a ${killType}`);
-        } else {
-            console.log(`${killer} achieved a ${killType}`);
+    // Check each player's death time against the current time
+    for (const player in playerDeathTimes) {
+        const respawnTime = playerDeathTimes[player];
+        const playerTeam = playerTeams[player].team;
+        
+        // If the player has not yet respawned, decrement alive count for their team
+        if (respawnTime > currentTime) {
+            aliveCount[playerTeam]--;
         }
     }
 
-    // Iterate through events
-    events.forEach(event => {
-        if (event.EventName !== "ChampionKill") return; // Only process ChampionKill events
-
-        const killer = event.KillerName;
-        const time = event.EventTime;
-
-        // Initialize kill tracker for the killer if not present
-        if (!killTracker[killer]) {
-            killTracker[killer] = [];
-        }
-
-        // Add the current kill time
-        killTracker[killer].push(time);
-
-        // Log the full kill history for the killer
-        console.log(`Kill history for ${killer}:`, killTracker[killer]);
-
-        // Check for multikills
-        const recentKills = killTracker[killer].filter(killTime => (currentTime - killTime) <= 10); // 10 seconds
-
-        // Debugging: Log the recent kills array
-        console.log(`Recent Kills for ${killer}:`, recentKills);
-
-        // Check for double, triple, quadrakills
-        if (recentKills.length === 2) {
-            logKillMessage(killer, 'double kill');
-        } else if (recentKills.length === 3) {
-            logKillMessage(killer, 'triple kill');
-        } else if (recentKills.length === 4) {
-            logKillMessage(killer, 'quadrakill');
-        }
-
-        // Check for pentakills
-        if (recentKills.length >= 5) {
-            const fourthKillTime = recentKills[3]; // Time of the 4th kill
-            const pentakills = killTracker[killer].filter(killTime => (killTime > fourthKillTime) && (killTime <= fourthKillTime + 30)); // 30 seconds
-            if (pentakills.length >= 1) {
-                logKillMessage(killer, 'pentakill');
-            }
-        }
-    });
+    //console.log(aliveCount);
+    return aliveCount;
 }
 
-// // Call the function
-// multiKills();
+async function multiKills(team) {
+    const gameData = await getLiveData(); 
+    const allPlayers = gameData.allPlayers;
+    const currentTime = await getGameTimeSeconds(); 
+
+    if (!allPlayers) {
+        console.error('No players found in game data');
+        return;
+    }
+
+    // Validate team input
+    const validTeams = ['ORDER', 'CHAOS'];
+    if (!validTeams.includes(team)) {
+        console.error('Invalid team specified. Please use "ORDER" or "CHAOS".');
+        return;
+    }
+
+    // Get players for the specified team
+    const teamPlayers = allPlayers
+        .filter(player => player.team === team)
+        .map(player => player.riotIdGameName); 
+
+    // Object to track multikills for the specified team
+    const teamMultiKills = [];
+
+    // Iterate over the events in reverse order to find multikills
+    const events = [...gameData.events.Events].reverse();
+    
+    for (const event of events) {
+        if (event.EventName === "Multikill" && teamPlayers.includes(event.KillerName)) {
+            const killer = event.KillerName;
+            const eventTime = event.EventTime;
+            const killStreak = event.KillStreak; // Get the kill streak from the event
+
+            teamMultiKills.push({ killer, eventTime, killStreak });
+            console.log(`${team} team multikill by ${killer} at ${eventTime} with a kill streak of ${killStreak}`);
+        }
+    }
+
+    // Return multikill data for the specified team
+    return teamMultiKills;
+}
+
+// Call the function for a specific team
+multiKills('CHAOS'); // Change 'CHAOS' to 'ORDER' to check for the other team
+
+
+
+
 
 
 // Helper function to get data for a given team and data type
