@@ -2,12 +2,13 @@
 // Global variable to cache all game data
 let cachedGameData = null;
 let lastFetchTime = null;
-let refreshTime = 100000;
+let itemPricesCache = null;
+let refreshTime = 1000;
+
 const FETCH_INTERVAL_MS = refreshTime;
 
 async function getLiveData() {
     const currentTime = Date.now();
-    
     
     if (cachedGameData && lastFetchTime && (currentTime - lastFetchTime < FETCH_INTERVAL_MS)) {
         
@@ -15,13 +16,13 @@ async function getLiveData() {
     }
     try {
         // Fetch the data from allgamedata.json for testing
-        const response = await fetch('/test/allgamedata.json');
+        //const response = await fetch('/test/allgamedata.json');
         
-        // const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        // });
+        const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
         if (response.ok) {
             
@@ -41,6 +42,7 @@ async function getLiveData() {
         return null;
     }
 }
+
 
 async function notInAGame() {
     const notInGame = document.getElementById('not-in-a-game');
@@ -135,14 +137,13 @@ function displayTeamStats(teamStats, teamTableId) {
     const avgLevel = teamStats.reduce((sum, player) => sum + player.level, 0) / 5;
     const activePlayerTeam = getActivePlayerTeam();
 
-    // Update the header with the totals
+    // Update the header with the totals  removed CS
     if (teamTableId === 'order-list') {
         teamHeader.innerHTML = `
             <th>Blue Team</th>
             <th>Champion</th>
             <th>Level</th>
             <th>K/D/A</th>
-            <th>CS</th>
             <th>Item Gold</th>
         `;
     } else if (teamTableId === 'chaos-list') { //<th> ${activePlayerTeam === 'CHAOS' ? 'Blue Team' : 'Red Team'}</th>
@@ -151,7 +152,6 @@ function displayTeamStats(teamStats, teamTableId) {
             <th>Champion</th>
             <th>Level</th>
             <th>K/D/A</th>
-            <th>CS</th>
             <th>Item Gold</th>
         `;
     }
@@ -165,7 +165,6 @@ function displayTeamStats(teamStats, teamTableId) {
                 <td>${player.champion}</td>
                 <td>${player.level}</td>
                 <td>${player.kills}/${player.deaths}/${player.assists}</td>
-                <td>${player.cs}</td>
                 <td>${player.totalGold}</td>
             `;
         } else if (teamTableId === 'chaos-list') {
@@ -174,13 +173,58 @@ function displayTeamStats(teamStats, teamTableId) {
                 <td>${player.champion}</td>
                 <td>${player.level}</td>
                 <td>${player.kills}/${player.deaths}/${player.assists}</td>
-                <td>${player.cs}</td>
                 <td>${player.totalGold}</td>
             `;
         }
 
         teamTable.appendChild(row);  
     });
+    // // Update the header with the totals Has CS
+    // if (teamTableId === 'order-list') {
+    //     teamHeader.innerHTML = `
+    //         <th>Blue Team</th>
+    //         <th>Champion</th>
+    //         <th>Level</th>
+    //         <th>K/D/A</th>
+    //         <th>CS</th>
+    //         <th>Item Gold</th>
+    //     `;
+    // } else if (teamTableId === 'chaos-list') { //<th> ${activePlayerTeam === 'CHAOS' ? 'Blue Team' : 'Red Team'}</th>
+    //     teamHeader.innerHTML = `
+    //         <th>Red Team</th>
+    //         <th>Champion</th>
+    //         <th>Level</th>
+    //         <th>K/D/A</th>
+    //         <th>CS</th>
+    //         <th>Item Gold</th>
+    //     `;
+    // }
+
+    // teamStats.forEach(player => {
+    //     const row = document.createElement('tr');
+        
+    //     if (teamTableId === 'order-list') {
+    //         row.innerHTML = `
+    //             <td>${player.name}</td>
+    //             <td>${player.champion}</td>
+    //             <td>${player.level}</td>
+    //             <td>${player.kills}/${player.deaths}/${player.assists}</td>
+    //             <td>${player.cs}</td>
+    //             <td>${player.totalGold}</td>
+    //         `;
+    //     } else if (teamTableId === 'chaos-list') {
+    //         row.innerHTML = `
+    //             <td>${player.name}</td>
+    //             <td>${player.champion}</td>
+    //             <td>${player.level}</td>
+    //             <td>${player.kills}/${player.deaths}/${player.assists}</td>
+    //             <td>${player.cs}</td>
+    //             <td>${player.totalGold}</td>
+    //         `;
+    //     }
+
+    //     teamTable.appendChild(row);  
+    
 }
 
 // Fetch and display live game data
@@ -196,26 +240,32 @@ async function gameInformation() {
     const teamOrder = allPlayers.filter(player => player.team === 'ORDER');
     const teamChaos = allPlayers.filter(player => player.team === 'CHAOS');
 
-    const teamOrderStats = teamOrder.map(player => ({
-        name: player.riotIdGameName,
-        champion: player.championName,
-        level: player.level,
-        kills: player.scores.kills,
-        cs: player.scores.creepScore,
-        deaths: player.scores.deaths,
-        assists: player.scores.assists,
-        totalGold: calculateTotalGold(player)
+    const teamOrderStats = await Promise.all(teamOrder.map(async (player) => {
+        const totalGold = await getGold(player.riotIdGameName); // Get total gold for the specific player
+        return {
+            name: player.riotIdGameName,
+            champion: player.championName,
+            level: player.level,
+            kills: player.scores.kills,
+            cs: player.scores.creepScore,
+            deaths: player.scores.deaths,
+            assists: player.scores.assists,
+            totalGold: totalGold // Assign the fetched total gold
+        };
     }));
 
-    const teamChaosStats = teamChaos.map(player => ({
-        name: player.riotIdGameName,
-        champion: player.championName,
-        level: player.level,
-        kills: player.scores.kills,
-        cs: player.scores.creepScore,
-        deaths: player.scores.deaths,
-        assists: player.scores.assists,
-        totalGold: calculateTotalGold(player)
+    const teamChaosStats = await Promise.all(teamChaos.map(async (player) => {
+        const totalGold = await getGold(player.riotIdGameName); // Get total gold for the specific player
+        return {
+            name: player.riotIdGameName,
+            champion: player.championName,
+            level: player.level,
+            kills: player.scores.kills,
+            cs: player.scores.creepScore,
+            deaths: player.scores.deaths,
+            assists: player.scores.assists,
+            totalGold: totalGold // Assign the fetched total gold
+        };
     }));
 
     // Display individual player stats
@@ -224,16 +274,16 @@ async function gameInformation() {
     //console.log("Fetched new data:", gameData);
 }
 
-function calculateTotalGold(player) {
-    const itemsGold = player.items.reduce((acc, item) => {
-        const itemPrice = parseFloat(item.price);
-        return acc + (isNaN(itemPrice) ? 0 : itemPrice);  //  0 if price is NaN
-    }, 0);
+// function calculateTotalGold(player) {
+//     const itemsGold = player.items.reduce((acc, item) => {
+//         const itemPrice = parseFloat(item.price);
+//         return acc + (isNaN(itemPrice) ? 0 : itemPrice);  //  0 if price is NaN
+//     }, 0);
     
-    const currentGold = parseFloat(player.currentGold);
+//     const currentGold = parseFloat(player.currentGold);
     
-    return Math.floor(itemsGold + (isNaN(currentGold) ? 0 : currentGold));  //  0 if currentGold is NaN
-}
+//     return Math.floor(itemsGold + (isNaN(currentGold) ? 0 : currentGold));  //  0 if currentGold is NaN
+// }
 
 //get game time in minutes:seconds and only seconds
 async function getGameTime() {
@@ -253,126 +303,47 @@ async function getGameTimeSeconds() {
     return gameTimeInSeconds
 }
 
-// Calculate kills
-async function getKills(teamOrPlayerName) {
-    const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers; 
-
-    if (!allPlayers) {
-        console.error('No players found in game data');
-        return;
-    }
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
-
-    if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.scores.kills;
-    } else {
-    const teamKills = allPlayers
-        .filter(player => player.team === teamOrPlayerName) 
-        .reduce((total, player) => total + player.scores.kills, 0); 
-
-    return teamKills;
-    }
-}
-
-//get levels
-async function getLevels(teamOrPlayerName) {
+// Calculate Stats
+async function getStats(teamOrPlayerName, statType) {
     const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers; 
+    const allPlayers = gameData.allPlayers;
 
     if (!allPlayers) {
         console.error('No players found in game data');
         return;
     }
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
 
-    if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.level;
-    } else {
-    const teamKills = allPlayers
-        .filter(player => player.team === teamOrPlayerName) 
-        .reduce((total, player) => total + player.level, 0); 
-
-    return teamKills;
-    }
-    
-}
-
-// Calculate deaths difference
-async function getDeaths(teamOrPlayerName) {
-    const gameData = await getLiveData(); // Assuming this returns the full game data
-    const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
-
-    if (!allPlayers) {
-        console.error('No players found in game data');
+    if (!statType) {
+        console.error('Stat type is undefined or missing.');
         return;
     }
-    
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
+
+    const specificPlayer = allPlayers.find(player => player.riotIdGameName === teamOrPlayerName);
 
     if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.scores.deaths;
+        if (statType === 'level') {
+            return specificPlayer.level;
+        } else if (specificPlayer.scores && specificPlayer.scores.hasOwnProperty(statType)) {
+            return specificPlayer.scores[statType];
+        } else {
+            console.error(`Stat type '${statType}' not found for player ${teamOrPlayerName}`);
+            return 0;
+        }
     } else {
-    const teamKills = allPlayers
-        .filter(player => player.team === teamOrPlayerName) 
-        .reduce((total, player) => total + player.scores.deaths, 0); 
-
-    return teamKills;
-    }
-    
-}
-
-// Calculate assists difference
-async function getAssists(teamOrPlayerName) {
-    const gameData = await getLiveData(); // Assuming this returns the full game data
-    const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
-
-    if (!allPlayers) {
-        console.error('No players found in game data');
-        return;
-    } 
-
-    // Check if it's a player or a team by searching for a player match
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
-
-    if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.scores.assists;
-    } else {
-        // Otherwise, assume it's a team and calculate total assists for that team
-        const teamAssists = allPlayers
+        const teamTotal = allPlayers
             .filter(player => player.team === teamOrPlayerName)
-            .reduce((total, player) => total + player.scores.assists, 0);
+            .reduce((total, player) => {
+                if (statType === 'level') {
+                    return total + player.level;
+                } else if (player.scores && player.scores.hasOwnProperty(statType)) {
+                    return total + player.scores[statType];
+                } else {
+                    console.error(`Stat type '${statType}' is not valid for player ${player.riotIdGameName}`);
+                    return total;
+                }
+            }, 0);
 
-        return teamAssists;
-    }
-}
-
-// Calculate CS difference
-async function getCS(teamOrPlayerName) {
-    const gameData = await getLiveData(); // Assuming this returns the full game data
-    const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
-
-    if (!allPlayers) {
-        console.error('No players found in game data');
-        return;
-    }
-    
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
-
-    if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.scores.creepScore;
-    } else {
-        // Otherwise, assume it's a team and calculate total assists for that team
-        const teamAssists = allPlayers
-            .filter(player => player.team === teamOrPlayerName)
-            .reduce((total, player) => total + player.scores.creepScore, 0);
-
-        return teamAssists;
+        return teamTotal;
     }
 }
 
@@ -380,26 +351,72 @@ async function getCS(teamOrPlayerName) {
 async function getGold(teamOrPlayerName) {
     const gameData = await getLiveData(); // Assuming this returns the full game data
     const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
-
+    
     if (!allPlayers) {
         console.error('No players found in game data');
         return;
     }
-
-    const specificPlayer = allPlayers.find(player => allPlayers.riotIdGameName === teamOrPlayerName);
-
+    
+    // Function to get item prices from the items data
+    const getItemPrices = async () => {
+        if (!itemPricesCache) {
+            const itemDataResponse = await fetch('https://ddragon.leagueoflegends.com/cdn/14.21.1/data/en_US/item.json');
+            const itemData = await itemDataResponse.json();
+            itemPricesCache = itemData.data; // Cache the item data mapping itemID to price
+            // console.log('Item prices fetched and cached.');
+        } else {
+            // console.log('Using cached item prices.');
+        }
+        return itemPricesCache;
+    };
+    
+    const itemPrices = await getItemPrices();
+    // console.log('Item prices:', itemPrices);
+    
+    const specificPlayer = allPlayers.find(player => player.riotIdGameName === teamOrPlayerName);
+    // console.log(`Specific player found: ${specificPlayer ? specificPlayer.riotIdGameName : 'None'}`);
+    
     if (specificPlayer) {
-        // Return assists for the specific player
-        return specificPlayer.calculateTotalGold(player);
+        // Return total gold for the specific player based on their items
+        const totalGold = specificPlayer.items.reduce((totalGold, item) => {
+            if (item.itemID && itemPrices[item.itemID]) {
+                const itemPrice = itemPrices[item.itemID].gold.base || 0; // Get base price of the item
+                const itemName = itemPrices[item.itemID].name; // Get the item name
+                totalGold += itemPrice;
+                //console.log(`Item ID: ${item.itemID}, Item Name: ${itemName}, Item Cost: ${itemPrice}`); // Log item details
+            } else {
+                //console.warn(`Item ID: ${item.itemID} not found in itemPrices.`); // Warn if item is not found
+            }
+            return totalGold;
+        }, 0);
+        //console.log(`Total gold for player ${specificPlayer.riotIdGameName}: ${totalGold}`);
+        return totalGold;
     } else {
-        // Otherwise, assume it's a team and calculate total assists for that team
-        const teamAssists = allPlayers
+        // Otherwise, assume it's a team and calculate total gold for that team
+        const teamGold = allPlayers
             .filter(player => player.team === teamOrPlayerName)
-            .reduce((total, player) => total + calculateTotalGold(player), 0);
-
-        return teamAssists;
-    }
+            .reduce((total, player) => {
+                const playerGold = player.items.reduce((goldTotal, item) => {
+                    if (item.itemID && itemPrices[item.itemID]) {
+                        const itemPrice = itemPrices[item.itemID].gold.base || 0; // Get base price of the item
+                        const itemName = itemPrices[item.itemID].name; // Get the item name
+                        goldTotal += itemPrice;
+                        //console.log(`Item ID: ${item.itemID}, Item Name: ${itemName}, Item Cost: ${itemPrice}`); // Log item details
+                    } else {
+                        //console.warn(`Item ID: ${item.itemID} not found in itemPrices for player ${player.riotIdGameName}.`); // Warn if item is not found
+                    }
+                    return goldTotal;
+                }, 0);
+                //console.log(`Total gold for player ${player.riotIdGameName}: ${playerGold}`);
+                return total + playerGold;
+            }, 0);
+    
+        //console.log(`Total gold for team ${teamOrPlayerName}: ${teamGold}`);
+        return teamGold;
+    }    
 }
+
+
 
 // Calculate turrets taken
 async function getTurretsKilled(team, num1, num2) {
@@ -640,21 +657,40 @@ async function getBaron(team) {
         .filter(player => player.team === team)
         .map(player => player.riotIdGameName); 
 
-    // Reverse the events array to search from the most recent event
     const teamBaron = [...gameData.events.Events].reverse().find(event => 
         event.EventName === "BaronKill" &&
         (currentTime - event.EventTime <= 180) &&
         teamPlayers.includes(event.KillerName)
     );
-    
-    return teamBaron ? teamBaron.EventTime : null;
+
+    if (!teamBaron) {
+        return null; // No Baron kill found
+    }
+
+    const aliveCountData = await countAlivePlayers(gameData.events.Events);
+    const alivePlayers = Object.keys(aliveCountData.aliveCount).reduce((acc, teamName) => {
+        acc[teamName] = aliveCountData.aliveCount[teamName]; // Store alive count
+        return acc;
+    }, {});
+
+    const playersWithBaron = allPlayers
+        .filter(player => aliveCountData.deathStats[player.riotIdGameName].deaths.every(deathTime => deathTime < teamBaron.EventTime))
+        .map(player => player.riotIdGameName);
+
+    // console.log(`Baron killed by ${teamBaron.KillerName} at ${teamBaron.EventTime}. Alive players: ${playersWithBaron.join(', ')}`);
+    const eventTime = teamBaron.EventTime;
+
+    return {
+        eventTime,
+        playersWithBaron,
+    };
 }
 
 // Calculate Elder taken
 async function getElder(team) {
     const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers;
-    const currentTime = await getGameTimeSeconds(); 
+    const allPlayers = gameData.allPlayers; 
+    const currentTime = await getGameTimeSeconds();
 
     if (!allPlayers) {
         console.error('No players found in game data');
@@ -666,12 +702,33 @@ async function getElder(team) {
         .map(player => player.riotIdGameName); 
 
     const teamElder = [...gameData.events.Events].reverse().find(event =>
-            event.EventName === "DragonKill" && 
-            event.DragonType === "Elder" &&
-            (currentTime - event.EventTime <= 150) && 
-            teamPlayers.includes(event.KillerName)
-        )
-    return teamElder ? teamElder.EventTime : null;
+        event.EventName === "DragonKill" && 
+        event.DragonType === "Elder" &&
+        (currentTime - event.EventTime <= 150) && 
+        teamPlayers.includes(event.KillerName)
+    );
+
+    if (!teamElder) {
+        return null; 
+    }
+
+    const aliveCountData = await countAlivePlayers(gameData.events.Events);
+    const alivePlayers = Object.keys(aliveCountData.aliveCount).reduce((acc, teamName) => {
+        acc[teamName] = aliveCountData.aliveCount[teamName]; 
+        return acc;
+    }, {});
+
+    const playersWithElder = allPlayers
+        .filter(player => aliveCountData.deathStats[player.riotIdGameName].deaths.every(deathTime => deathTime < teamBaron.EventTime))
+        .map(player => player.riotIdGameName);
+
+    // console.log(`Baron killed by ${teamBaron.KillerName} at ${teamElder.EventTime}. Alive players: ${playersWithElder.join(', ')}`);
+    const eventTime = teamElder.EventTime;
+
+    return {
+        eventTime,
+        playersWithElder,
+    };
 }
 
 const BRW = [10, 10, 12, 12, 14, 16, 20, 25, 28, 32.5, 35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5];
@@ -688,59 +745,62 @@ function getTimeIncreaseFactor(currentMinutes) {
     return 0.50; // Cap at 50%
 }
 
-function calculateDeathTimer(level, currentMinutes) {
+async function calculateDeathTimer(teamOrPlayerName, currentMinutes) {
+    const level = await getStats(teamOrPlayerName, "level"); // Retrieve the actual level
     const baseRespawnWait = BRW[level - 1];
     const timeIncreaseFactor = getTimeIncreaseFactor(currentMinutes);
-    return baseRespawnWait + baseRespawnWait * timeIncreaseFactor;
+    const deathTimer = baseRespawnWait + (baseRespawnWait * timeIncreaseFactor);
+
+    // console.log(`Player: ${teamOrPlayerName}, Level: ${level}, Minute: ${currentMinutes}, Base Respawn: ${baseRespawnWait}, Factor: ${timeIncreaseFactor}, Death Timer: ${deathTimer}`);
+    
+    return deathTimer;
 }
 
 async function countAlivePlayers(events) {
     const gameData = await getLiveData();
     const allPlayers = gameData.allPlayers;
-    const currentTime = await getGameTimeSeconds(); // Current game time in seconds
-    const playerDeathTimes = {}; // Track the death timer for each player
-    const aliveCount = { order: 5, chaos: 5 }; // Assume full teams initially
-
-    // Map each player to their team and level
+    const aliveCount = { order: 5, chaos: 5 };
     const playerTeams = {};
+    const deathStats = {}; // Track deaths, respawn times, and time spent dead
+
     allPlayers.forEach(player => {
-        playerTeams[player.riotIdGameName] = {
-            team: player.team.toLowerCase(), // 'order' or 'chaos'
-            level: player.level
+        const playerName = player.riotIdGameName;
+        playerTeams[playerName] = player.team.toLowerCase();
+
+        deathStats[playerName] = {
+            deaths: [],
+            respawnTimes: [],
+            timeSpentDead: 0
         };
     });
 
-    // Process each kill event to calculate death timers
-    events.forEach(event => {
+    for (const event of events) {
         if (event.EventName === "ChampionKill") {
             const victim = event.VictimName;
-            const killMinute = event.EventTime / 60; // Convert to minutes
+            const eventTime = event.EventTime;
+            const currentMinutes = eventTime / 60;
+            const victimTeam = playerTeams[victim];
 
-            // Get victim's level and team
-            const victimInfo = playerTeams[victim];
-            const victimLevel = victimInfo.level;
-            const victimTeam = victimInfo.team;
+            const deathDuration = await calculateDeathTimer(victim, currentMinutes);
+            const respawnTime = eventTime + deathDuration;
 
-            // Calculate death timer
-            const deathDuration = calculateDeathTimer(victimLevel, killMinute);
-            playerDeathTimes[victim] = event.EventTime + deathDuration;
-        }
-    });
+            // console.log(`${victim} killed at ${currentMinutes.toFixed(2)} minutes - respawning in ${deathDuration.toFixed(2)} seconds`);
 
-    // Check each player's death time against the current time
-    for (const player in playerDeathTimes) {
-        const respawnTime = playerDeathTimes[player];
-        const playerTeam = playerTeams[player].team;
-        
-        // If the player has not yet respawned, decrement alive count for their team
-        if (respawnTime > currentTime) {
-            aliveCount[playerTeam]--;
+            deathStats[victim].deaths.push(eventTime);
+            deathStats[victim].respawnTimes.push(respawnTime);
+            deathStats[victim].timeSpentDead += deathDuration;
+
+            if (respawnTime > eventTime) {
+                aliveCount[victimTeam]--;
+            }
         }
     }
 
-    //console.log(aliveCount);
-    return aliveCount;
+    // console.log("Death Stats:", deathStats); // Display death stats for debugging
+
+    return { aliveCount, deathStats };
 }
+
 
 async function multiKills(team) {
     const gameData = await getLiveData(); 
@@ -752,59 +812,46 @@ async function multiKills(team) {
         return;
     }
 
-    // Validate team input
     const validTeams = ['ORDER', 'CHAOS'];
     if (!validTeams.includes(team)) {
         console.error('Invalid team specified. Please use "ORDER" or "CHAOS".');
         return;
     }
 
-    // Get players for the specified team
     const teamPlayers = allPlayers
         .filter(player => player.team === team)
         .map(player => player.riotIdGameName); 
 
-    // Object to track multikills for the specified team
     const teamMultiKills = [];
 
-    // Iterate over the events in reverse order to find multikills
     const events = [...gameData.events.Events].reverse();
     
     for (const event of events) {
         if (event.EventName === "Multikill" && teamPlayers.includes(event.KillerName)) {
             const killer = event.KillerName;
             const eventTime = event.EventTime;
-            const killStreak = event.KillStreak; // Get the kill streak from the event
+            const killStreak = event.KillStreak;
 
             teamMultiKills.push({ killer, eventTime, killStreak });
             //console.log(`${team} team multikill by ${killer} at ${eventTime} with a kill streak of ${killStreak}`);
         }
     }
 
-    // Return multikill data for the specified team
     return teamMultiKills;
 }
-
-// Call the function for a specific team
-multiKills('CHAOS'); // Change 'CHAOS' to 'ORDER' to check for the other team
-
-
-
-
-
 
 // Helper function to get data for a given team and data type
 async function getTeamData(team, dataType) {
     const gameData = await getLiveData();
-    const alivePlayers = await countAlivePlayers(gameData.events.Events);
+    const { aliveCount } = await countAlivePlayers(gameData.events.Events);
     
     if (team === 'ORDER') {
         switch (dataType) {
-            case 'kills': return await getKills('ORDER');
-            case 'deaths': return await getDeaths('ORDER');
-            case 'assists': return await getAssists('ORDER');
-            case 'cs': return await getCS('ORDER');
-            case 'levels': return await getLevels('ORDER');
+            case 'kills': return (await getStats('ORDER', 'kills'));
+            case 'deaths': return (await getStats('ORDER', 'deaths'));
+            case 'assists': return (await getStats('ORDER', 'assists'));
+            case 'cs': return (await getStats('ORDER', 'creepScore'));
+            case 'levels': return (await getStats('ORDER', 'level'));
             case 'gold': return await getGold('ORDER');
             case 'outerTurret': return (await getTurretsKilled('ORDER',1,2)).outerTurret;
             case 'innerTurret': return (await getTurretsKilled('ORDER',1,2)).innerTurret;
@@ -813,18 +860,18 @@ async function getTeamData(team, dataType) {
             case 'totalTurret': return (await getTurretsKilled('ORDER',1,2)).total;
             case 'inhibitor' :  const { count } = await getInhibitorsKilled('ORDER',1,2); return count;
             case 'dragon': return await getDragon('ORDER');
-            case 'baron': return await getBaron('ORDER');
-            case 'elder': return await getElder('ORDER') ? 1 : 0;
-            case 'playersAlive': return alivePlayers.order;
+            case 'baron': return await getBaron('ORDER')
+            case 'elder': return await getElder('ORDER')
+            case 'playersAlive': return aliveCount.order;
             default: return 0;
         }
     } else { // CHAOS team
         switch (dataType) {
-            case 'kills': return await getKills('CHAOS');
-            case 'deaths': return await getDeaths('CHAOS');
-            case 'assists': return await getAssists('CHAOS');
-            case 'cs': return await getCS('CHAOS');
-            case 'levels': return await getLevels('CHAOS');
+            case 'kills': return (await getStats('CHAOS', 'kills'));
+            case 'deaths': return (await getStats('CHAOS', 'deaths'));
+            case 'assists': return (await getStats('CHAOS', 'assists'));
+            case 'cs': return (await getStats('CHAOS', 'creepScore'));
+            case 'levels': return (await getStats('CHAOS', 'level'));
             case 'gold': return await getGold('CHAOS');
             case 'outerTurret': return (await getTurretsKilled('CHAOS',2,1)).outerTurret;
             case 'innerTurret': return (await getTurretsKilled('CHAOS',2,1)).innerTurret;
@@ -833,9 +880,9 @@ async function getTeamData(team, dataType) {
             case 'totalTurret': return (await getTurretsKilled('CHAOS',2,1)).total;
             case 'inhibitor' :  const { count } = await getInhibitorsKilled('CHAOS',2,1); return count;
             case 'dragon': return await getDragon('CHAOS');
-            case 'baron': return await getBaron('CHAOS');
-            case 'elder': return await getElder('CHAOS') ? 1 : 0;
-            case 'playersAlive': return alivePlayers.chaos;
+            case 'baron': return await getBaron('CHAOS')
+            case 'elder': return await getElder('CHAOS')
+            case 'playersAlive': return aliveCount.chaos;
             default: return 0;
         }
     }
@@ -844,6 +891,7 @@ async function getTeamData(team, dataType) {
 // Main function to calculate win probability
 async function calculateWinProbability() {
     const activePlayerTeam = await getActivePlayerTeam();
+
     const opposingTeam = activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER';
 
     const activeAlive = await getTeamData(activePlayerTeam, 'playersAlive');
@@ -902,9 +950,16 @@ async function calculateWinProbability() {
     const dragonRatio = activeDragon / (activeDragon + opposingDragon || 1);
     const dragonSoul = activeDragon >= 4;
 
-    const baronBuff = await getTeamData(activePlayerTeam, 'baron') ? 1 : 0;
-    const elderBuff = await getTeamData(activePlayerTeam, 'elder');
-
+    const baronBuffAlivePlayers = await getTeamData(activePlayerTeam, 'baron');
+    let baronBuff = 0; // Default to 0 if no data
+    if (baronBuffAlivePlayers !== null) {
+        baronBuff = baronBuffAlivePlayers.playersWithBaron.length / activePlayerTeam.length;
+    }
+    const elderBuffAlivePlayers = await getTeamData(activePlayerTeam, 'elder');
+    let elderBuff = 0; // Default to 0 if no data
+    if (elderBuffAlivePlayers !== null) {
+        elderBuff = elderBuffAlivePlayers.playersWithElder.length / activePlayerTeam.length;
+    }
     const gameTime = await getGameTimeSeconds();
 
     // Weights for each metric (early, mid, late)
@@ -915,10 +970,10 @@ async function calculateWinProbability() {
         ,assists: 0.2
         ,cs: 0.4
         ,gold: 0.4
-        ,outerTurret: 0.1
-        ,innerTurret: 0.15
+        ,outerTurret: 0.15
+        ,innerTurret: 0.175
         ,inhibTurret: 0.2
-        ,nexusTurret: 0.25
+        ,nexusTurret: 0.225
         ,dragon: 0.05
         ,dragonSoul: 0.00
         ,baron: 0.00
@@ -936,10 +991,10 @@ async function calculateWinProbability() {
         ,assists: 0.1
         ,cs: 0.3
         ,gold: 0.3
-        ,outerTurret: 0.15
-        ,innerTurret: 0.2
-        ,inhibTurret: 0.25
-        ,nexusTurret: 0.3
+        ,outerTurret: 0.1
+        ,innerTurret: 0.125
+        ,inhibTurret: 0.15
+        ,nexusTurret: 0.175
         ,dragon: 0.1
         ,dragonSoul: 0.2
         ,baron: 0.15
@@ -947,20 +1002,20 @@ async function calculateWinProbability() {
         ,levels: 0.2
         ,players: 0.325
         ,harold: .2
-        ,inhibitor: .2
+        ,inhibitor: .15
     };
 
     //Late Game
     const lateGameWeights = {
-        kills: 0.2
+        kills: 0.15
         ,deaths: 0.2
-        ,assists: 0.1
-        ,cs: 0.2
-        ,gold: 0.2
-        ,outerTurret: 0.2
-        ,innerTurret: 0.25
-        ,inhibTurret: 0.3
-        ,nexusTurret: 0.35
+        ,assists: 0.15
+        ,cs: 0.125
+        ,gold: 0.125
+        ,outerTurret: 0.1
+        ,innerTurret: 0.125
+        ,inhibTurret: 0.15
+        ,nexusTurret: 0.175
         ,dragon: 0.2
         ,dragonSoul: 0.4
         ,baron: 0.25
@@ -968,7 +1023,7 @@ async function calculateWinProbability() {
         ,levels: 0.1
         ,players: 0.5
         ,harold: .15
-        ,inhibitor: .25
+        ,inhibitor: .2
     };
 
     // Calculate weighted score
@@ -1032,23 +1087,23 @@ async function calculateWinProbability() {
         + aliveRatio * lateGameWeights.players
     );
 
-        // console.log('activeteam:', (activePlayerTeam));
-        // console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
-        // console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
-        // console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
-        // console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
-        // console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
-        // console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
-        // console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
-        // console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
-        // console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
-        // console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
-        // console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
-        // console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
-        // console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
-        // console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
-        // console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
-        // console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
+        console.log('activeteam:', (activePlayerTeam));
+        console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
+        console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
+        console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
+        console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
+        console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
+        console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
+        console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
+        console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
+        console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
+        console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
+        console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
+        console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
+        console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
+        console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
+        console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
+        console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
         
 
     //return ((activePlayerTeam === 'ORDER' ? winProbability : opposingTeamProbability) * 100).toFixed(2);
@@ -1076,7 +1131,7 @@ async function calculateWinProbability() {
 
         // console.log('Late Game');
         // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
-        // console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
+        console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
         return (winProbability * 100).toFixed(2);
     }
@@ -1109,7 +1164,9 @@ async function shouldForfeit() {
         return `You literaly cannot FF at ${gameTime}. Wait until 10m`
     } else if (gameResult === 'Lose') {
         return "Game Over: You Lost."
-    } else if (gameResult === 'Win') {
+    } else if (gameResult === 'Lose' && winProbability > 95) {
+        return "Game Over: You Lost. How did you manage that?"
+    }else if (gameResult === 'Win') {
         return "Game Over: You Won!"
     }   else if ((gameMode === 'TUTORIAL' ||
         gameMode === 'PRACTICETOOL')
@@ -1122,16 +1179,16 @@ async function shouldForfeit() {
     } else if (winProbability >= 40 && winProbability < 60) {
         return "It's a close one"
     } else if (winProbability >= 60 && winProbability < 80) {
-        return "You're team is looking like it should win"
+        return `You're team is looking like it should win ${winProbability}%`
     } else if (winProbability >= 80 && winProbability < 95) {
-        return "You should win, just don't throw"
+        return `You should win, just don't throw ${winProbability}%`
     } else if (winProbability >= 95) {
         return `Your victory is near with a <strong>${winProbability}%</strong> chance of winning. Just don't throw.`
     } 
 }
 
 async function analysis() {
-    
+
 }
 
 // Update all stats differences, including win probability, and display in the DOM
@@ -1142,14 +1199,14 @@ async function updateAllStatsInDOM() {
     const gameTime = await getGameTime();
     const gameTimeInSeconds = await getGameTimeSeconds();
     //console.log('gametimeseconds:',gameTimeInSeconds);
-    const orderkills = await getKills('ORDER');
-    const chaosKills = await getKills('CHAOS');
-    const orderdeaths = await getDeaths('ORDER');
-    const chaosdeaths = await getDeaths('CHAOS');
-    const orderAssists = await getAssists('ORDER');
-    const chaosAssists = await getAssists('CHAOS');
-    const orderCS = await getCS('ORDER');
-    const chaosCS = await getCS('CHAOS');
+    const orderkills = await (getStats('ORDER','kills'));
+    const chaosKills = await (getStats('CHAOS','kills'));
+    const orderdeaths = await (getStats('ORDER','deaths'));
+    const chaosdeaths = await (getStats('CHAOS','deaths'));
+    const orderAssists = await (getStats('ORDER','assists'));
+    const chaosAssists = await (getStats('CHAOS','assists'));
+    const orderCS = await (getStats('ORDER','creepScore'));
+    const chaosCS = await (getStats('CHAOS','creepScore'));
     const orderGold = await getGold('ORDER');
     const chaosGold = await getGold('CHAOS');
     const orderDragon = await getDragon('ORDER');
@@ -1166,13 +1223,13 @@ async function updateAllStatsInDOM() {
     const { count: orderInhibitor } = await getInhibitorsKilled('ORDER',1,2);
     const { count: chaosInhibitor } = await getInhibitorsKilled('CHAOS',2,1);
 
-    const orderBaronBuff = await getBaron('ORDER');
-    const orderBaronBuffTimer =  `${Math.floor(((orderBaronBuff + baronBuff) - gameTimeInSeconds)/60)}m ${(((orderBaronBuff + baronBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
-    const chaosBaronBuff = await getBaron('CHAOS');
-    const chaosBaronBuffTimer =  `${Math.floor(((chaosBaronBuff + baronBuff) - gameTimeInSeconds)/60)}m ${(((chaosBaronBuff + baronBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
-    const orderElderBuff = await getElder('ORDER');
+    const orderBaronBuff = await getBaron('ORDER') === null ? '' : await getBaron('ORDER');
+    const orderBaronBuffTimer =  `${Math.floor(((orderBaronBuff.eventTime + baronBuff) - gameTimeInSeconds)/60)}m ${(((orderBaronBuff.eventTime + baronBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
+    const chaosBaronBuff = await getBaron('CHAOS')=== null ? '' : await getBaron('CHAOS');;
+    const chaosBaronBuffTimer =  `${Math.floor(((chaosBaronBuff.eventTime + baronBuff) - gameTimeInSeconds)/60)}m ${(((chaosBaronBuff.eventTime + baronBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
+    const orderElderBuff = await getElder('ORDER') === null ? '' : await getElder('ORDER');
     const orderElderBuffTimer = `${Math.floor(((orderElderBuff + elderBuff) - gameTimeInSeconds)/60)}m ${(((orderElderBuff + elderBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
-    const chaosElderBuff = await getElder('CHAOS');
+    const chaosElderBuff = await getElder('CHAOS') === null ? '' : await getElder('CHAOS');
     const chaosElderBuffTimer = `${Math.floor(((chaosElderBuff + elderBuff) - gameTimeInSeconds)/60)}m ${(((chaosElderBuff + elderBuff) - gameTimeInSeconds) % 60).toFixed(0)}s`;
     const winProbability = await calculateWinProbability();
         //console.log('Calculated Win Probability:', winProbability);
@@ -1203,7 +1260,7 @@ async function updateAllStatsInDOM() {
         : '';
 
 
-
+    // removed CS
     const statsHtml = `
     <div class="middle-container">
         <div class="stats-win-container">
@@ -1211,7 +1268,6 @@ async function updateAllStatsInDOM() {
                 <div class="stat-entry"><p class="team-value">${orderkills}</p><p class="stat-name">Kills</p><p class="team-value">${chaosKills}</p></div>
                 <div class="stat-entry"><p class="team-value">${orderdeaths}</p><p class="stat-name">Deaths</p><p class="team-value">${chaosdeaths}</p></div>
                 <div class="stat-entry"><p class="team-value">${orderAssists}</p><p class="stat-name">Assists</p><p class="team-value">${chaosAssists}</p></div>
-                <div class="stat-entry"><p class="team-value">${orderCS}</p><p class="stat-name">CS</p><p class="team-value">${chaosCS}</p></div>
                 <div class="stat-entry"><p class="team-value">${orderGold}</p><p class="stat-name">Gold</p><p class="team-value">${chaosGold}</p></div>
                 <div class="stat-entry"><p class="team-value">${orderTurret}</p><p class="stat-name">Turrets</p><p class="team-value">${chaosTurret}</p></div>
                 <div class="stat-entry"><p class="team-value">${orderInhibitor}</p><p class="stat-name">Inhibitors</p><p class="team-value">${chaosInhibitor}</p></div>        
@@ -1221,8 +1277,7 @@ async function updateAllStatsInDOM() {
                 ${elderBuffHTML}
             </div>
             <div class="chart-container">
-                <p>PLACEHOLDER FOR WIN PROBABILITY CHART</p>
-                <canvas id="myChart" width="800" height="400"></canvas>
+                <p>WIN PROBABILITY CHART PLACEHOLDER</p>
             </div>
         </div>
         <div class="probability-container">
@@ -1230,8 +1285,34 @@ async function updateAllStatsInDOM() {
         </div> 
     </div>
     `;
+    // Has CS
+    // const statsHtml = `
+    // <div class="middle-container">
+    //     <div class="stats-win-container">
+    //         <div class="stats-container">
+    //             <div class="stat-entry"><p class="team-value">${orderkills}</p><p class="stat-name">Kills</p><p class="team-value">${chaosKills}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderdeaths}</p><p class="stat-name">Deaths</p><p class="team-value">${chaosdeaths}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderAssists}</p><p class="stat-name">Assists</p><p class="team-value">${chaosAssists}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderCS}</p><p class="stat-name">CS</p><p class="team-value">${chaosCS}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderGold}</p><p class="stat-name">Gold</p><p class="team-value">${chaosGold}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderTurret}</p><p class="stat-name">Turrets</p><p class="team-value">${chaosTurret}</p></div>
+    //             <div class="stat-entry"><p class="team-value">${orderInhibitor}</p><p class="stat-name">Inhibitors</p><p class="team-value">${chaosInhibitor}</p></div>        
+    //             <div class="stat-entry"><p class="team-value">${orderDragon}</p><p class="stat-name">Dragons</p><p class="team-value">${chaosDragon}</p></div>
+    //             ${dragonSoulHTML}
+    //             ${baronHTML}
+    //             ${elderBuffHTML}
+    //         </div>
+    //         <div class="chart-container">
+    //             <p>WIN PROBABILITY CHART PLACEHOLDER</p>
+    //         </div>
+    //     </div>
+    //     <div class="probability-container">
+    //             <div class="should-ff-text">${ffText}</div>
+    //     </div> 
+    // </div>
+    // `;
     //<div class="stat-entry"><p class="stat-name">Your team has a </p><p class="team-value">${winProbability}%</p> <p class="stat-name">of winning</p></div>
-
+    
     //<button id="refresh-button" onclick="refreshPage()">Refresh</button>  <--- removed button, using auto refresh
 updateTeamStatsInDOM(statsHtml);
 
@@ -1274,4 +1355,3 @@ async function autoRefresh() {
 }
 
 autoRefresh();
-
