@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LoL Stats</title>
+    <link rel="stylesheet" href="analysis-styles.css">
+
+</head>
+<body>
+    <div class="container">
+        <select id="region">
+            <option value="americas" selected>Americas</option>
+            <option value="asia">Asia</option>
+            <option value="europe">Europe</option>
+            <option value="sea">SEA</option>
+        </select>
+        <input type="text" id="summonerName" placeholder="Summoner Name">
+        <input type="text" id="tagLine" placeholder="#NA1">
+        <button id="fetchStatsButton">Fetch Stats</button>
+        <div id="output"></div>
+    </div>
+    <script src="stats.js"></script>
+</body>
+</html>

@@ -17,7 +17,7 @@ function createWindow() {
     });
 
     win.loadFile(path.join('public', 'index.html'));
-	//win.setMenu(null)
+	win.setMenu(null)
 }
 
 

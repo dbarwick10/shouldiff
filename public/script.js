@@ -16,13 +16,13 @@ async function getLiveData() {
     }
     try {
         // Fetch the data from allgamedata.json for testing
-        //const response = await fetch('/test/allgamedata.json');
+        const response = await fetch('/test/allgamedata.json');
         
-        const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+        // const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        // });
 
         if (response.ok) {
             
@@ -357,12 +357,23 @@ async function getGold(teamOrPlayerName) {
         return;
     }
     
-    // Function to get item prices from the items data
+    const getVersion = async () => {
+        
+        const response = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
+        const data = await response.json();
+        const version = data[0]; 
+        // console.log('version: ',version)
+        return version;
+    };
+
     const getItemPrices = async () => {
+        const version = await getVersion();
+        console.log('version: ',version)
+
         if (!itemPricesCache) {
-            const itemDataResponse = await fetch('https://ddragon.leagueoflegends.com/cdn/14.21.1/data/en_US/item.json');
+            const itemDataResponse = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/item.json`);
             const itemData = await itemDataResponse.json();
-            itemPricesCache = itemData.data; // Cache the item data mapping itemID to price
+            itemPricesCache = itemData.data;
             // console.log('Item prices fetched and cached.');
         } else {
             // console.log('Using cached item prices.');
@@ -380,8 +391,8 @@ async function getGold(teamOrPlayerName) {
         // Return total gold for the specific player based on their items
         const totalGold = specificPlayer.items.reduce((totalGold, item) => {
             if (item.itemID && itemPrices[item.itemID]) {
-                const itemPrice = itemPrices[item.itemID].gold.base || 0; // Get base price of the item
-                const itemName = itemPrices[item.itemID].name; // Get the item name
+                const itemPrice = itemPrices[item.itemID].gold.base || 0;
+                const itemName = itemPrices[item.itemID].name;
                 totalGold += itemPrice;
                 //console.log(`Item ID: ${item.itemID}, Item Name: ${itemName}, Item Cost: ${itemPrice}`); // Log item details
             } else {
@@ -1007,11 +1018,11 @@ async function calculateWinProbability() {
 
     //Late Game
     const lateGameWeights = {
-        kills: 0.15
+        kills: 0.2
         ,deaths: 0.2
-        ,assists: 0.15
-        ,cs: 0.125
-        ,gold: 0.125
+        ,assists: 0.1
+        ,cs: 0.2
+        ,gold: 0.2
         ,outerTurret: 0.1
         ,innerTurret: 0.125
         ,inhibTurret: 0.15
@@ -1087,23 +1098,23 @@ async function calculateWinProbability() {
         + aliveRatio * lateGameWeights.players
     );
 
-        console.log('activeteam:', (activePlayerTeam));
-        console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
-        console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
-        console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
-        console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
-        console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
-        console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
-        console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
-        console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
-        console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
-        console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
-        console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
-        console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
-        console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
-        console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
-        console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
-        console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
+        // console.log('activeteam:', (activePlayerTeam));
+        // console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
+        // console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
+        // console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
+        // console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
+        // console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
+        // console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
+        // console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
+        // console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
+        // console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
+        // console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
+        // console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
+        // console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
+        // console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
+        // console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
+        // console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
+        // console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
         
 
     //return ((activePlayerTeam === 'ORDER' ? winProbability : opposingTeamProbability) * 100).toFixed(2);
@@ -1164,9 +1175,7 @@ async function shouldForfeit() {
         return `You literaly cannot FF at ${gameTime}. Wait until 10m`
     } else if (gameResult === 'Lose') {
         return "Game Over: You Lost."
-    } else if (gameResult === 'Lose' && winProbability > 95) {
-        return "Game Over: You Lost. How did you manage that?"
-    }else if (gameResult === 'Win') {
+    } else if (gameResult === 'Win') {
         return "Game Over: You Won!"
     }   else if ((gameMode === 'TUTORIAL' ||
         gameMode === 'PRACTICETOOL')
@@ -1179,9 +1188,9 @@ async function shouldForfeit() {
     } else if (winProbability >= 40 && winProbability < 60) {
         return "It's a close one"
     } else if (winProbability >= 60 && winProbability < 80) {
-        return `You're team is looking like it should win ${winProbability}%`
+        return "You're team is looking like it should win"
     } else if (winProbability >= 80 && winProbability < 95) {
-        return `You should win, just don't throw ${winProbability}%`
+        return "You should win, just don't throw"
     } else if (winProbability >= 95) {
         return `Your victory is near with a <strong>${winProbability}%</strong> chance of winning. Just don't throw.`
     } 
