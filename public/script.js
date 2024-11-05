@@ -16,13 +16,13 @@ async function getLiveData() {
     }
     try {
         // Fetch the data from allgamedata.json for testing
-        const response = await fetch('/test/allgamedata.json');
+        // const response = await fetch('/test/allgamedata.json');
         
-        // const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        // });
+        const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
         if (response.ok) {
             
