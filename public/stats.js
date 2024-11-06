@@ -56,7 +56,8 @@ async function fetchMatchStats() {
         const playerStats = calculatePlayerStats(matchStats, puuid);
         const teamStats = calculateTeamStats(matchStats, puuid);
         const enemyTeamStats = calculateEnemyTeamStats(matchStats, puuid);
-
+        
+        console.log(`Found data from ${matchStats.length} matches.`)
         displayStats(playerStats, teamStats, enemyTeamStats);
         
     } catch (error) {
