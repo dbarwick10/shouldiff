@@ -1,22 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>LoL Stats</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League of Legends Stats</title>
     <link rel="stylesheet" href="analysis-styles.css">
-
 </head>
 <body>
     <div class="container">
-        <select id="region">
-            <option value="americas" selected>Americas</option>
-            <option value="asia">Asia</option>
-            <option value="europe">Europe</option>
-            <option value="sea">SEA</option>
-        </select>
-        <input type="text" id="summonerName" placeholder="Summoner Name">
-        <input type="text" id="tagLine" placeholder="#NA1">
-        <button id="fetchStatsButton">Fetch Stats</button>
-        <div id="output"></div>
+        <h1>League of Legends Game Stats</h1>
+        <div class="input-section">
+            <input type="text" id="summonerName" placeholder="Enter Summoner Name">
+            <input type="text" id="tagLine" placeholder="Enter Tagline">
+            <input type="text" id="region" placeholder="Enter Region">
+            <button id="fetchStatsButton">Fetch Stats</button>
+        </div>
+        <div id="output-container">
+            <table id="output">
+                <thead>
+                    <tr>
+                        <th>Stats</th>
+                        <th>Games</th>
+                        <th>KDA</th>
+                        <th>Level</th>
+                        <th>Item Gold</th>
+                        <th>Time Spent Dead</th>
+                        <th>Turrets Killed</th>
+                        <th>Inhibitors Killed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Stats data will be populated here -->
+                </tbody>
+            </table>
+        </div>
     </div>
     <script src="stats.js"></script>
 </body>

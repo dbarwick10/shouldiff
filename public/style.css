@@ -1,89 +1,282 @@
-/* General body styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    line-height: 1.6;
+html, body {
+    height: 100%;
     margin: 0;
-    padding: 20px;
+    padding: 0;
 }
 
-/* Output container */
-#output {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-top: 20px;
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Beaufort for LoL', Arial, sans-serif; /* Use LoL-inspired fonts */
 }
 
-/* Table styles */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-}
-
-table th,
-table td {
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-}
-
-table th {
-    background-color: #007bff;
-    color: white;
-    text-transform: uppercase;
-}
-
-table tr:hover {
-    background-color: #f1f1f1;
-}
-
-h3 {
-    margin-top: 0;
-    color: #007bff;
-}
-
-/* Total games summary */
-h4 {
-    margin: 10px 0;
-    font-weight: normal;
-    color: #555;
-}
-
-/* Button styles */
-button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 15px;
-    cursor: pointer;
+/* Body Background */
+body {
+    background: linear-gradient(120deg, #2b2d42, #0d0d12); /* Dark gradient for background */
+    color: #d6d6e5;
     font-size: 16px;
+    line-height: 1.6;
+    background-size: cover;
+    align-content: center;
+    width: 100%;
+}
+
+/* Headings */
+h1, h2 {
+    color: #d4af37; /* Gold-inspired headings to give it a luxurious, victorious look */
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 2em;
+    display: none;
+    padding-left: 2.5%;
+}
+
+/* Flex Container for Tables */
+.table-container {
+    display: flex; /* Ensure the tables are displayed side by side */
+    justify-content: space-between; /* Optional: evenly space the tables */
+    width: 100%;
+}
+
+#not-in-a-game {
+    color: #d4af37; /* Gold-inspired headings to give it a luxurious, victorious look */
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 2em;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Ensure tables have equal size */
+table {
+    flex: 1; /* Allow tables to grow equally */
+    margin: 0 10px; /* Adjusted margin for spacing between tables */
+    border-collapse: collapse; /* Collapses borders between cells */
+    width: 100%;
+}
+
+/* Table Header and Cell Styling */
+th, td {
+    padding: 6px; /* Add padding for better spacing */
+    text-align: left; /* Align text to the left */
+}
+
+#chaos-list th{
+    background-color: rgba(13, 13, 18, 0.6);
+    color: #c1221a;
+    font-weight: bold;
+    border-bottom: 1px solid #444;
+    text-wrap: balance;
+}
+
+#order-list th{
+    background-color: rgba(13, 13, 18, 0.6);
+    color: #0073a4;
+    font-weight: bold;
+    border-bottom: 1px solid #444;
+    text-wrap: balance;
+}
+
+/* Styling for the table cells */
+td {
+    background-color: rgba(28, 36, 52, 0.85);
+    color: #a0aec0;
+    border-bottom: 1px solid #444;
+    text-shadow: 1px 1px 2px black;
+    border-right: 1px solid black;
+}
+
+/* Alternate row colors */
+tr:nth-child(odd) td {
+    background-color: rgba(255, 255, 255, 0.05); /* Slight color contrast between rows */
+}
+
+/* Highlight row on hover */
+tr:hover td {
+    background-color: rgba(114, 137, 218, 0.2); /* Highlight row on hover */
+}
+
+/* Set fixed column widths for both tables to ensure they are identical */
+#order-list th:nth-child(1),
+#chaos-list th:nth-child(1),
+#order-list td:nth-child(1),
+#chaos-list td:nth-child(1) {
+    width: 27%; /* Player */
+}
+
+#order-list th:nth-child(2),
+#chaos-list th:nth-child(2),
+#order-list td:nth-child(2),
+#chaos-list td:nth-child(2) {
+    width: 17%; /* Champion */
+}
+
+#order-list th:nth-child(3),
+#chaos-list th:nth-child(3),
+#order-list td:nth-child(3),
+#chaos-list td:nth-child(3) {
+    width: 14%; /* K/D/A */
+}
+
+#order-list th:nth-child(4),
+#chaos-list th:nth-child(4),
+#order-list td:nth-child(4),
+#chaos-list td:nth-child(4) {
+    width: 14%; /* CS */
+}
+
+#order-list th:nth-child(5),
+#chaos-list th:nth-child(5),
+#order-list td:nth-child(5),
+#chaos-list td:nth-child(5) {
+    width: 14%; /* Gold */
+}
+
+#order-list th:nth-child(6),
+#chaos-list th:nth-child(6),
+#order-list td:nth-child(6),
+#chaos-list td:nth-child(6) {
+    width: 14%; /* Gold */
+}
+
+
+/* Ensure tables do not stretch beyond a certain width */
+table {
+    width: 50%; /* Adjust as needed for each table */
+    margin: 5px; /* Remove margin from tables for better alignment */
+}
+
+/* Glowing Button for Refresh or Fetch Data */
+button {
+    background: #414a6b;
+    border: 2px solid #7289da;
+    color: #d4af37;
+    padding: 10px 20px 10px 20px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #3b3e58;
+    box-shadow: 0 0 12px rgba(114, 137, 218, 0.8);
+    color: #ffffff;
 }
 
-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
+/* Win Probability Glow Effect */
+/*#compare-team-stats p:last-child {
+    font-size: 1.4em;
+    color: #37d4af;
+    text-shadow: 0 0 8px rgba(55, 212, 175, 0.8), 0 0 15px rgba(55, 212, 175, 0.5);
+    font-weight: bold;
+}*/
 
-/* Input styles */
-input {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
+.middle-container {
+    display: flex;
+    flex-direction: row;
     width: 100%;
-    max-width: 300px;
-    margin-bottom: 10px;
+    height: 250px;
+    padding: 0 5px;
+    gap: 5px;
+    justify-content: center;
 }
 
-input:focus {
-    outline: none;
-    border-color: #007bff;
+.stats-win-container {
+    display: flex;
+    flex-direction: column;
+    width: 75%;
+    gap: 5px;
+    flex: 2;
+}
+
+.stats-container,
+.chart-container {
+    display: flex;
+    justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: calc(5px + 0.5vw);
+    text-align: center;
+    width: 100%;
+    border: 1px solid #414a6b;
+    border-radius: 5px;
+    padding: 10px 6px;
+}
+
+.stats-container {
+    height: 45%;
+}
+
+.chart-container {
+    height: 55%
+}
+
+.probability-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 25%;
+    border: 1px solid #414a6b;
+    border-radius: 5px;
+    padding: 8px;
+    gap: 25px;
+    flex: 1;
+}
+
+.stat-name {
+    font-size: 1rem;
+    color: gray;
+    margin: 4px 0;
+}
+
+.parent {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    display: none;
+    padding-left: 10%;
+    padding-right: 5%;
+}
+
+/* Animations for the Container */
+#compare-team-stats {
+    animation: fadeIn 1.5s ease;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0d0d12; /* Dark track */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #414a6b; /* Styled thumb with dark blue */
+    border-radius: 6px;
+    border: 3px solid #0d0d12; /* Padding for contrast */
+}
+
+/* Add a subtle glowing effect on hover */
+button:hover, p:hover {
+    text-shadow: 0 0 1px #f0f0f0, 0 0 1px #d4af37;
 }
