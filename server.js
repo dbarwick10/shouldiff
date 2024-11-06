@@ -81,7 +81,7 @@ app.get('/api/match-stats', async (req, res) => {
     }
 
     try {
-        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=20&api_key=${RIOT_API_KEY}`;
+        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=35&api_key=${RIOT_API_KEY}`;
         console.log('Fetching match IDs from Riot API');
         
         const matchIdsResponse = await fetch(matchIdsUrl);

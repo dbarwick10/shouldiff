@@ -39,16 +39,14 @@ async function fetchMatchStats() {
         }
 
         document.getElementById('output').innerHTML = `
-                <div class="loading-indicator">Fetching Game Data
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
-                </div>`;
+                <div class="saving"><strong>Fetching Previous Game Data</strong>
+                <span>.</span><span>.</span><span>.</span></div>
+                `;
 
             console.log('Fetching match stats...');
             const response = await fetch(`http://localhost:3000/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
             // console.log('Match stats fetched:', await response.json()); // This will log the result of match stats
-                
+
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch match stats: ${errorText}`);
@@ -67,21 +65,24 @@ async function fetchMatchStats() {
     }
 }
 
-// Function to safely calculate player stats with checks and debugging logs
 function calculatePlayerStats(matchStats, puuid) {
     const playerStats = {
         wins: [],
         losses: [],
         surrenderWins: [],
         surrenderLosses: [],
+        winTime: [],
+        lossTime: [],
+        surrenderWinTime: [],
+        surrenderLossTime: []
     };
 
     matchStats.forEach(match => {
         const player = match.info.participants.find(p => p.puuid === puuid);
         if (!player) return;
 
-        // Calculate KDA as (kills + assists) / deaths
         const kda = (player.kills + player.assists) / (player.deaths || 1);
+        const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000;
 
         const gameData = {
             kda: kda,
@@ -89,28 +90,49 @@ function calculatePlayerStats(matchStats, puuid) {
             itemGold: player.goldSpent,
             timeSpentDead: player.totalTimeSpentDead || 0,
             turretsKilled: player.turretKills || 0,
-            inhibitorsKilled: player.inhibitorKills || 0
+            inhibitorsKilled: player.inhibitorKills || 0,
+            gameDuration: gameDuration
         };
 
         if (player.win) {
             playerStats.wins.push(gameData);
+            playerStats.winTime.push(gameDuration);
         } else {
             playerStats.losses.push(gameData);
+            playerStats.lossTime.push(gameDuration);
         }
 
         if (player.gameEndedInSurrender) {
-            if (!player.win) {
-                playerStats.surrenderLosses.push(gameData);
-            } else {
+            if (player.win) {
                 playerStats.surrenderWins.push(gameData);
+                playerStats.surrenderWinTime.push(gameDuration);
+            } else {
+                playerStats.surrenderLosses.push(gameData);
+                playerStats.surrenderLossTime.push(gameDuration);
             }
         }
     });
 
+    // Calculate average times
+    const calculateAverage = (times) => {
+        const sum = times.reduce((a, b) => a + b, 0);
+        return (sum / times.length) || 0;
+    };
+
+    playerStats.averageWinTime = calculateAverage(playerStats.winTime);
+    playerStats.averageLossTime = calculateAverage(playerStats.lossTime);
+    playerStats.averageSurrenderWinTime = calculateAverage(playerStats.surrenderWinTime);
+    playerStats.averageSurrenderLossTime = calculateAverage(playerStats.surrenderLossTime);
+
+    playerStats.winTime = `${(playerStats.averageWinTime / 60).toFixed(0)}m ${(playerStats.averageWinTime % 60).toFixed(0)}s`
+    playerStats.lossTime = `${(playerStats.averageLossTime / 60).toFixed(0)}m ${(playerStats.averageLossTime % 60).toFixed(0)}s`
+    playerStats.surrenderWinTime = `${(playerStats.averageSurrenderWinTime / 60).toFixed(0)}m ${(playerStats.averageSurrenderWinTime % 60).toFixed(0)}s`
+    playerStats.surrenderLossTime = `${(playerStats.averageSurrenderLossTime / 60).toFixed(0)}m ${(playerStats.averageSurrenderLossTime % 60).toFixed(0)}s`
+
     return playerStats;
 }
 
-// Function to calculate team stats
+
 function calculateTeamStats(matchStats, puuid) {
     const teamStats = {
         wins: [],
@@ -124,8 +146,8 @@ function calculateTeamStats(matchStats, puuid) {
         if (!player) return;
 
         const playerTeam = match.info.participants.filter(p => p.teamId === player.teamId);
+        const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000
 
-        // Calculate team KDA
         const teamGameData = {
             kda: playerTeam.reduce((sum, teammate) => sum + (teammate.kills + teammate.assists) / (teammate.deaths || 1), 0) / playerTeam.length,
             level: playerTeam.reduce((sum, teammate) => sum + teammate.champLevel, 0) / playerTeam.length,
@@ -133,6 +155,7 @@ function calculateTeamStats(matchStats, puuid) {
             timeSpentDead: playerTeam.reduce((sum, teammate) => sum + (teammate.totalTimeSpentDead || 0), 0) / playerTeam.length,
             turretsKilled: playerTeam.reduce((sum, teammate) => sum + (teammate.turretKills || 0), 0),
             inhibitorsKilled: playerTeam.reduce((sum, teammate) => sum + (teammate.inhibitorKills || 0), 0),
+            gameDuration: gameDuration // Include game duration in seconds
         };
 
         const team = match.info.teams.find(t => t.teamId === player.teamId);
@@ -154,7 +177,6 @@ function calculateTeamStats(matchStats, puuid) {
     return teamStats;
 }
 
-// Function to calculate enemy team stats
 function calculateEnemyTeamStats(matchStats, puuid) {
     const enemyTeamStats = {
         wins: [],
@@ -167,10 +189,9 @@ function calculateEnemyTeamStats(matchStats, puuid) {
         const player = match.info.participants.find(p => p.puuid === puuid);
         if (!player) return;
 
-        // Find the enemy team players by selecting participants not on the player's team
         const enemyTeam = match.info.participants.filter(p => p.teamId !== player.teamId);
+        const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000
 
-        // Calculate enemy team stats including KDA
         const enemyTeamGameData = {
             kda: enemyTeam.reduce((sum, enemy) => sum + (enemy.kills + enemy.assists) / (enemy.deaths || 1), 0) / enemyTeam.length,
             level: enemyTeam.reduce((sum, enemy) => sum + enemy.champLevel, 0) / enemyTeam.length,
@@ -178,6 +199,7 @@ function calculateEnemyTeamStats(matchStats, puuid) {
             timeSpentDead: enemyTeam.reduce((sum, enemy) => sum + (enemy.totalTimeSpentDead || 0), 0) / enemyTeam.length,
             turretsKilled: enemyTeam.reduce((sum, enemy) => sum + (enemy.turretKills || 0), 0),
             inhibitorsKilled: enemyTeam.reduce((sum, enemy) => sum + (enemy.inhibitorKills || 0), 0),
+            gameDuration: gameDuration // Add game duration in seconds
         };
 
         const enemyTeamResult = match.info.teams.find(t => t.teamId !== player.teamId);
@@ -199,7 +221,8 @@ function calculateEnemyTeamStats(matchStats, puuid) {
     return enemyTeamStats;
 }
 
-function generateRow(category, section) {
+
+function generateRow(category, section, playerStats, teamStats, enemyTeamStats) {
     const stats = section.data[category];
     let count;
 
@@ -209,19 +232,21 @@ function generateRow(category, section) {
         count = Object.keys(stats).length;
     }
 
-    // Calculate averages using the stats array or object
+    // Calculate averages for each stat and game time in minutes:seconds
     const avgKDA = calculateAverage(stats, 'kda');
     const avgLevel = calculateAverage(stats, 'level');
     const avgItemGold = calculateAverage(stats, 'itemGold');
     const avgTimeSpentDead = calculateAverage(stats, 'timeSpentDead');
     const avgTurretsKilled = calculateAverage(stats, 'turretsKilled');
     const avgInhibitorsKilled = calculateAverage(stats, 'inhibitorsKilled');
+    const avgGameTimeSeconds = calculateAverage(stats, 'gameDuration');
+    const avgGameTimeMinutes = Math.floor(avgGameTimeSeconds / 60);
+    const avgGameTimeRemainderSeconds = Math.floor(avgGameTimeSeconds % 60);
 
     return `
         <tr>
             <td>${capitalize(category)}</td>
             <td>${section.name}</td>
-            <td>${count}</td>
             <td>${avgKDA.toFixed(2)}</td>
             <td>${avgLevel.toFixed(2)}</td>
             <td>${avgItemGold.toFixed(0)}</td>
@@ -230,6 +255,7 @@ function generateRow(category, section) {
             <td>${avgInhibitorsKilled.toFixed(2)}</td>
         </tr>`;
 }
+
 
 function calculateAverage(stats, key) {
     if (Array.isArray(stats)) {
@@ -244,27 +270,62 @@ function capitalize(str) {
 }
 
 function displayStats(playerStats, teamStats, enemyTeamStats) {
-    const output = document.getElementById('output');
+    const summonerName = document.getElementById('summonerName').value;
+    const output = document.getElementById('output'); 
+    const playerSummary = document.getElementById('player-summary');
     
+    // Calculate player stats summary
+    const playerWins = playerStats.wins.length;
+    const playerLosses = playerStats.losses.length;
+    const playerSurrenderWins = playerStats.surrenderWins.length;
+    const playerSurrenderLosses = playerStats.surrenderLosses.length;
+    const winTime = playerStats.winTime;
+    const lossTime = playerStats.lossTime;
+    const surrenderWinTime = playerStats.surrenderWinTime;
+    const surrenderLossTime = playerStats.surrenderLossTime;
+
+    const summaryItems = [
+        { label: "Wins", count: playerWins, time: winTime },
+        { label: "Losses", count: playerLosses, time: lossTime },
+        { label: "Surrender Wins", count: playerSurrenderWins, time: surrenderWinTime },
+        { label: "Surrender Losses", count: playerSurrenderLosses, time: surrenderLossTime }
+    ];
+
+    // Create player summary HTML
+    const playerSummaryHtml = summaryItems.map(item => 
+        `<li><strong>${item.label}:</strong> ${item.count} <span class="time">(${item.time})</span></li>`
+    ).join('');
+
+    // Categories for stats display
     const categories = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
     const statSections = [
-        { name: 'Player', data: playerStats },
+        { name: `${summonerName}`, data: playerStats },
         { name: 'Team', data: teamStats },
         { name: 'Enemy', data: enemyTeamStats }
     ];
-    
+
     const rows = categories.flatMap(category =>
-        statSections.map(section => generateRow(category, section))
+        statSections.map(section => generateRow(category, section, playerStats, teamStats, enemyTeamStats))
     );
-    
+
+    // Update output inner HTML
+
+    playerSummary.innerHTML = `
+        <div class="player-summary">
+            ${playerSummaryHtml}
+        </div>
+    `;
     output.innerHTML = `
-        <table>
-            <tr>
-                <th>Outcome</th><th>Category</th><th>Count</th><th>KDA</th><th>Level</th><th>Item Gold</th><th>Time Spent Dead</th><th>Turrets Killed</th><th>Inhibitors Killed</th>
-            </tr>
-            ${rows.join('')}
-        </table>`;
+        <div>
+            <table>
+                <tr>
+                    <th>Outcome</th><th>Category</th><th>Average KDA</th><th>Average Level</th><th>Average Item Gold</th><th>Average Time Spent Dead</th><th>Average Turrets Killed</th><th>Average Inhibitors Killed</th>
+                </tr>
+                ${rows.join('')}
+            </table>
+        </div>`;
 }
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('fetchStatsButton');
