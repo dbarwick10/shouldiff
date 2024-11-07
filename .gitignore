@@ -8,5 +8,5 @@
 node_modules/
 
 # dist
-dist/
+# dist/
 package-lock.js
