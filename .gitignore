@@ -8,5 +8,6 @@
 node_modules/
 
 # dist
-# dist/
+dist/
 package-lock.js
+dist/ShouldIFF-win32-x64/ShouldIFF.exe

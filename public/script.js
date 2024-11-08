@@ -43,7 +43,6 @@ async function getLiveData() {
     }
 }
 
-
 async function notInAGame() {
     const notInGame = document.getElementById('not-in-a-game');
     const parents = document.getElementsByClassName('parent');
@@ -1325,7 +1324,7 @@ async function updateAllStatsInDOM() {
     //<button id="refresh-button" onclick="refreshPage()">Refresh</button>  <--- removed button, using auto refresh
 updateTeamStatsInDOM(statsHtml);
 
-
+//ttrying this
 }
 
 // Function to display data in the DOM

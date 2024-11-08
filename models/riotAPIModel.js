@@ -25,7 +25,7 @@ const fetchPuuid = async (summonerName, region, tagline) => {
 };
 
 const fetchMatchStats = async (puuid, region) => {
-    const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=35&api_key=${RIOT_API_KEY}`;
+    const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=5&api_key=${RIOT_API_KEY}`;
     const matchIdsResponse = await fetch(matchIdsUrl);
 
     if (!matchIdsResponse.ok) {
@@ -34,6 +34,7 @@ const fetchMatchStats = async (puuid, region) => {
     }
 
     const matchIds = await matchIdsResponse.json();
+    console.log('Fetching Data From: ', matchIds);
     const matchStats = [];
 
     for (const matchId of matchIds) {

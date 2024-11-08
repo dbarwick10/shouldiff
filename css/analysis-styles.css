@@ -252,6 +252,15 @@ button:hover {
     font-size: 5em;
 }
 
+.saving span:nth-child(1) {
+    /**
+     * Starts the animation of the third dot
+     * with a delay of .2s, otherwise all dots
+     * would animate at the same time
+     */
+    animation-delay: .0s;
+}
+
 .saving span:nth-child(2) {
     /**
      * Starts the animation of the third dot
