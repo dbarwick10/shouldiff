@@ -1,7 +1,4 @@
-import { getActivePlayerTeam, getGameTime, getGameTimeSeconds, getStats, getGold, getTurretsKilled, getInhibitorsKilled, getDragonSoul, getDragon, getBaron, getElder, countAlivePlayers, calculateDeathTimer, multiKills,  } from '../controllers/currentGameController';
-import { calculateWinProbability, getGameEnd } from '../models/winProbability'
-import { getLiveData } from '../views/currentGameDisplay';
-
+import { getLiveData, getGold } from '../controllers/currentGameController.js';
 
 export async function notInAGame() {
     const notInGame = document.getElementById('not-in-a-game');
@@ -101,51 +98,6 @@ export function displayTeamStats(teamStats, teamTableId) {
 
         teamTable.appendChild(row);  
     });
-    // // Update the header with the totals Has CS
-    // if (teamTableId === 'order-list') {
-    //     teamHeader.innerHTML = `
-    //         <th>Blue Team</th>
-    //         <th>Champion</th>
-    //         <th>Level</th>
-    //         <th>K/D/A</th>
-    //         <th>CS</th>
-    //         <th>Item Gold</th>
-    //     `;
-    // } else if (teamTableId === 'chaos-list') { //<th> ${activePlayerTeam === 'CHAOS' ? 'Blue Team' : 'Red Team'}</th>
-    //     teamHeader.innerHTML = `
-    //         <th>Red Team</th>
-    //         <th>Champion</th>
-    //         <th>Level</th>
-    //         <th>K/D/A</th>
-    //         <th>CS</th>
-    //         <th>Item Gold</th>
-    //     `;
-    // }
-
-    // teamStats.forEach(player => {
-    //     const row = document.createElement('tr');
-        
-    //     if (teamTableId === 'order-list') {
-    //         row.innerHTML = `
-    //             <td>${player.name}</td>
-    //             <td>${player.champion}</td>
-    //             <td>${player.level}</td>
-    //             <td>${player.kills}/${player.deaths}/${player.assists}</td>
-    //             <td>${player.cs}</td>
-    //             <td>${player.totalGold}</td>
-    //         `;
-    //     } else if (teamTableId === 'chaos-list') {
-    //         row.innerHTML = `
-    //             <td>${player.name}</td>
-    //             <td>${player.champion}</td>
-    //             <td>${player.level}</td>
-    //             <td>${player.kills}/${player.deaths}/${player.assists}</td>
-    //             <td>${player.cs}</td>
-    //             <td>${player.totalGold}</td>
-    //         `;
-    //     }
-
-    //     teamTable.appendChild(row);  
     
 }
 
@@ -356,9 +308,9 @@ export async function updateAllStatsInDOM() {
     //<div class="stat-entry"><p class="stat-name">Your team has a </p><p class="team-value">${winProbability}%</p> <p class="stat-name">of winning</p></div>
     
     //<button id="refresh-button" onclick="refreshPage()">Refresh</button>  <--- removed button, using auto refresh
-updateTeamStatsInDOM(statsHtml);
 
-
+    console.log("View: displayWinProbability called with", winProbability);
+    updateTeamStatsInDOM(statsHtml);
 }
 
 // Function to display data in the DOM
