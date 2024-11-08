@@ -1,6 +1,5 @@
-import { getLiveData } from '../views/currentGameDisplay';
-import { notInAGame, InAGame, displayTeamStats, gameInformation, shouldForfeit, updateAllStatsInDOM, updateTeamStatsInDOM } from '../models/currentGameModel';
-import { getActivePlayerTeam, getGameTime, getGameTimeSeconds, getStats, getGold, getTurretsKilled, getInhibitorsKilled, getDragonSoul, getDragon, getBaron, getElder, countAlivePlayers, calculateDeathTimer, multiKills,  } from './currentGameController';
+//import { notInAGame, InAGame, displayTeamStats, gameInformation, shouldForfeit, updateAllStatsInDOM, updateTeamStatsInDOM } from '../views/currentGameDisplay';
+//import { getLiveData, getActivePlayerTeam, getGameTime, getGameTimeSeconds, getStats, getGold, getTurretsKilled, getInhibitorsKilled, getDragonSoul, getDragon, getBaron, getElder, countAlivePlayers, calculateDeathTimer, multiKills,  } from './currentGameController';
 
 
 // Helper function to get data for a given team and data type
@@ -296,6 +295,7 @@ export async function calculateWinProbability() {
         // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
         console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
+        console.log("Model: getWinProbability called");
         return (winProbability * 100).toFixed(2);
     }
 }
