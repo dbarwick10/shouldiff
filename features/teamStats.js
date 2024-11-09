@@ -30,12 +30,14 @@ export function calculateTeamStats(matchStats, puuid) {
         if (team) {
             if (team.win) {
                 teamStats.wins.push(teamGameData);
-                if (player.gameEndedInSurrender) {
-                    teamStats.surrenderWins.push(teamGameData);
-                }
             } else {
                 teamStats.losses.push(teamGameData);
-                if (player.gameEndedInSurrender) {
+            }
+
+            if (player.gameEndedInSurrender) {
+                if (team.win) {
+                    teamStats.surrenderWins.push(teamGameData);
+                } else {  
                     teamStats.surrenderLosses.push(teamGameData);
                 }
             }

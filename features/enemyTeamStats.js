@@ -28,19 +28,20 @@ export function calculateEnemyTeamStats(matchStats, puuid) {
 
         const enemyTeamResult = match.info.teams.find(t => t.teamId !== player.teamId);
         if (enemyTeamResult) {
-            if (!enemyTeamResult.win) {
-                enemyTeamStats.losses.push(enemyTeamGameData);
-                if (player.gameEndedInSurrender) {
-                    enemyTeamStats.surrenderLosses.push(enemyTeamGameData);
-                }
-            } else {
+            if (enemyTeamResult.win) {
                 enemyTeamStats.wins.push(enemyTeamGameData);
-                if (player.gameEndedInSurrender) {
+            } else {
+                enemyTeamStats.losses.push(enemyTeamGameData);
+            }
+            if (player.gameEndedInSurrender) {
+                if (enemyTeamResult.win) {
                     enemyTeamStats.surrenderWins.push(enemyTeamGameData);
+                } else {
+                    enemyTeamStats.surrenderLosses.push(enemyTeamGameData);
                 }
             }
         }
-    });
+});
 
     return enemyTeamStats;
 }
