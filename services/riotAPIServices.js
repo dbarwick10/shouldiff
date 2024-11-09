@@ -1,8 +1,9 @@
-import { calculatePlayerStats, calculateTeamStats, calculateEnemyTeamStats } from '../models/previousGameModel.js';
-// import { fetchPuuid, fetchMatchStats, fetchLiveClientData } from '../models/riotAPIModel.js';
-import { displayStats } from '../views/previousGameDisplay.js';
+import { displayStats } from "../components/displayStatsComp.js";
+import { calculatePlayerStats } from "../features/playerStats.js";
+import { calculateTeamStats } from "../features/teamStats.js";
+import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
 
-export async function getPuuid() {
+async function getPuuid() {
     const summonerName = document.getElementById('summonerName').value;
     const tagline = document.getElementById('tagLine').value;
     const region = document.getElementById('region').value;
@@ -27,12 +28,12 @@ export async function getPuuid() {
         return puuidData.puuid;
     } catch (error) {
         console.error('Error fetching PUUID:', error);
-        document.getElementById('output').innerHTML = `<p>Error fetching PUUID: ${error.message}</p>`;
+        //document.getElementById('output').innerHTML = `<p>Error fetching PUUID: ${error.message}</p>`;
         return null;
     }
 }
 
-export async function matchStats() {
+export async function fetchMatchStats() {
     try {
         const region = document.getElementById('region').value;
         const puuid = await getPuuid();
@@ -68,17 +69,3 @@ export async function matchStats() {
         document.getElementById('output').innerHTML = `<p>Error fetching match stats: ${error.message}</p>`;
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const analyzeButton = document.getElementById('fetchStatsButton');
-    if (analyzeButton) {
-        analyzeButton.addEventListener('click', async function() {
-            this.disabled = true;  // Prevent double-clicking
-            try {
-                await matchStats();
-            } finally {
-                this.disabled = false;  // Re-enable the button
-            }
-        });
-    }
-});

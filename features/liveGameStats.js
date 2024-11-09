@@ -1,35 +1,23 @@
+import { getLiveData } from "../services/liveDataServices.js";
+
+const allGameData = await getLiveData();
 let itemPricesCache = null;
 
-export async function getLiveData() {
-
+export async function getGameMode() {
     try {
-        console.log("Model: Fetching live data...");
+        const allGameData = await getLiveData(); // Use cached game data
+        const gameMode = allGameData.gameData.gameMode; // Get game mode
 
-        // Fetch the data from allgamedata.json for testing
-        const response = await fetch('/test/allgamedata.json');
-        
-        // const response = await fetch("http://127.0.0.1:3000/liveclientdata/allgamedata", {
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        // });
-
-        if (response.ok) {
-            
-            const newData = await response.json();
-            console.log("Model: Fetched data"); // Log the new data
-            return newData;
+        if (gameMode) {
+            //console.log('game mode:', gameMode)
+            return gameMode
         } else {
-            console.error('Error fetching data:', response.status, response.statusText);
-            return null;
-        }
-    } catch (error) {
-        //console.error('Request failed:', error);
-        notInAGame();
-        return null;
+            return null; // Return null if player is not found
+        }} catch (error) {
+            console.error('Error fetching active player or player list:', error);
+            return null; // Return null on error
     }
 }
-
 
 export async function getActivePlayerTeam() {
     try {
@@ -52,10 +40,8 @@ export async function getActivePlayerTeam() {
     }
 }
 
-//get game time in minutes:seconds and only seconds
 export async function getGameTime() {
-    const gameTimeData = await getLiveData(); 
-    const time = gameTimeData.gameData.gameTime
+    const time = allGameData.gameData.gameTime
     const minutes = Math.floor(time / 60)
     const seconds = (time % 60).toFixed(0)
     const gameTime = `${minutes}m ${seconds}s`
@@ -64,16 +50,14 @@ export async function getGameTime() {
 }
 
 export async function getGameTimeSeconds() {
-    const gameTimeData = await getLiveData(); 
-    const gameTimeInSeconds = gameTimeData.gameData.gameTime
+    const gameTimeInSeconds = allGameData.gameData.gameTime
     
     return gameTimeInSeconds
 }
 
 // Calculate Stats
 export async function getStats(teamOrPlayerName, statType) {
-    const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers;
+    const allPlayers = allGameData.allPlayers;
 
     if (!allPlayers) {
         console.error('No players found in game data');
@@ -116,8 +100,7 @@ export async function getStats(teamOrPlayerName, statType) {
 
 // Calculate total gold difference
 export async function getGold(teamOrPlayerName) {
-    const gameData = await getLiveData(); // Assuming this returns the full game data
-    const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
+    const allPlayers = allGameData.allPlayers; // Assuming players are in allPlayers array
     
     if (!allPlayers) {
         console.error('No players found in game data');
@@ -135,7 +118,7 @@ export async function getGold(teamOrPlayerName) {
 
     const getItemPrices = async () => {
         const version = await getVersion();
-        console.log('version: ',version)
+        // console.log('version: ',version)
 
         if (!itemPricesCache) {
             const itemDataResponse = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/item.json`);
@@ -194,14 +177,11 @@ export async function getGold(teamOrPlayerName) {
     }    
 }
 
-
-
 // Calculate turrets taken
 export async function getTurretsKilled(team, num1, num2) {
-    const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers;
+    const allPlayers = allGameData.allPlayers;
 
-    if (!allPlayers || !gameData.events || !gameData.events.Events) {
+    if (!allPlayers || !allGameData.events || !allGameData.events.Events) {
         console.error('Required data not found in game data');
         return;
     }
@@ -210,7 +190,7 @@ export async function getTurretsKilled(team, num1, num2) {
         .filter(player => player.team === team) 
         .map(player => player.riotIdGameName); 
 
-    const outerTurret = gameData.events.Events
+    const outerTurret = allGameData.events.Events
         .filter(event => 
             event.EventName === "TurretKilled" &&
             (
@@ -225,7 +205,7 @@ export async function getTurretsKilled(team, num1, num2) {
         )
         .length;
 
-    const innerTurret = gameData.events.Events
+    const innerTurret = allGameData.events.Events
     .filter(event => 
         event.EventName === "TurretKilled" &&
         (
@@ -240,7 +220,7 @@ export async function getTurretsKilled(team, num1, num2) {
     )
     .length;
 
-    const inhibTurret = gameData.events.Events
+    const inhibTurret = allGameData.events.Events
         .filter(event => 
             event.EventName === "TurretKilled" &&
             (
@@ -255,7 +235,7 @@ export async function getTurretsKilled(team, num1, num2) {
         )
     .length;
 
-    const nexusTurret = gameData.events.Events
+    const nexusTurret = allGameData.events.Events
         .filter(event => 
             event.EventName === "TurretKilled" &&
             (
@@ -289,11 +269,10 @@ const activeCountdowns = {
 };
 
 export async function getInhibitorsKilled(team, num1, num2) {
-    const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers; 
+    const allPlayers = allGameData.allPlayers; 
     const currentTime = await getGameTimeSeconds();
 
-    if (!allPlayers || !gameData.events || !gameData.events.Events) {
+    if (!allPlayers || !allGameData.events || !allGameData.events.Events) {
         console.error('Required data not found in game data');
         return { count: 0, inhibitorNumber: null };
     }
@@ -305,7 +284,7 @@ export async function getInhibitorsKilled(team, num1, num2) {
     let inhibitorNumber = null;
 
     // Reverse search for the most recent InhibKilled event
-    const inhibEvent = [...gameData.events.Events].reverse().find(event =>
+    const inhibEvent = [...allGameData.events.Events].reverse().find(event =>
         event.EventName === "InhibKilled" &&
         (currentTime - event.EventTime <= 180) &&
         (
@@ -333,7 +312,7 @@ export async function getInhibitorsKilled(team, num1, num2) {
 
     // Use a Set to count only unique inhibitors that are destroyed and not yet respawned
     const uniqueInhibitors = new Set();
-    gameData.events.Events.forEach(event => {
+    allGameData.events.Events.forEach(event => {
         const isDestroyed = event.EventName === "InhibKilled";
         const respawnTime = inhibitorTimers[team][event.InhibKilled];
         const hasNotRespawned = respawnTime && respawnTime > currentTime;
@@ -384,25 +363,18 @@ export async function startInhibitorRespawnCountdown(team, inhibitorNumber) {
     }, 1000); // Update every second
 }
 
-
-
-
-
-
 //get dragon soul
 export async function getDragonSoul() {
-    const gameTimeData = await getLiveData(); 
-    const soulType = gameTimeData.gameData.mapTerrain
+    const soulType = allGameData.gameData.mapTerrain
     
     return soulType
 }
 
 // Calculate dragons taken
 export async function getDragon(team) {
-    const gameData = await getLiveData(); // Assuming this returns the full game data
-    const allPlayers = gameData.allPlayers; // Assuming players are in allPlayers array
+    const allPlayers = allGameData.allPlayers; // Assuming players are in allPlayers array
 
-    if (!allPlayers || !gameData.events || !gameData.events.Events) {
+    if (!allPlayers || !allGameData.events || !allGameData.events.Events) {
         console.error('Required game data not found');
         return 0;
     }
@@ -411,7 +383,7 @@ export async function getDragon(team) {
         .filter(player => player.team === team) // Get players on the ORDER team
         .map(player => player.riotIdGameName); // Get their summoner names
 
-    const teamDragon = gameData.events.Events
+    const teamDragon = allGameData.events.Events
         .filter(event => event.EventName === "DragonKill" &&
             teamPlayers.includes(event.KillerName) // Check if killer is on CHAOS team
         )
@@ -422,8 +394,7 @@ export async function getDragon(team) {
 
 // Calculate baron taken
 export async function getBaron(team) {
-    const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers; 
+    const allPlayers = allGameData.allPlayers; 
     const currentTime = await getGameTimeSeconds();
 
     if (!allPlayers) {
@@ -435,7 +406,7 @@ export async function getBaron(team) {
         .filter(player => player.team === team)
         .map(player => player.riotIdGameName); 
 
-    const teamBaron = [...gameData.events.Events].reverse().find(event => 
+    const teamBaron = [...allGameData.events.Events].reverse().find(event => 
         event.EventName === "BaronKill" &&
         (currentTime - event.EventTime <= 180) &&
         teamPlayers.includes(event.KillerName)
@@ -445,7 +416,7 @@ export async function getBaron(team) {
         return null; // No Baron kill found
     }
 
-    const aliveCountData = await countAlivePlayers(gameData.events.Events);
+    const aliveCountData = await countAlivePlayers(allGameData.events.Events);
     const alivePlayers = Object.keys(aliveCountData.aliveCount).reduce((acc, teamName) => {
         acc[teamName] = aliveCountData.aliveCount[teamName]; // Store alive count
         return acc;
@@ -466,8 +437,7 @@ export async function getBaron(team) {
 
 // Calculate Elder taken
 export async function getElder(team) {
-    const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers; 
+    const allPlayers = allGameData.allPlayers; 
     const currentTime = await getGameTimeSeconds();
 
     if (!allPlayers) {
@@ -479,7 +449,7 @@ export async function getElder(team) {
         .filter(player => player.team === team)
         .map(player => player.riotIdGameName); 
 
-    const teamElder = [...gameData.events.Events].reverse().find(event =>
+    const teamElder = [...allGameData.events.Events].reverse().find(event =>
         event.EventName === "DragonKill" && 
         event.DragonType === "Elder" &&
         (currentTime - event.EventTime <= 150) && 
@@ -490,7 +460,7 @@ export async function getElder(team) {
         return null; 
     }
 
-    const aliveCountData = await countAlivePlayers(gameData.events.Events);
+    const aliveCountData = await countAlivePlayers(allGameData.events.Events);
     const alivePlayers = Object.keys(aliveCountData.aliveCount).reduce((acc, teamName) => {
         acc[teamName] = aliveCountData.aliveCount[teamName]; 
         return acc;
@@ -535,8 +505,7 @@ export async function calculateDeathTimer(teamOrPlayerName, currentMinutes) {
 }
 
 export async function countAlivePlayers(events) {
-    const gameData = await getLiveData();
-    const allPlayers = gameData.allPlayers;
+    const allPlayers = allGameData.allPlayers;
     const aliveCount = { order: 5, chaos: 5 };
     const playerTeams = {};
     const deathStats = {}; // Track deaths, respawn times, and time spent dead
@@ -581,8 +550,7 @@ export async function countAlivePlayers(events) {
 
 
 export async function multiKills(team) {
-    const gameData = await getLiveData(); 
-    const allPlayers = gameData.allPlayers;
+    const allPlayers = allGameData.allPlayers;
     const currentTime = await getGameTimeSeconds(); 
 
     if (!allPlayers) {
@@ -602,7 +570,7 @@ export async function multiKills(team) {
 
     const teamMultiKills = [];
 
-    const events = [...gameData.events.Events].reverse();
+    const events = [...allGameData.events.Events].reverse();
     
     for (const event of events) {
         if (event.EventName === "Multikill" && teamPlayers.includes(event.KillerName)) {
@@ -617,4 +585,3 @@ export async function multiKills(team) {
 
     return teamMultiKills;
 }
-

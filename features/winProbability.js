@@ -1,8 +1,20 @@
-//import { notInAGame, InAGame, displayTeamStats, gameInformation, shouldForfeit, updateAllStatsInDOM, updateTeamStatsInDOM } from '../views/currentGameDisplay';
-//import { getLiveData, getActivePlayerTeam, getGameTime, getGameTimeSeconds, getStats, getGold, getTurretsKilled, getInhibitorsKilled, getDragonSoul, getDragon, getBaron, getElder, countAlivePlayers, calculateDeathTimer, multiKills,  } from './currentGameController';
+import { getStats
+    ,getBaron
+    ,getDragon
+    ,getDragonSoul
+    ,getElder
+    ,getGameMode
+    ,getGameTime
+    ,getGameTimeSeconds
+    ,getGold
+    ,getInhibitorsKilled
+    ,getTurretsKilled
+    ,getActivePlayerTeam
+    ,countAlivePlayers
+ } from "../features/liveGameStats.js"
 
+ import { getLiveData } from "../services/liveDataServices.js"; 
 
-// Helper function to get data for a given team and data type
 export async function getTeamData(team, dataType) {
     const gameData = await getLiveData();
     const { aliveCount } = await countAlivePlayers(gameData.events.Events);
@@ -249,23 +261,23 @@ export async function calculateWinProbability() {
         + aliveRatio * lateGameWeights.players
     );
 
-        // console.log('activeteam:', (activePlayerTeam));
-        // console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
-        // console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
-        // console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
-        // console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
-        // console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
-        // console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
-        // console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
-        // console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
-        // console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
-        // console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
-        // console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
-        // console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
-        // console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
-        // console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
-        // console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
-        // console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
+    //     console.log('activeteam:', (activePlayerTeam));
+    //     console.log(activePlayerTeam,'killR +:', (killsRatio * midGameWeights.kills).toFixed(2));
+    //     console.log(activePlayerTeam,'assistR +:', (assistsRatio * midGameWeights.assists).toFixed(2));
+    //     console.log(activePlayerTeam,'deathR -:', (deathsRatio * midGameWeights.deaths).toFixed(2));
+    //     console.log(activePlayerTeam,'csR +:', (cSRatio * midGameWeights.cs).toFixed(2));
+    //     console.log(activePlayerTeam,'lvlR +:', (levelsRatio * midGameWeights.levels).toFixed(2));
+    //     console.log(activePlayerTeam,'goldR +:', (goldRatio * midGameWeights.gold).toFixed(2));
+    //     console.log(activePlayerTeam,'outerturrR +:', (turretOuterRatio * midGameWeights.outerTurret).toFixed(2));
+    //     console.log(activePlayerTeam,'innerturrR +:', (turretInnerRatio * midGameWeights.innerTurret).toFixed(2));
+    //     console.log(activePlayerTeam,'inhibturrR +:', (turretInhibRatio * midGameWeights.inhibTurret).toFixed(2));
+    //     console.log(activePlayerTeam,'nexturrR +:', (turretNexusRatio * midGameWeights.nexusTurret).toFixed(2));
+    //     console.log(activePlayerTeam,'inhibitorR +:', (inhibitorRatio * midGameWeights.inhibitor).toFixed(2));
+    //     console.log(activePlayerTeam,'dragR +:', (dragonRatio * midGameWeights.dragon).toFixed(2));
+    //     console.log(activePlayerTeam,'dsoulR +:', (dragonSoul * midGameWeights.dragonSoul).toFixed(2));
+    //     console.log(activePlayerTeam,'baronR +:', (baronBuff * midGameWeights.baron).toFixed(2));
+    //     console.log(activePlayerTeam,'elderR +:', (elderBuff * midGameWeights.elder).toFixed(2));
+    //     console.log(activePlayerTeam,'AliveR +:', (aliveRatio * midGameWeights.players).toFixed(2));
         
 
     //return ((activePlayerTeam === 'ORDER' ? winProbability : opposingTeamProbability) * 100).toFixed(2);
@@ -295,7 +307,6 @@ export async function calculateWinProbability() {
         // console.log(`${activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER'} Opp prob =`, (opposingTeamProbability).toFixed(2));
         console.log(activePlayerTeam,"win prob =", (winProbability).toFixed(2));
 
-        console.log("Model: getWinProbability called");
         return (winProbability * 100).toFixed(2);
     }
 }
@@ -309,6 +320,43 @@ export async function getGameEnd() {
     //console.log(gameEnded ? gameEnded.Result : null);
     return gameEnded ? gameEnded.Result : null;
 
+}
+
+export async function shouldForfeit() {
+    const winProbability = await calculateWinProbability();
+    const gameMode = await getGameMode();
+    const gameTime = await getGameTime();
+    const gameResult = await getGameEnd();
+    const gameTimeInSeconds = await getGameTimeSeconds();
+
+    if (gameMode === 'CLASSIC' &&                        //classic summoners rift
+        gameTimeInSeconds < 900) {                         //ff at 15
+        return `You literaly cannot FF at ${gameTime}. Wait until 15m`
+    } else if ((gameMode === 'ULTBOOK' ||                //ultimate spellbook and aram
+        gameMode === 'ARAM') &&
+        gameTimeInSeconds < 600) {                       //ff at 10
+        return `You literaly cannot FF at ${gameTime}. Wait until 10m`
+    } else if (gameResult === 'Lose') {
+        return "Game Over: You Lost."
+    } else if (gameResult === 'Win') {
+        return "Game Over: You Won!"
+    }   else if ((gameMode === 'TUTORIAL' ||
+        gameMode === 'PRACTICETOOL')
+    ){                 //tutorial & practice tool easter egg
+        return "This is a tutorial, please keep practicing so you don't have to surrender more games"
+    } else if (winProbability <= 10) {
+        return "Go next"
+    } else if(winProbability <= 40 && winProbability > 10) {
+        return `It will be a struggle with a win probability at ${winProbability}%, but it's possible`
+    } else if (winProbability >= 40 && winProbability < 60) {
+        return "It's a close one"
+    } else if (winProbability >= 60 && winProbability < 80) {
+        return "You're team is looking like it should win"
+    } else if (winProbability >= 80 && winProbability < 95) {
+        return "You should win, just don't throw"
+    } else if (winProbability >= 95) {
+        return `Your victory is near with a <strong>${winProbability}%</strong> chance of winning. Just don't throw.`
+    } 
 }
 
 export async function analysis() {
