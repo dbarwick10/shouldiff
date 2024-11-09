@@ -18,6 +18,9 @@ export function calculatePlayerStats(matchStats, puuid) {
         const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000;
 
         const gameData = {
+            kills: player.kills,
+            deaths: player.deaths,
+            assists: player.assists,
             kda: kda,
             level: player.champLevel,
             itemGold: player.goldSpent,

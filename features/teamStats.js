@@ -14,6 +14,9 @@ export function calculateTeamStats(matchStats, puuid) {
         const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000
 
         const teamGameData = {
+            kills: playerTeam.reduce((sum, teammate) => sum + teammate.kills, 0) / playerTeam.length,
+            deaths: playerTeam.reduce((sum, teammate) => sum + teammate.deaths, 0) / playerTeam.length,
+            assists: playerTeam.reduce((sum, teammate) => sum + teammate.assists, 0) / playerTeam.length,
             kda: playerTeam.reduce((sum, teammate) => sum + (teammate.kills + teammate.assists) / (teammate.deaths || 1), 0) / playerTeam.length,
             level: playerTeam.reduce((sum, teammate) => sum + teammate.champLevel, 0) / playerTeam.length,
             itemGold: playerTeam.reduce((sum, teammate) => sum + teammate.goldSpent, 0) / playerTeam.length,

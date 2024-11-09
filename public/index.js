@@ -1,20 +1,5 @@
-import { fetchMatchStats } from "../services/riotAPIServices.js";
 import { updateAllStatsInDOM, gameInformation} from "../components/updateAllStatsComp.js";
 import { getLiveData, refresh } from "../services/liveDataServices.js";
-
-document.addEventListener('DOMContentLoaded', function() {
-    const analyzeButton = document.getElementById('fetchStatsButton');
-    if (analyzeButton) {
-        analyzeButton.addEventListener('click', async function() {
-            this.disabled = true;  // Prevent double-clicking
-            try {
-                await fetchMatchStats();
-            } finally {
-                this.disabled = false;  // Re-enable the button
-            }
-        });
-    }
-});
 
 document.addEventListener('DOMContentLoaded', () => {
     gameInformation();
@@ -41,9 +26,9 @@ async function autoRefresh() {
         await updateAllStatsInDOM();
         
         console.log('DOM elements after update:', {
-            statsContainer: document.getElementById('compare-team-stats').innerHTML,
-            orderList: document.getElementById('order-list').innerHTML,
-            chaosList: document.getElementById('chaos-list').innerHTML
+            statsContainer: !!document.getElementById('compare-team-stats'),
+            orderList: !!document.getElementById('order-list'),
+            chaosList: !!document.getElementById('chaos-list')
         });
     }
 

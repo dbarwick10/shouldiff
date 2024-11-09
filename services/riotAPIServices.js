@@ -49,7 +49,7 @@ export async function fetchMatchStats() {
 
             console.log('Fetching match stats...');
             const response = await fetch(`http://localhost:3000/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
-            // console.log('Match stats fetched:', await response.json()); // This will log the result of match stats
+            console.log('Match stats fetched');
 
         if (!response.ok) {
             const errorText = await response.text();

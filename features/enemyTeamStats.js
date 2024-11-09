@@ -14,6 +14,9 @@ export function calculateEnemyTeamStats(matchStats, puuid) {
         const gameDuration = (match.info.gameEndTimestamp - match.info.gameStartTimestamp) / 1000
 
         const enemyTeamGameData = {
+            kills: enemyTeam.reduce((sum, enemy) => sum + enemy.kills, 0) / enemyTeam.length,
+            deaths: enemyTeam.reduce((sum, enemy) => sum + enemy.deaths, 0) / enemyTeam.length,
+            assists: enemyTeam.reduce((sum, enemy) => sum + enemy.assists, 0) / enemyTeam.length,
             kda: enemyTeam.reduce((sum, enemy) => sum + (enemy.kills + enemy.assists) / (enemy.deaths || 1), 0) / enemyTeam.length,
             level: enemyTeam.reduce((sum, enemy) => sum + enemy.champLevel, 0) / enemyTeam.length,
             itemGold: enemyTeam.reduce((sum, enemy) => sum + enemy.goldSpent, 0) / enemyTeam.length,
