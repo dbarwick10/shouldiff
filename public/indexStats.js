@@ -1,5 +1,5 @@
 import { fetchMatchStats } from "../services/riotAPIServices.js";
-
+import { fetchMatchEvents } from "../services/riotAPIServices.js";
 
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('fetchStatsButton');
@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
 
                 await fetchMatchStats();
+                await fetchMatchEvents();
+                
 
             } finally {
                 this.disabled = false;  // Re-enable the button

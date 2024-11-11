@@ -2,6 +2,7 @@ import { displayStats } from "../components/displayStatsComp.js";
 import { calculatePlayerStats } from "../features/playerStats.js";
 import { calculateTeamStats } from "../features/teamStats.js";
 import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
+import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
 
 async function getPuuid() {
     const summonerName = document.getElementById('summonerName').value;
@@ -67,5 +68,51 @@ export async function fetchMatchStats() {
     } catch (error) {
         console.error('Error fetching match stats:', error);
         document.getElementById('output').innerHTML = `<p>Error fetching match stats: ${error.message}</p>`;
+    }
+}
+
+export async function fetchMatchEvents() {
+    try {
+        const region = document.getElementById('region').value;
+        const puuid = await getPuuid();
+        if (!puuid) {
+            console.error('No PUUID received');
+            return;
+        }
+
+        console.log('Fetching match events...');
+        const response = await fetch(`http://localhost:3000/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
+        console.log('Match events fetched');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch match events: ${errorText}`);
+        }
+
+        const matchEvents = await response.json();
+        
+        // Debug log to see the structure of matchEvents
+        console.log('Received match events structure:', {
+            isArray: Array.isArray(matchEvents),
+            length: matchEvents?.length,
+            firstMatchKeys: matchEvents?.[0] ? Object.keys(matchEvents[0]) : 'no matches',
+            sampleMatch: matchEvents?.[0]
+        });
+
+        if (!Array.isArray(matchEvents)) {
+            throw new Error('Expected an array of match events, received: ' + typeof matchEvents);
+        }
+
+        // Wait for the analysis to complete
+        const analysis = await analyzeMatchTimelineForSummoner(matchEvents, puuid);
+        console.log('Match analysis completed:', analysis);
+
+        console.log(`Found events from ${matchEvents.length} matches.`);
+        return analysis;
+        
+    } catch (error) {
+        console.error('Error fetching match events:', error);
+        document.getElementById('output').innerHTML = `<p>Error fetching match events: ${error.message}</p>`;
+        throw error; // Re-throw the error to be handled by the calling code
     }
 }
