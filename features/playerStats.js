@@ -107,76 +107,157 @@ export function calculatePlayerStats(matchStats, puuid) {
     return playerStats;
 }
 
-export function getPlayerTeamId(matchStats, puuid) {
-    console.log('Received matchStats1:', matchStats);
-    console.log('Received puuid1:', puuid);
+// Helper function to get player's team ID and match ID
+export async function getPlayerTeamId(matchData, puuid) {
+    try {
+        // Check if matchData is iterable
+        if (!Array.isArray(matchData)) {
+            console.error('matchData is not an array:', typeof matchData);
+            return null;
+        }
 
-    if (!matchStats || !Array.isArray(matchStats)) {
-        console.error('matchStats is not an array1:', matchStats);
+        for (const match of matchData) {
+            if (!match?.info?.participants) {
+                console.error('Match is missing info or participants:', match);
+                continue;
+            }
+
+            const playerParticipant = match.info.participants.find(p => p.puuid === puuid);
+            if (playerParticipant) {
+                console.log(`Found player with puuid ${puuid} in match ${match.metadata?.matchId}`);
+                return { 
+                    teamId: playerParticipant.teamId, 
+                    matchId: match.metadata?.matchId 
+                };
+            } else {
+                console.warn(`Player with puuid ${puuid} not found in match ${match.metadata?.matchId}`);
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error(`Error in getPlayerTeamId:`, error);
         return null;
     }
-
-    let teamId = null;
-    matchStats.forEach(match => {
-        console.log('Processing match:', match);
-        if (!match.info || !match.info.participants) {
-            console.error('Match is missing info or participants:', match);
-            return;
-        }
-        const player = match.info.participants.find(p => p.puuid === puuid);
-        console.log('Found player:', player);
-        if (!player) {
-            console.warn(`Player with puuid ${puuid} not found in match`);
-            return;
-        }
-
-        if (player) {
-            console.log('Returning teamId:', player.teamId);
-            teamId = player.teamId;
-            return;
-        }
-    });
-
-    if (teamId === null) {
-        console.error(`Player with puuid ${puuid} not found in any match`);
-    }
-    return teamId;
 }
 
-export function getPlayerTeamMates(matchStats, puuid) {
-    console.log('Received matchStats2:', matchStats);
-    console.log('Received puuid2:', puuid);
+// Updated function to get teammates and enemies using getPlayerTeamId
+export async function getPlayerTeamMatesAndEnemies(matchData, puuid) {
+    try {
+        if (!Array.isArray(matchData)) {
+            console.error('matchData is not an array:', typeof matchData);
+            return { teamMates: [], teammatesByMatch: {}, enemies: [] };
+        }
 
-    if (!matchStats || !Array.isArray(matchStats)) {
-        console.error('matchStats is not an array2:', matchStats);
-        return [];
+        const player = [];
+        const teamMates = [];
+        const teammatesByMatch = {};
+        const enemies = [];
+
+        for (const match of matchData) {
+            if (!match?.info?.participants) {
+                console.error('Match is missing info or participants:', match);
+                continue;
+            }
+
+            const matchId = match.metadata?.matchId;
+            if (!matchId) {
+                console.error('Match is missing matchId');
+                continue;
+            }
+
+            // Get player's team information for this match
+            const playerTeamInfo = await getPlayerTeamId([match], puuid);
+            if (!playerTeamInfo) {
+                console.warn(`Could not find player team info for match ${matchId}`);
+                continue;
+            }
+
+            // Initialize array for this match's teammates
+            teammatesByMatch[matchId] = [];
+
+            // Process all participants
+            for (const participant of match.info.participants) {
+                if (participant.puuid === puuid) {
+                    player.push({
+                        ...participant,
+                        matchId
+                    });
+                }
+                // Determine if participant is teammate or enemy
+                if (participant.teamId === playerTeamInfo.teamId) {
+                    // Add to teammates
+                    teamMates.push({
+                        ...participant,
+                        matchId
+                    });
+                    teammatesByMatch[matchId].push(participant.participantId);
+                } else {
+                    // Add to enemies
+                    enemies.push({
+                        ...participant,
+                        matchId
+                    });
+                }
+            }
+
+            console.log(`Processed match ${matchId}:`, {
+                teammateCount: teammatesByMatch[matchId].length,
+                enemyCount: match.info.participants.length - teammatesByMatch[matchId].length
+            });
+        }
+
+        console.log('Teammates by match:', teammatesByMatch);
+
+        return {
+            teamMates,
+            teammatesByMatch,
+            enemies
+        };
+    } catch (error) {
+        console.error('Error in getPlayerTeamMatesAndEnemies:', error);
+        return {
+            teamMates: [],
+            teammatesByMatch: {},
+            enemies: []
+        };
     }
+}
 
-    let teammates = [];
-    matchStats.forEach(match => {
-        console.log('Processing match:', match);
-        if (!match.info || !match.info.participants) {
-            console.error('Match is missing info or participants:', match);
-            return;
-        }
-        const player = match.info.participants.find(p => p.puuid === puuid);
-        console.log('Found player:', player);
-        if (!player) {
-            console.warn(`Player with puuid ${puuid} not found in match`);
-            return;
+export async function getPlayerId(matchData, puuid) {
+    try {
+        if (!Array.isArray(matchData)) {
+            console.error('matchData is not an array:', typeof matchData);
+            return null;
         }
 
-        if (player) {
-            teammates = match.info.participants
-                .filter(p => p.teamId === player.teamId && p.puuid !== puuid)
-                .map(p => p.puuid);  // Extract only the puuid of each teammate
-            console.log('Returning teammates:', teammates);
-            return teammates;
-        }
-    });
+        for (const match of matchData) {
+            if (!match?.info?.participants) {
+                console.error('Match is missing info or participants:', match);
+                continue;
+            }
 
-    if (teammates.length === 0) {
-        console.error(`Player with puuid ${puuid} not found in any match`);
+            const matchId = match.metadata?.matchId;
+            if (!matchId) {
+                console.error('Match is missing matchId');
+                continue;
+            }
+
+            const playerParticipant = match.info.participants.find(p => p.puuid === puuid);
+            if (playerParticipant) {
+                console.log(`Found player ID for puuid ${puuid} in match ${matchId}`);
+                return {
+                    participantId: playerParticipant.participantId,
+                    matchId
+                };
+            } else {
+                console.warn(`Player with puuid ${puuid} not found in match ${matchId}`);
+            }
+        }
+        
+        console.warn('Could not find player ID in any match');
+        return null;
+    } catch (error) {
+        console.error('Error in getPlayerId:', error);
+        return null;
     }
-    return teammates;
 }

@@ -19,6 +19,18 @@ export function generateRow(category, section, playerStats, teamStats, enemyTeam
     const avgGameTimeMinutes = Math.floor(avgGameTimeSeconds / 60);
     const avgGameTimeRemainderSeconds = Math.floor(avgGameTimeSeconds % 60);
 
+    if (
+        isNaN(avgKDA) ||
+        isNaN(avgLevel) ||
+        isNaN(avgItemGold) ||
+        isNaN(avgTimeSpentDead) ||
+        isNaN(avgTurretsKilled) ||
+        isNaN(avgInhibitorsKilled) ||
+        isNaN(avgGameTimeSeconds)
+    ) {
+        return '';
+    }
+
     return `
         <tr>
             <td>${category}</td>
