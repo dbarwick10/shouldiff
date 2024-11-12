@@ -1,6 +1,6 @@
 import { getPlayerTeamId, getPlayerTeamMates } from "../features/playerStats.js";
 
-export function analyzeMatchTimelineForSummoner(matchStats, summonerPuuid) {
+export function analyzeMatchTimelineForSummoner(matchStats, puuid) {
     const analysisResult = {
         player: {
             championKills: [],
@@ -42,22 +42,22 @@ export function analyzeMatchTimelineForSummoner(matchStats, summonerPuuid) {
     //     }
     // });
 
-    const playerTeamId = getPlayerTeamId(summonerPuuid, matchStats);
+    const playerTeamId = getPlayerTeamId(matchStats, puuid);
     if (!playerTeamId) {
         console.error("Player team ID not found");
         return analysisResult;
     }
 
-    const playerTeammates = getPlayerTeamMates(summonerPuuid, matchStats);
+    const playerTeammates = getPlayerTeamMates(matchStats, puuid);
     if (!playerTeammates) {
         console.error("Player teammates not found");
         return analysisResult;
     }
 
-    // Get the participantId for the given summonerPuuid
+    // Get the participantId for the given puuid
     let playerId = null;
     for (const match of matchStats) {
-        const player = match.info.participants.find(p => p.puuid === summonerPuuid);
+        const player = match.info.participants.find(p => p.puuid === puuid);
         if (player) {
             playerId = player.participantId;
             break;

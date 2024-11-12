@@ -89,25 +89,25 @@ export async function fetchMatchEvents() {
             throw new Error(`Failed to fetch match events: ${errorText}`);
         }
 
-        const matchEvents = await response.json();
+        const matchStats = await response.json();
         
-        // Debug log to see the structure of matchEvents
+        // Debug log to see the structure of matchStats
         console.log('Received match events structure:', {
-            isArray: Array.isArray(matchEvents),
-            length: matchEvents?.length,
-            firstMatchKeys: matchEvents?.[0] ? Object.keys(matchEvents[0]) : 'no matches',
-            sampleMatch: matchEvents?.[0]
+            isArray: Array.isArray(matchStats),
+            length: matchStats?.length,
+            firstMatchKeys: matchStats?.[0] ? Object.keys(matchStats[0]) : 'no matches',
+            sampleMatch: matchStats?.[0]
         });
 
-        if (!Array.isArray(matchEvents)) {
-            throw new Error('Expected an array of match events, received: ' + typeof matchEvents);
+        if (!Array.isArray(matchStats)) {
+            throw new Error('Expected an array of match events, received: ' + typeof matchStats);
         }
 
         // Wait for the analysis to complete
-        const analysis = await analyzeMatchTimelineForSummoner({ matches: matchEvents }, puuid);
+        const analysis = await analyzeMatchTimelineForSummoner({ matches: matchStats }, puuid);
         console.log('Match analysis completed:', analysis);
 
-        console.log(`Found events from ${matchEvents.length} matches.`);
+        console.log(`Found events from ${matchStats.length} matches.`);
         return analysis;
         
     } catch (error) {
