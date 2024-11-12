@@ -1,11 +1,12 @@
-export function analyzeMatchTimelineForSummoner(timelineData, summonerId, participantIdToTeamIdMap) {
+import { getPlayerTeamId, getPlayerTeamMates } from "../features/playerStats.js";
+
+export function analyzeMatchTimelineForSummoner(matchStats, summonerPuuid) {
     const analysisResult = {
         player: {
             championKills: [],
             buildingKills: [],
-            itemPurchases: [],
             eliteMonsterKills: [],
-            totalGoldSpent: 0,
+            itemPurchases: [],
             totalChampionKills: 0,
             totalBuildingKills: 0,
             totalEliteMonsterKills: 0,
@@ -25,112 +26,173 @@ export function analyzeMatchTimelineForSummoner(timelineData, summonerId, partic
         }
     };
 
-    // Ensure timelineData is an array and not undefined
-    if (!Array.isArray(timelineData)) {
-        console.error("Timeline data is not an array or is undefined");
+    console.log("matchStats:", matchStats);
+
+    // Ensure matchStats is an array and not undefined
+    if (!matchStats || !Array.isArray(matchStats.matches)) {
+        console.error("matchStats is not an object with a matches array or is undefined");
         return analysisResult;
     }
 
-    timelineData.forEach(event => {
-        // Ensure event is not undefined and has the expected properties
-        if (!event || !event.type) {
-            console.warn("Skipping invalid event", event);
-            return;  // Skip invalid events
+    // Log the structure of matchStats
+    // matchStats.forEach((match, index) => {
+    //     console.log(`matchStats[${index}]:`, match);
+    //     if (!match.info || !match.info.participants) {
+    //         console.error(`matchStats[${index}] is missing info or participants`);
+    //     }
+    // });
+
+    const playerTeamId = getPlayerTeamId(summonerPuuid, matchStats);
+    if (!playerTeamId) {
+        console.error("Player team ID not found");
+        return analysisResult;
+    }
+
+    const playerTeammates = getPlayerTeamMates(summonerPuuid, matchStats);
+    if (!playerTeammates) {
+        console.error("Player teammates not found");
+        return analysisResult;
+    }
+
+    // Get the participantId for the given summonerPuuid
+    let playerId = null;
+    for (const match of matchStats) {
+        const player = match.info.participants.find(p => p.puuid === summonerPuuid);
+        if (player) {
+            playerId = player.participantId;
+            break;
+        }
+    }
+    if (!playerId) {
+        console.error("Summoner participant ID not found");
+        return analysisResult;
+    }
+
+    const playerTeammateIds = playerTeammates.map(teammate => {
+        const teammateParticipant = matchStats.flatMap(match => match.info.participants)
+            .find(p => p.puuid === teammate.puuid);
+        return teammateParticipant ? teammateParticipant.participantId : null;
+    }).filter(id => id !== null);
+
+    if (!playerTeammateIds) {
+        console.error("Summoner participant ID not found");
+        return analysisResult;
+    }
+
+    console.log("Processing timeline data:", matchStats);
+
+    matchStats.forEach(match => {
+        if (!match.info || !match.info.timeline || !match.info.timeline.events) {
+            console.error("Match is missing timeline events");
+            return;
         }
 
-        const participantTeamId = participantIdToTeamIdMap[event.participantId];
+        match.info.timeline.events.forEach(event => {
+            // Log the event to see its properties
+            console.log("Event data:", event);
 
-        // Check if participantTeamId is undefined
-        if (participantTeamId === undefined) {
-            console.warn(`Missing participantId mapping for participantId: ${event.participantId}`);
-            return;  // Skip events with unknown participant ID
-        }
+            // Ensure event is not undefined and has the expected properties
+            if (!event || !event.type) {
+                console.warn("Skipping invalid event", event);
+                return;  // Skip invalid events
+            }
 
-        switch (event.type) {
-            case 'CHAMPION_KILL':
-                if (event.killerId === summonerId) {
-                    analysisResult.player.championKills.push({
-                        victimId: event.victimId,
-                        bounty: event.bounty,
-                        timestamp: event.timestamp,
-                        position: event.position,
-                        assistingParticipantIds: event.assistingParticipantIds
-                    });
-                    analysisResult.player.totalChampionKills++;
-                }
-                if (event.killerTeamId === participantTeamId) {
-                    analysisResult.team.championKills++;
-                } else if (event.killerTeamId !== participantTeamId) {
-                    analysisResult.enemyTeam.championKills++;
-                }
-                break;
+            console.log("Processing event:", event);
 
-            case 'BUILDING_KILL':
-                if (event.killerId === summonerId) {
-                    analysisResult.player.buildingKills.push({
-                        buildingType: event.buildingType,
-                        towerType: event.towerType,
-                        laneType: event.laneType,
-                        timestamp: event.timestamp,
-                        position: event.position
-                    });
-                    analysisResult.player.totalBuildingKills++;
-                }
-                if (event.killerTeamId === participantTeamId) {
-                    analysisResult.team.buildingKills++;
-                } else if (event.killerTeamId !== participantTeamId) {
-                    analysisResult.enemyTeam.buildingKills++;
-                }
-                break;
+            const participantTeamId = match.info.participants.find(p => p.participantId === event.participantId)?.teamId;
 
-            case 'ITEM_PURCHASED':
-                if (event.participantId === summonerId) {
-                    analysisResult.player.itemPurchases.push({
-                        itemId: event.itemId,
-                        timestamp: event.timestamp
-                    });
-                    analysisResult.player.totalItemsPurchased++;
-                    const itemCost = getItemCost(event.itemId);
-                    analysisResult.player.totalGoldSpent += itemCost;
-                }
-                if (participantTeamId === summonerId) {
-                    analysisResult.team.totalItemsPurchased++;
-                    const itemCost = getItemCost(event.itemId);
-                    analysisResult.team.totalGoldSpent += itemCost;
-                }
-                break;
+            // Check if participantTeamId is undefined
+            if (participantTeamId === undefined) {
+                console.warn(`Missing participantId mapping for participantId: ${event.participantId}`);
+                return;  // Skip events with unknown participant ID
+            }
 
-            case 'ELITE_MONSTER_KILL':
-                if (event.killerId === summonerId) {
-                    analysisResult.player.eliteMonsterKills.push({
-                        monsterType: event.monsterType,
-                        monsterSubType: event.monsterSubType || 'N/A',
-                        timestamp: event.timestamp,
-                        position: event.position,
-                        assistingParticipantIds: event.assistingParticipantIds
-                    });
-                    analysisResult.player.totalEliteMonsterKills++;
-                }
-                if (event.killerTeamId === participantTeamId) {
-                    analysisResult.team.eliteMonsterKills++;
-                } else if (event.killerTeamId !== participantTeamId) {
-                    analysisResult.enemyTeam.eliteMonsterKills++;
-                }
-                break;
+            console.log("Participant team ID:", participantTeamId);
 
-            default:
-                console.log("Unknown event type:", event.type);
-        }
+            switch (event.type) {
+                case 'CHAMPION_KILL':
+                    console.log("Processing CHAMPION_KILL event:", event);
+                    if (event.killerId === playerId) {
+                        console.log("Summoner is the killer:", event.killerId);
+                        analysisResult.player.championKills.push({
+                            victimId: event.victimId,
+                            bounty: event.bounty,
+                            timestamp: event.timestamp,
+                            position: event.position,
+                            assistingParticipantIds: event.assistingParticipantIds
+                        });
+                        analysisResult.player.totalChampionKills++;
+                    } else if (playerTeammateIds.includes(event.killerId)) {
+                        console.log("Teammate is the killer:", event.killerId);
+                        analysisResult.team.championKills++;
+                    } else {
+                        console.log("Enemy is the killer:", event.killerId);
+                        analysisResult.enemyTeam.championKills++;
+                    }
+                    break;
+
+                case 'BUILDING_KILL':
+                    console.log("Processing BUILDING_KILL event:", event);
+                    if (event.killerId === playerId) {
+                        console.log("Summoner is the killer:", event.killerId);
+                        analysisResult.player.buildingKills.push({
+                            buildingType: event.buildingType,
+                            towerType: event.towerType,
+                            laneType: event.laneType,
+                            timestamp: event.timestamp,
+                            position: event.position
+                        });
+                        analysisResult.player.totalBuildingKills++;
+                    } else if (playerTeammateIds.includes(event.killerId)) {
+                        console.log("Teammate is the killer:", event.killerId);
+                        analysisResult.team.buildingKills++;
+                    } else {
+                        console.log("Enemy is the killer:", event.killerId);
+                        analysisResult.enemyTeam.buildingKills++;
+                    }
+                    break;
+
+                case 'ITEM_PURCHASED':
+                    console.log("Processing ITEM_PURCHASED event:", event);
+                    if (event.participantId === playerId) {
+                        console.log("Summoner purchased an item:", event.itemId);
+                        analysisResult.player.itemPurchases.push({
+                            itemId: event.itemId,
+                            timestamp: event.timestamp
+                        });
+                        analysisResult.player.totalItemsPurchased++;
+                    }
+                    break;
+
+                case 'ELITE_MONSTER_KILL':
+                    console.log("Processing ELITE_MONSTER_KILL event:", event);
+                    if (event.killerId === playerId) {
+                        console.log("Summoner is the killer:", event.killerId);
+                        analysisResult.player.eliteMonsterKills.push({
+                            monsterType: event.monsterType,
+                            monsterSubType: event.monsterSubType || 'N/A',
+                            timestamp: event.timestamp,
+                            position: event.position,
+                            assistingParticipantIds: event.assistingParticipantIds
+                        });
+                        analysisResult.player.totalEliteMonsterKills++;
+                    } else if (playerTeammateIds.includes(event.killerId)) {
+                        console.log("Teammate is the killer:", event.killerId);
+                        analysisResult.team.eliteMonsterKills++;
+                    } else {
+                        console.log("Enemy is the killer:", event.killerId);
+                        analysisResult.enemyTeam.eliteMonsterKills++;
+                    }
+                    break;
+
+                default:
+                    console.log("Unknown event type:", event.type);
+            }
+        });
     });
 
-    return analysisResult;
-}
+    console.log("Final analysis result:", analysisResult);
 
-// Helper function to get item cost
-function getItemCost(itemId) {
-    const itemDatabase = {
-        1029: 3000,  // Example: itemId 1029 corresponds to an item costing 3000 gold
-        // Add other item costs here
-    };
-    return itemDatabase[itemId] || 0; // Return 0 if item cost is not found
+    // Ensure analysisResult is being returned correctly
+    return analysisResult;
 }

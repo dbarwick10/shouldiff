@@ -104,7 +104,7 @@ export async function fetchMatchEvents() {
         }
 
         // Wait for the analysis to complete
-        const analysis = await analyzeMatchTimelineForSummoner(matchEvents, puuid);
+        const analysis = await analyzeMatchTimelineForSummoner({ matches: matchEvents }, puuid);
         console.log('Match analysis completed:', analysis);
 
         console.log(`Found events from ${matchEvents.length} matches.`);

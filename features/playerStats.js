@@ -106,3 +106,77 @@ export function calculatePlayerStats(matchStats, puuid) {
 
     return playerStats;
 }
+
+export function getPlayerTeamId(matchStats, puuid) {
+    console.log('Received matchStats1:', matchStats);
+    console.log('Received puuid1:', puuid);
+
+    if (!matchStats || !Array.isArray(matchStats)) {
+        console.error('matchStats is not an array1:', matchStats);
+        return null;
+    }
+
+    let teamId = null;
+    matchStats.forEach(match => {
+        console.log('Processing match:', match);
+        if (!match.info || !match.info.participants) {
+            console.error('Match is missing info or participants:', match);
+            return;
+        }
+        const player = match.info.participants.find(p => p.puuid === puuid);
+        console.log('Found player:', player);
+        if (!player) {
+            console.warn(`Player with puuid ${puuid} not found in match`);
+            return;
+        }
+
+        if (player) {
+            console.log('Returning teamId:', player.teamId);
+            teamId = player.teamId;
+            return;
+        }
+    });
+
+    if (teamId === null) {
+        console.error(`Player with puuid ${puuid} not found in any match`);
+    }
+    return teamId;
+}
+
+export function getPlayerTeamMates(matchStats, puuid) {
+    console.log('Received matchStats2:', matchStats);
+    console.log('Received puuid2:', puuid);
+
+    if (!matchStats || !Array.isArray(matchStats)) {
+        console.error('matchStats is not an array2:', matchStats);
+        return [];
+    }
+
+    let teammates = [];
+    matchStats.forEach(match => {
+        console.log('Processing match:', match);
+        if (!match.info || !match.info.participants) {
+            console.error('Match is missing info or participants:', match);
+            return;
+        }
+        const player = match.info.participants.find(p => p.puuid === puuid);
+        console.log('Found player:', player);
+        if (!player) {
+            console.warn(`Player with puuid ${puuid} not found in match`);
+            return;
+        }
+
+        if (player) {
+            teammates = match.info.participants
+                .filter(p => p.teamId === player.teamId && p.puuid !== puuid)
+                .map(p => p.puuid);  // Extract only the puuid of each teammate
+            console.log('Returning teammates:', teammates);
+            return teammates;
+        }
+    });
+
+    if (teammates.length === 0) {
+        console.error(`Player with puuid ${puuid} not found in any match`);
+    }
+    return teammates;
+}
