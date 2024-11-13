@@ -1,4 +1,5 @@
-import { fetchMatchData, getPuuid } from "../services/riotAPIServices.js";
+import { getPuuid } from "../services/riotAPIServices.js";
+import { fetchMatchData } from "../services/helperServices.js";
 //import { fetchMatchEvents } from "../services/riotAPIServices.js";
 import { displayStats } from "../components/displayStatsComp.js";
 

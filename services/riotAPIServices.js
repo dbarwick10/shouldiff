@@ -3,10 +3,11 @@ import { displayStats } from "../components/displayStatsComp.js";
 import { calculateTeamStats } from "../features/teamStats.js";
 import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
 import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
+// import { analyzePlayerStats } from "../features/analyzeStats.js";
 
 let puuid;
 const region = document.getElementById('region').value;
-async function getPuuid() {
+export async function getPuuid() {
     const summonerName = document.getElementById('summonerName').value;
     const tagline = document.getElementById('tagLine').value;
 
@@ -36,53 +37,53 @@ async function getPuuid() {
     }
 }
 
-async function fetchMatchData() {
+// async function fetchMatchData() {
 
-    try {
-        // Fetch match stats
-        console.log('Fetching match stats...');
-        const matchStats = await fetchMatchStats();
-        console.log('Match stats fetched');
+//     try {
+//         // Fetch match stats
+//         console.log('Fetching match stats...');
+//         const matchStats = await fetchMatchStats();
+//         console.log('Match stats fetched');
 
-        // Extract necessary data from match stats
-        const playerTeamId = await getPlayerTeamId(matchStats, puuid);
-        const { teamMates, teammateIds, enemies } = await getPlayerTeamMatesAndEnemies(matchStats, puuid);
-        const playerId = await getPlayerId(matchStats, puuid);
-        const events = await analyzeMatchTimelineForSummoner();
+//         // Extract necessary data from match stats
+//         const playerTeamId = await getPlayerTeamId(matchStats, puuid);
+//         const { teamMates, teammateIds, enemies } = await getPlayerTeamMatesAndEnemies(matchStats, puuid);
+//         const playerId = await getPlayerId(matchStats, puuid);
+//         const events = await analyzeMatchTimelineForSummoner();
 
-        // Fetch match events
-        console.log('Fetching match events...');
-        const matchEvents = await fetchMatchEvents();
-        console.log('Match events fetched');
+//         // Fetch match events
+//         console.log('Fetching match events...');
+//         const matchEvents = await fetchMatchEvents();
+//         console.log('Match events fetched');
 
-        // Calculate and display stats
-        const playerStats = await calculatePlayerStats(matchStats, puuid);
-        const teamStats = await calculateTeamStats(matchStats, puuid);
-        const enemyTeamStats = await calculateEnemyTeamStats(matchStats, puuid);
-        displayStats(playerStats, teamStats, enemyTeamStats);
+//         // Calculate and display stats
+//         const playerStats = await calculatePlayerStats(matchStats, puuid);
+//         const teamStats = await calculateTeamStats(matchStats, puuid);
+//         const enemyTeamStats = await calculateEnemyTeamStats(matchStats, puuid);
+//         displayStats(playerStats, teamStats, enemyTeamStats);
 
-        // Analyze match timeline
-        const analysis = await analyzeMatchTimelineForSummoner(matchEvents, puuid);
-        console.log('Match analysis completed:', analysis);
+//         // Analyze match timeline
+//         // const analysis = await analyzePlayerStats(matchEvents, puuid);
+//         // console.log('Match analysis completed:', analysis);
 
-        return {
-            matches: matchStats.matches,
-            playerStats,
-            teamStats,
-            enemyTeamStats,
-            playerTeamId,
-            teamMates,
-            playerId,
-            analysis
-        };
-    } catch (error) {
-        console.error('Error fetching match data:', error);
-        document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
-        throw error;
-    }
-}
+//         return {
+//             matches: matchStats.matches,
+//             playerStats,
+//             teamStats,
+//             enemyTeamStats,
+//             playerTeamId,
+//             teamMates,
+//             playerId
+//             // ,analysis
+//         };
+//     } catch (error) {
+//         console.error('Error fetching match data:', error);
+//         document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
+//         throw error;
+//     }
+// }
 
-async function fetchMatchStats() {
+export async function fetchMatchStats() {
     try {
         document.getElementById('output').innerHTML = `
             <div class="saving"><strong>Fetching Previous Game Data</strong>
@@ -102,7 +103,7 @@ async function fetchMatchStats() {
     }
 }
 
-async function fetchMatchEvents() {
+export async function fetchMatchEvents() {
     try {
         console.log('Fetching match events...');
         const response = await fetch(`http://localhost:3000/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
@@ -132,5 +133,3 @@ async function fetchMatchEvents() {
         throw error;
     }
 }
-
-export { fetchMatchData, getPuuid };

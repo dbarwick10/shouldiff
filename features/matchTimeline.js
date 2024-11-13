@@ -65,7 +65,7 @@ export async function analyzeMatchTimelineForSummoner(matchStats, puuid) {
             }
 
             // Log the matchId and all events for the match
-            console.log(`Match ID: ${matchId}, Events:`, allEvents);
+            //console.log(`Match ID: ${matchId}, Events:`, allEvents);
 
             // Collect matchId and allEvents
             matchEventsData.push({ matchId, allEvents });

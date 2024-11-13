@@ -124,7 +124,7 @@ export async function getPlayerTeamId(matchData, puuid) {
 
             const playerParticipant = match.info.participants.find(p => p.puuid === puuid);
             if (playerParticipant) {
-                console.log(`Found player with puuid ${puuid} in match ${match.metadata?.matchId}`);
+                // console.log(`Found player with puuid ${puuid} in match ${match.metadata?.matchId}`);
                 return { 
                     teamId: playerParticipant.teamId, 
                     matchId: match.metadata?.matchId 
