@@ -5,10 +5,19 @@ import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
 import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
 import { fetchMatchStats, fetchMatchEvents, getPuuid } from "./riotAPIServices.js";
 import { analyzePlayerStats } from "../features/analyzeStats.js";
+import { getItemsAndPrices, clearCacheOnStart } from "../features/getItemsAndPrices.js";
 
 export async function fetchMatchData() {
 
     try {
+        // Fetch and cache item prices for the last three versions
+        console.log('Clearing item prices cache...');
+        clearCacheOnStart();
+        console.log('Fetching and caching item prices...');
+        const itemsAndPrices = await getItemsAndPrices();
+        itemsAndPrices; // Avoid linter warning
+        console.log('Item prices cached', itemsAndPrices);
+
         // Fetch match stats
         console.log('Fetching match stats...');
         const matchStats = await fetchMatchStats();

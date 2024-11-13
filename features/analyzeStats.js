@@ -1,4 +1,7 @@
-import { analyzeMatchTimelineForSummoner } from './matchTimeline.js';
+import { analyzeMatchTimelineForSummoner } from '../features/matchTimeline.js';
+import { getItemDetails } from '../features/getItemsAndPrices.js';
+
+const destroyedItems = new Map();
 
 function initializeStats() {
     return {
@@ -6,14 +9,25 @@ function initializeStats() {
         deaths: 0,
         assists: 0,
         buildingKills: 0,
+        towerKills: {
+            outer: 0,
+            inner: 0,
+            base: 0,
+            nexus: 0
+        },
+        inhibitorKills: 0,
         eliteMonsterKills: 0,
         itemPurchases: 0,
+        itemGold: 0,
         events: []
     };
 }
 
 export async function analyzePlayerStats(matchStats, puuid) {
     try {
+        
+        destroyedItems.clear();
+        
         const matches = Array.isArray(matchStats) ? matchStats : matchStats.matches;
         if (!matches || !Array.isArray(matches)) {
             console.error('Invalid matchStats structure:', matchStats);
@@ -160,7 +174,7 @@ function processChampionKill(event, playerParticipantId, teamParticipantIds, sta
 
 function processBuildingKill(event, playerParticipantId, teamParticipantIds, stats, matchId) {
     event.matchId = matchId;
-    
+
     if (event.killerId === playerParticipantId) {
         stats.playerStats.buildingKills++;
         stats.playerStats.events.push(event);
@@ -170,6 +184,57 @@ function processBuildingKill(event, playerParticipantId, teamParticipantIds, sta
     } else {
         stats.enemyStats.buildingKills++;
         stats.enemyStats.events.push(event);
+    }
+
+    if (event.buildingType === 'TOWER_BUILDING') {
+        switch (event.towerType) {
+            case 'OUTER_TURRET':
+                if (event.killerId === playerParticipantId) {
+                    stats.playerStats.towerKills.outer++;
+                } else if (teamParticipantIds.includes(event.killerId)) {
+                    stats.teamStats.towerKills.outer++;
+                } else {
+                    stats.enemyStats.towerKills.outer++;
+                }
+                break;
+            case 'INNER_TURRET':
+                if (event.killerId === playerParticipantId) {
+                    stats.playerStats.towerKills.inner++;
+                } else if (teamParticipantIds.includes(event.killerId)) {
+                    stats.teamStats.towerKills.inner++;
+                } else {
+                    stats.enemyStats.towerKills.inner++;
+                }
+                break;
+            case 'BASE_TURRET':
+                if (event.killerId === playerParticipantId) {
+                    stats.playerStats.towerKills.base++;
+                } else if (teamParticipantIds.includes(event.killerId)) {
+                    stats.teamStats.towerKills.base++;
+                } else {
+                    stats.enemyStats.towerKills.base++;
+                }
+                break;
+            case 'NEXUS_TURRET':
+                if (event.killerId === playerParticipantId) {
+                    stats.playerStats.towerKills.nexus++;
+                } else if (teamParticipantIds.includes(event.killerId)) {
+                    stats.teamStats.towerKills.nexus++;
+                } else {
+                    stats.enemyStats.towerKills.nexus++;
+                }
+                break;
+            default:
+                break;
+        }
+    } else if (event.buildingType === 'INHIBITOR_BUILDING') {
+        if (event.killerId === playerParticipantId) {
+            stats.playerStats.inhibitorKills++;
+        } else if (teamParticipantIds.includes(event.killerId)) {
+            stats.teamStats.inhibitorKills++;
+        } else {
+            stats.enemyStats.inhibitorKills++;
+        }
     }
 }
 
@@ -188,17 +253,68 @@ function processMonsterKill(event, playerParticipantId, teamParticipantIds, stat
     }
 }
 
-function processItemPurchase(event, playerParticipantId, teamParticipantIds, stats, matchId) {
+// Keep track of destroyed items per participant
+
+
+// Helper to track destroyed items
+function trackDestroyedItem(participantId, itemId) {
+    if (!destroyedItems.has(participantId)) {
+        destroyedItems.set(participantId, new Set());
+    }
+    destroyedItems.get(participantId).add(itemId);
+}
+
+// Helper to check if item was destroyed
+function wasItemDestroyed(participantId, itemId) {
+    return destroyedItems.get(participantId)?.has(itemId) || false;
+}
+
+// Process item destruction events
+export function processItemDestroyed(event) {
+    if (event.type === 'ITEM_DESTROYED') {
+        trackDestroyedItem(event.participantId, event.itemId);
+    }
+}
+
+export async function processItemPurchase(event, playerParticipantId, teamParticipantIds, stats, matchId) {
+    // If this isn't a purchase event, ignore it
+    if (event.type !== 'ITEM_PURCHASED') {
+        return stats;
+    }
+
     event.matchId = matchId;
     
+    // Check if this item was later destroyed
+    if (wasItemDestroyed(event.participantId, event.itemId)) {
+        return stats; // Skip processing if the item was destroyed
+    }
+
+    let itemDetails;
+    try {
+        if (event.itemId) {
+            itemDetails = await getItemDetails(event.itemId.toString());
+        }
+    } catch (error) {
+        console.warn(`Failed to fetch details for item ${event.itemId}, proceeding without gold calculations:`, error);
+        itemDetails = { gold: { total: 0 } };
+    }
+
     if (event.participantId === playerParticipantId) {
         stats.playerStats.itemPurchases++;
+        stats.playerStats.itemGold += itemDetails?.gold?.total || 0;
+        event.itemDetails = itemDetails;
         stats.playerStats.events.push(event);
     } else if (teamParticipantIds.includes(event.participantId)) {
         stats.teamStats.itemPurchases++;
+        stats.teamStats.itemGold += itemDetails?.gold?.total || 0;
+        event.itemDetails = itemDetails;
         stats.teamStats.events.push(event);
     } else {
         stats.enemyStats.itemPurchases++;
+        stats.enemyStats.itemGold += itemDetails?.gold?.total || 0;
+        event.itemDetails = itemDetails;
         stats.enemyStats.events.push(event);
     }
+
+    return stats;
 }
