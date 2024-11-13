@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League of Legends Stats</title>
+    <link rel="stylesheet" href="/css/analysis-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>League of Legends Game Stats</h1>
+        <div class="input-section">
+            <input type="text" id="summonerName" placeholder="Enter Summoner Name">
+            <input type="text" id="tagLine" placeholder="Enter Tagline">
+            <select id="region">
+                <option value="americas" selected>Americas</option>
+                <option value="asia">Asia</option>
+                <option value="europe">Europe</option>
+                <option value="sea">SEA</option>
+            </select>
+            <button id="fetchStatsButton">Fetch Stats</button>
+        </div>
+        <div id="player-summary">
+            
+        </div>
+        <div id="output-container">
+            <table id="output">
+                <thead>
+                    <tr>
+                        <th>Stats</th>
+                        <th>Games</th>
+                        <th>KDA</th>
+                        <th>Level</th>
+                        <th>Item Gold</th>
+                        <th>Time Spent Dead</th>
+                        <th>Turrets Killed</th>
+                        <th>Inhibitors Killed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Stats data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script type="module" src="indexStats.js"></script>
+</body>
+</html>
