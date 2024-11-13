@@ -1,9 +1,9 @@
-import { calculatePlayerStats, getPlayerTeamId, getPlayerTeamMatesAndEnemies, getPlayerId } from "../features/playerStats.js";
-import { displayStats } from "../components/displayStatsComp.js";
-import { calculateTeamStats } from "../features/teamStats.js";
-import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
-import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
-// import { analyzePlayerStats } from "../features/analyzeStats.js";
+// import { calculatePlayerStats, getPlayerTeamId, getPlayerTeamMatesAndEnemies, getPlayerId } from "../features/playerStats.js";
+// import { displayStats } from "../components/displayStatsComp.js";
+// import { calculateTeamStats } from "../features/teamStats.js";
+// import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
+// import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
+// // import { analyzePlayerStats } from "../features/analyzeStats.js";
 
 let puuid;
 const region = document.getElementById('region').value;
@@ -36,52 +36,6 @@ export async function getPuuid() {
         return null;
     }
 }
-
-// async function fetchMatchData() {
-
-//     try {
-//         // Fetch match stats
-//         console.log('Fetching match stats...');
-//         const matchStats = await fetchMatchStats();
-//         console.log('Match stats fetched');
-
-//         // Extract necessary data from match stats
-//         const playerTeamId = await getPlayerTeamId(matchStats, puuid);
-//         const { teamMates, teammateIds, enemies } = await getPlayerTeamMatesAndEnemies(matchStats, puuid);
-//         const playerId = await getPlayerId(matchStats, puuid);
-//         const events = await analyzeMatchTimelineForSummoner();
-
-//         // Fetch match events
-//         console.log('Fetching match events...');
-//         const matchEvents = await fetchMatchEvents();
-//         console.log('Match events fetched');
-
-//         // Calculate and display stats
-//         const playerStats = await calculatePlayerStats(matchStats, puuid);
-//         const teamStats = await calculateTeamStats(matchStats, puuid);
-//         const enemyTeamStats = await calculateEnemyTeamStats(matchStats, puuid);
-//         displayStats(playerStats, teamStats, enemyTeamStats);
-
-//         // Analyze match timeline
-//         // const analysis = await analyzePlayerStats(matchEvents, puuid);
-//         // console.log('Match analysis completed:', analysis);
-
-//         return {
-//             matches: matchStats.matches,
-//             playerStats,
-//             teamStats,
-//             enemyTeamStats,
-//             playerTeamId,
-//             teamMates,
-//             playerId
-//             // ,analysis
-//         };
-//     } catch (error) {
-//         console.error('Error fetching match data:', error);
-//         document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
-//         throw error;
-//     }
-// }
 
 export async function fetchMatchStats() {
     try {
