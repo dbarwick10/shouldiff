@@ -1,0 +1,271 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Beaufort for LoL', Arial, sans-serif; /* Use LoL-inspired fonts */
+}
+
+/* Body Background */
+body {
+    background: linear-gradient(120deg, #2b2d42, #0d0d12); /* Dark gradient for background */
+    color: #d6d6e5;
+    font-size: 16px;
+    line-height: 1.6;
+    background-size: cover;
+    align-content: center;
+    width: 100%;
+}
+
+.container {
+    width: 80%;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+.player-summary {
+    display: flex;
+    width: 100%;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.input-section {
+    padding-left: 0;
+    flex: 1;
+    flex-direction: row;
+}
+
+/* Player Stats Summary (above the table) */
+.player-summary {
+    display: flex;
+    background-color: rgba(28, 36, 52, 0.85);
+    color: #a0aec0;
+    border-radius: 8px;
+    justify-content: space-evenly; /* Space items more evenly */
+    padding: 20px 15px; /* Added more padding for better spacing */
+    margin: 20px 0; /* Adjusted margin to give some room between sections */
+    text-align: center;
+    font-size: 1.1em; /* Slightly bigger font for clarity */
+    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6); /* Slightly stronger glow effect */
+    width: 100%; /* Adjusted to fit container */
+    gap: 20px; /* Space between the stats */
+}
+
+.player-summary div {
+    display: flex;
+    flex-direction: column; /* Stack stats vertically */
+    align-items: center; /* Center align each stat */
+}
+
+.player-summary p {
+    margin: 5px 0;
+}
+.player-summary ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.player-summary li {
+    margin-bottom: 5px;
+}
+
+.player-summary strong {
+    font-weight: bold;
+    color: #a0aec0;
+    font-size: 1.1em;
+}
+
+.player-summary .time {
+    color: #979797;
+}
+
+
+/* Table Header and Cell Styling */
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+table {
+    border-collapse: collapse;
+    width: 80%;
+    margin-top: 15px;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 80%;
+    margin-top: 15px;
+}
+
+.table-container {
+    margin-top: 20px; /* Space between player summary and the table */
+    padding: 10px;
+    background-color: rgba(28, 36, 52, 0.85);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(13, 13, 18, 0.6);
+}
+
+/* Table Header (Outcome, KDA, etc.) */
+th {
+    background-color: rgba(13, 13, 18, 0.6);
+    color: #d4af37;
+    font-weight: bold;
+    border-bottom: 1px solid #444;
+}
+
+/* Table Data Cells */
+td {
+    background-color: rgba(28, 36, 52, 0.85);
+    color: #a0aec0;
+    border-bottom: 1px solid #444;
+    text-shadow: 1px 1px 2px black;
+    border-right: 1px solid black;
+}
+
+/* Alternate Row Colors */
+tr:nth-child(odd) td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Highlight Row on Hover */
+tr:hover td {
+    background-color: rgba(114, 137, 218, 0.2);
+}
+
+/* Ensure Tables Have Equal Size */
+table {
+    width: 100%;
+    margin: 5px;
+    border-collapse: collapse;
+}
+
+/* Player Stats Table - Adjusting Table for Consistency */
+#player-summary th, #player-summary td {
+    width: auto;
+    padding: 8px 15px;
+    text-align: left;
+    background-color: rgba(28, 36, 52, 0.85);
+    border: none;
+}
+
+#player-summary th {
+    background-color: rgba(13, 13, 18, 0.6);
+    color: #d4af37;
+}
+
+#player-summary td {
+    color: #a0aec0;
+    font-size: 1.1em;
+}
+
+#player-summary .stat-name {
+    color: gray;
+    font-size: 1rem;
+}
+
+/* Styling the Button */
+button {
+    background: #414a6b;
+    border: 2px solid #7289da;
+    color: #d4af37;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: #3b3e58;
+    box-shadow: 0 0 12px rgba(114, 137, 218, 0.8);
+    color: #ffffff;
+}
+
+/**
+ * ==============================================
+ * Dot Flashing
+ * ==============================================
+ */
+ @keyframes blink {
+    /**
+     * At the start of the animation the dot
+     * has an opacity of .2
+     */
+    0% {
+      opacity: .2;
+    }
+    /**
+     * At 20% the dot is fully visible and
+     * then fades out slowly
+     */
+    20% {
+      opacity: 1;
+    }
+    /**
+     * Until it reaches an opacity of .2 and
+     * the animation can start again
+     */
+    100% {
+      opacity: .2;
+    }
+}
+
+.saving span {
+    /**
+     * Use the blink animation, which is defined above
+     */
+    animation-name: blink;
+    /**
+     * The animation should take 1.4 seconds
+     */
+    animation-duration: 1.4s;
+    /**
+     * It will repeat itself forever
+     */
+    animation-iteration-count: infinite;
+    /**
+     * This makes sure that the starting style (opacity: .2)
+     * of the animation is applied before the animation starts.
+     * Otherwise we would see a short flash or would have
+     * to set the default styling of the dots to the same
+     * as the animation. Same applies for the ending styles.
+     */
+    animation-fill-mode: both;
+    font-size: 5em;
+}
+
+.saving span:nth-child(2) {
+    /**
+     * Starts the animation of the third dot
+     * with a delay of .2s, otherwise all dots
+     * would animate at the same time
+     */
+    animation-delay: .2s;
+}
+
+.saving span:nth-child(3) {
+    /**
+     * Starts the animation of the third dot
+     * with a delay of .4s, otherwise all dots
+     * would animate at the same time
+     */
+    animation-delay: .4s;
+}
