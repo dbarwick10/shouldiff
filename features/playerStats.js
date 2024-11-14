@@ -172,6 +172,7 @@ export async function getPlayerTeamMatesAndEnemies(matchData, puuid) {
                 continue;
             }
 
+            const gameMode = match.info?.gameMode;
             // Initialize array for this match's teammates
             teammatesByMatch[matchId] = [];
 
@@ -201,6 +202,7 @@ export async function getPlayerTeamMatesAndEnemies(matchData, puuid) {
             }
 
             console.log(`Processed match ${matchId}:`, {
+                gameMode: gameMode,
                 teammateCount: teammatesByMatch[matchId].length,
                 enemyCount: match.info.participants.length - teammatesByMatch[matchId].length
             });

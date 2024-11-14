@@ -47,6 +47,10 @@ app.get('/api/puuid', async (req, res) => {
         return res.status(400).json({ error: 'Missing summonerName parameter' });
     }
 
+    if (!tagline) {
+        return res.status(400).json({ error: 'Missing tagline parameter' });
+    }
+
     try {
         const riotUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(summonerName)}/${encodeURIComponent(tagline)}`;
         console.log('Fetching from Riot API:', riotUrl);

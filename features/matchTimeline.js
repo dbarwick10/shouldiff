@@ -34,7 +34,7 @@ export async function analyzeMatchTimelineForSummoner(matchStats, puuid) {
                 continue;
             }
 
-            console.log(`Processing match ${matchId}`);
+            // console.log(`Processing match ${matchId}`);
 
             // Collect all events for the match
             const allEvents = [];
@@ -65,13 +65,13 @@ export async function analyzeMatchTimelineForSummoner(matchStats, puuid) {
             }
 
             // Log the matchId and all events for the match
-            //console.log(`Match ID: ${matchId}, Events:`, allEvents);
+            // console.log(`Match ID: ${matchId}, Events:`, allEvents);
 
             // Collect matchId and allEvents
             matchEventsData.push({ matchId, allEvents });
         }
 
-        console.log('events complete:', matchEventsData);
+        // console.log('events complete:', matchEventsData);
         return matchEventsData; // Return the array of matchId and allEvents
     } catch (error) {
         console.error('Error in analyzeMatchTimelineForSummoner:', error);

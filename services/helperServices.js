@@ -6,6 +6,7 @@ import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
 import { fetchMatchStats, fetchMatchEvents, getPuuid } from "./riotAPIServices.js";
 import { analyzePlayerStats } from "../features/analyzeStats.js";
 import { getItemsAndPrices, clearCacheOnStart } from "../features/getItemsAndPrices.js";
+import { calculateAverageEventTimes } from "../features/avgEventTimesStats.js";
 
 export async function fetchMatchData() {
 
@@ -43,7 +44,11 @@ export async function fetchMatchData() {
 
         // Analyze match timeline
         const analysis = await analyzePlayerStats(matchEvents, puuid);
-        // console.log('Match analysis completed:', analysis);
+        const individualGameStats = analysis.individualGameStats;
+        console.log('Match analysis completed (aggregate):', analysis.aggregateStats);
+        console.log('Match analysis completed:', individualGameStats);
+
+        const avgStats = await calculateAverageEventTimes(individualGameStats);
 
         return {
             matches: matchStats.matches,
@@ -54,6 +59,7 @@ export async function fetchMatchData() {
             teamMates,
             playerId
             ,analysis
+            ,avgStats
         };
     } catch (error) {
         console.error('Error fetching match data:', error);

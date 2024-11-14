@@ -15,6 +15,10 @@ export async function getPuuid() {
         alert('Please enter a summoner name');
         return;
     }
+    if (!tagline) {
+        alert('Please enter a tagline');
+        return;
+    }
 
     try {
         const tag = tagline.replace(/[^a-zA-Z0-9 ]/g, "");
@@ -59,7 +63,7 @@ export async function fetchMatchStats() {
 
 export async function fetchMatchEvents() {
     try {
-        console.log('Fetching match events...');
+        // console.log('Fetching match events...');
         const response = await fetch(`http://localhost:3000/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
 
         if (!response.ok) {
