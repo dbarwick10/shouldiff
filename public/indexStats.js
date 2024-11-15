@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (matchStats) {
                     displayStats(matchStats.playerStats, matchStats.teamStats, matchStats.enemyTeamStats);
                 }
+                const displayChart = matchStats.avgStats;
+                const canvas = document.getElementById('averageEventTimesChart');
+                if (displayChart) {
+                    displayChart;
+                }
                 //await fetchMatchEvents();
             } finally {
                 this.disabled = false;  // Re-enable the button

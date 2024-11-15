@@ -12,7 +12,7 @@ export function calculateAverageEventTimes(individualGameStats) {
             nexusTowerKills: [],
             inhibitorKills: [],
             eliteMonsterKills: [],
-            itemGold: []  // Back to array for consistency
+            itemGold: []
         },
         teamStats: {
             kills: [],
@@ -42,7 +42,6 @@ export function calculateAverageEventTimes(individualGameStats) {
 
     individualGameStats.forEach((match, index) => {
         console.log(`Processing match ${index}:`, match);
-        // console.log(`Match itemGold data:`, match.playerStats?.economy?.itemGold);
         aggregatePlayerStats(aggregatedTimestamps.playerStats, match.playerStats);
         aggregatePlayerStats(aggregatedTimestamps.teamStats, match.teamStats);
         aggregatePlayerStats(aggregatedTimestamps.enemyStats, match.enemyStats);
@@ -61,13 +60,10 @@ export function calculateAverageEventTimes(individualGameStats) {
 }
 
 function aggregateTimestamps(aggregatedArray, timestamps) {
-    if (!Array.isArray(timestamps)) {
-        return;
-    }
+    if (!Array.isArray(timestamps)) return;
+
     timestamps.forEach((timestamp, index) => {
-        if (timestamp === undefined || timestamp === null) {
-            return;
-        }
+        if (timestamp === undefined || timestamp === null) return;
         if (!aggregatedArray[index]) {
             aggregatedArray[index] = [];
         }
@@ -91,19 +87,8 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     aggregateTimestamps(aggregatedStats.inhibitorKills, stats.objectives?.inhibitorKills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.eliteMonsterKills, stats.objectives?.eliteMonsterKills?.timestamps || []);
 
-    console.log('Economy data in aggregatePlayerStats:', stats.economy);
-    console.log('ItemGold data:', stats.economy?.itemGold);
-    console.log('ItemGold history:', stats.economy?.itemGold?.history);
-    
     if (stats.economy?.itemGold?.history) {
-        // Store the length of itemGold array before and after aggregation
-        const beforeLength = aggregatedStats.itemGold.length;
-        console.log('ItemGold array length before aggregation:', beforeLength);
-        
         aggregateItemGold(aggregatedStats.itemGold, stats.economy.itemGold.history);
-        
-        const afterLength = aggregatedStats.itemGold.length;
-        console.log('ItemGold array length after aggregation:', afterLength);
     }
 }
 
@@ -130,78 +115,23 @@ function calculateAverageTimes(aggregatedArray) {
     });
 }
 
+// Aggregate item gold data
 function aggregateItemGold(aggregatedArray, itemGoldHistory) {
-    console.log('Starting aggregateItemGold');
-    console.log('Input aggregatedArray:', aggregatedArray);
-    console.log('Input itemGoldHistory:', itemGoldHistory);
-
-    // If aggregatedArray isn't an array, make it one
-    if (!Array.isArray(aggregatedArray)) {
-        console.warn('aggregatedArray was not an array, initializing it');
-        aggregatedArray = [];
-    }
-
-    // For each item in the history, create or update an entry in the aggregated array
-    itemGoldHistory.forEach((historyItem, index) => {
-        // If there's no entry at this index, create one
-        if (!aggregatedArray[index]) {
-            aggregatedArray[index] = {
-                timestamps: [],
-                amounts: []
-            };
+    itemGoldHistory.forEach(({ amount, timestamp }) => {
+        const existingEntry = aggregatedArray.find(entry => entry.timestamp === timestamp);
+        if (existingEntry) {
+            existingEntry.totalAmount += amount;
+            existingEntry.count += 1;
+        } else {
+            aggregatedArray.push({ timestamp, totalAmount: amount, count: 1 });
         }
-
-        console.log(`Processing history item ${index}:`, historyItem);
-        console.log(`Current state of aggregatedArray[${index}]:`, aggregatedArray[index]);
-
-        // Push the values
-        aggregatedArray[index].timestamps.push(historyItem.timestamp);
-        aggregatedArray[index].amounts.push(historyItem.amount);
-
-        console.log(`After adding values, aggregatedArray[${index}]:`, aggregatedArray[index]);
     });
-
-    console.log('Final aggregatedArray:', aggregatedArray);
-    console.log('Final aggregatedArray length:', aggregatedArray.length);
-    
-    // Return the array explicitly
-    return aggregatedArray;
 }
 
-function calculateAverageItemGold(aggregatedArray) {
-    console.log('Starting calculateAverageItemGold');
-    console.log('Input aggregatedArray:', aggregatedArray);
-
-    if (!Array.isArray(aggregatedArray)) {
-        console.warn('Input is not an array in calculateAverageItemGold');
-        return [];
-    }
-
-    if (aggregatedArray.length === 0) {
-        console.warn('Input array is empty in calculateAverageItemGold');
-        return [];
-    }
-
-    const result = aggregatedArray.map((entry, index) => {
-        console.log(`Processing entry ${index}:`, entry);
-
-        if (!entry || !entry.timestamps || !entry.amounts) {
-            console.warn(`Invalid entry at index ${index}`);
-            return null;
-        }
-
-        if (entry.timestamps.length === 0 || entry.amounts.length === 0) {
-            console.warn(`Empty timestamps or amounts at index ${index}`);
-            return null;
-        }
-
-        const avgTimestamp = entry.timestamps.reduce((acc, val) => acc + val, 0) / entry.timestamps.length;
-        const avgAmount = entry.amounts.reduce((acc, val) => acc + val, 0) / entry.amounts.length;
-
-        console.log(`Calculated averages for index ${index}:`, { avgTimestamp, avgAmount });
-        return { timestamp: avgTimestamp, amount: avgAmount };
-    });
-
-    console.log('Final result from calculateAverageItemGold:', result);
-    return result;
+// Calculate average item gold at each timestamp
+function calculateAverageItemGold(itemGoldData) {
+    return itemGoldData.map(({ timestamp, totalAmount, count }) => ({
+        timestamp,
+        averageAmount: totalAmount / count
+    }));
 }

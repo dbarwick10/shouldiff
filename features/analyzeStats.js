@@ -24,7 +24,10 @@ function initializeStats(matchId) {
         },
         economy: {
             itemPurchases: { count: 0, timestamps: [], items: [] },
-            itemGold: { total: 0, history: [] }
+            itemGold: { 
+                total: 0, 
+                history: []
+            }
         },
         events: []
     };

@@ -7,6 +7,7 @@ import { fetchMatchStats, fetchMatchEvents, getPuuid } from "./riotAPIServices.j
 import { analyzePlayerStats } from "../features/analyzeStats.js";
 import { getItemsAndPrices, clearCacheOnStart } from "../features/getItemsAndPrices.js";
 import { calculateAverageEventTimes } from "../features/avgEventTimesStats.js";
+import { displayAverageEventTimes } from "../components/displayAverageEventTimes.js";
 
 export async function fetchMatchData() {
 
@@ -48,10 +49,13 @@ export async function fetchMatchData() {
         console.log('Match analysis completed (aggregate):', analysis.aggregateStats);
         console.log('Match analysis completed:', individualGameStats);
 
-        const avgStats = await calculateAverageEventTimes(individualGameStats);
+        // Populate Chart
+        const averageEventTimes = await calculateAverageEventTimes(individualGameStats);
+        const avgStats = await displayAverageEventTimes(averageEventTimes);
+        avgStats;
 
         return {
-            matches: matchStats.matches,
+            matches: filteredMatchStats.matches,
             playerStats,
             teamStats,
             enemyTeamStats,
@@ -59,11 +63,12 @@ export async function fetchMatchData() {
             teamMates,
             playerId
             ,analysis
+            //,averageEventTimes
             ,avgStats
         };
     } catch (error) {
         console.error('Error fetching match data:', error);
-        document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
+        // document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
         throw error;
     }
 }

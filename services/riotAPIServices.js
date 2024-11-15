@@ -3,7 +3,7 @@
 // import { calculateTeamStats } from "../features/teamStats.js";
 // import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
 // import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
-// // import { analyzePlayerStats } from "../features/analyzeStats.js";
+// import { analyzePlayerStats } from "../features/analyzeStats.js";
 
 let puuid;
 const region = document.getElementById('region').value;
@@ -43,12 +43,13 @@ export async function getPuuid() {
 
 export async function fetchMatchStats() {
     try {
+        const gameMode = document.getElementById('gameMode').value.toUpperCase();
         document.getElementById('output').innerHTML = `
             <div class="saving"><strong>Fetching Previous Game Data</strong>
             <span>.</span><span>.</span><span>.</span></div>
         `;
 
-        const response = await fetch(`http://localhost:3000/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
+        const response = await fetch(`http://localhost:3000/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}&gameMode=${encodeURIComponent(gameMode)}`);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch match stats: ${errorText}`);

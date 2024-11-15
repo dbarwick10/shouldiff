@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>League of Legends Stats</title>
     <link rel="stylesheet" href="/css/analysis-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -17,6 +18,11 @@
                 <option value="asia">Asia</option>
                 <option value="europe">Europe</option>
                 <option value="sea">SEA</option>
+            </select>
+            <select id="gameMode">
+                <option value="ranked">Ranked</option>
+                <option value="normal">Normal</option>
+                <option value="aram" selected>ARAM</option>
             </select>
             <button id="fetchStatsButton">Fetch Stats</button>
         </div>
@@ -41,6 +47,9 @@
                     <!-- Stats data will be populated here -->
                 </tbody>
             </table>
+        </div>
+        <div>
+            <canvas id="averageEventTimesChart" width="400" height="200"></canvas>
         </div>
     </div>
     <script type="module" src="indexStats.js"></script>

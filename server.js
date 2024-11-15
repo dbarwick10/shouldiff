@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import 'dotenv/config';
+import { match } from 'assert';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -82,14 +83,17 @@ app.get('/api/puuid', async (req, res) => {
 // Match stats endpoint
 app.get('/api/match-stats', async (req, res) => {
     console.log('Received request for match stats:', req.query);
-    const { puuid, region } = req.query;
+    const { puuid, region, gameMode } = req.query;
 
     if (!puuid) {
         return res.status(400).json({ error: 'Missing puuid parameter' });
     }
 
     try {
-        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${matchCount}&api_key=${RIOT_API_KEY}`;
+        // Request more matches initially if filtering by game mode to ensure we get enough
+        const initialCount = gameMode ? Math.min(100, matchCount * 3) : matchCount;
+        
+        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`;
         console.log('Fetching match IDs from Riot API');
         
         const matchIdsResponse = await fetch(matchIdsUrl);
@@ -107,7 +111,10 @@ app.get('/api/match-stats', async (req, res) => {
         console.log(`Found ${matchIds.length} matches`);
 
         const matchStats = [];
+
         for (const matchId of matchIds) {
+            if (matchStats.length >= matchCount) break;
+
             try {
                 const matchUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${RIOT_API_KEY}`;
                 console.log(`Fetching data for match ${matchId}`);
@@ -120,7 +127,18 @@ app.get('/api/match-stats', async (req, res) => {
                 }
 
                 const matchData = await matchResponse.json();
-                matchStats.push(matchData);
+
+                // Filter by game mode if specified
+                if (gameMode) {
+                    const matchGameMode = matchData.info.gameMode.toUpperCase();
+                    if (matchGameMode === gameMode.toUpperCase()) {
+                        matchStats.push(matchData);
+                        console.log(`Added ${matchGameMode} match. Current count: ${matchStats.length}/${matchCount}`);
+                    }
+                } else {
+                    matchStats.push(matchData);
+                    console.log(`Added match. Current count: ${matchStats.length}/${matchCount}`);
+                }
 
                 // Rate limiting delay
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -129,6 +147,8 @@ app.get('/api/match-stats', async (req, res) => {
             }
         }
 
+        console.log(`Returning ${matchStats.length} matches`);
+        // Send just the array of matches instead of an object
         res.json(matchStats);
     } catch (error) {
         console.error('Server error in /api/match-stats:', error);
