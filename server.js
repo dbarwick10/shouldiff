@@ -117,7 +117,7 @@ app.get('/api/match-stats', async (req, res) => {
 
             try {
                 const matchUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${RIOT_API_KEY}`;
-                console.log(`Fetching data for match ${matchId}`);
+                console.log(`Fetching data for ${gameMode} match ${matchId}`);
                 
                 const matchResponse = await fetch(matchUrl);
 
@@ -137,7 +137,7 @@ app.get('/api/match-stats', async (req, res) => {
                     }
                 } else {
                     matchStats.push(matchData);
-                    console.log(`Added match. Current count: ${matchStats.length}/${matchCount}`);
+                    console.log(`Added ${gameMode} match. Current count: ${matchStats.length}/${matchCount}`);
                 }
 
                 // Rate limiting delay

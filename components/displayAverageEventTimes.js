@@ -1,5 +1,6 @@
-export async function displayAverageEventTimes(averageEventTimes) {
+let averageEventTimesChart; // Declare a variable to hold the chart instance
 
+export async function displayAverageEventTimes(averageEventTimes) {
     // Define labels as the stat categories (kills, deaths, etc.)
     const labels = averageEventTimes.playerStats.kills.map((_, index) => `Kill ${index + 1}`);
 
@@ -46,36 +47,46 @@ export async function displayAverageEventTimes(averageEventTimes) {
         console.error('Failed to get canvas context');
         return;
     }
-    
-        const averageEventTimesChart = new Chart(ctx, {
-            type: 'line',
-    data: data,
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            title: {
-                display: true,
-                text: 'Average Time Until Each Kill Event'
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: false,
+
+    // Destroy the existing chart if it exists
+    if (averageEventTimesChart) {
+        averageEventTimesChart.destroy();
+    }
+
+    // Create a new chart
+    averageEventTimesChart = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
                 title: {
                     display: true,
-                    text: 'Time (seconds)'
+                    text: 'Average Time Until Each Kill Event'
                 }
             },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Kill Count'
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Time (seconds)'
+                    }
+                },
+                y: {
+                    type: 'category',
+                    labels: labels,
+                    reverse: true,
+                    title: {
+                        display: true,
+                        text: 'Event Type'
+                    }
                 }
             }
         }
-    }
     });
 }

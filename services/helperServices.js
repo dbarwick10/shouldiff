@@ -32,6 +32,15 @@ export async function fetchMatchData() {
         const playerId = await getPlayerId(matchStats, puuid);
         const events = await analyzeMatchTimelineForSummoner();
 
+        // // Filter matches based on selected game mode
+        // const gameModes = document.getElementById('gameModes').value;
+        // const filteredMatches = matchStats.matches.filter(match => !gameModes || match.info.gameMode === gameModes || gameModes === "");
+
+        // if (filteredMatches.length === 0) {
+        //     console.warn(`No matches found for game mode: ${gameModes}`);
+        //     return;
+        // }
+
         // Fetch match events
         console.log('Fetching match events...');
         const matchEvents = await fetchMatchEvents();
@@ -55,7 +64,7 @@ export async function fetchMatchData() {
         avgStats;
 
         return {
-            matches: filteredMatchStats.matches,
+            matches: matchStats.matches,
             playerStats,
             teamStats,
             enemyTeamStats,
@@ -68,7 +77,7 @@ export async function fetchMatchData() {
         };
     } catch (error) {
         console.error('Error fetching match data:', error);
-        // document.getElementById('output').innerHTML = `<p>Error fetching match data: ${error.message}</p>`;
+        document.getElementById('output').innerHTML = `<p>Error fetching match data</p>`;
         throw error;
     }
 }
