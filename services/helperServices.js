@@ -53,7 +53,7 @@ export async function fetchMatchData() {
         displayStats(playerStats, teamStats, enemyTeamStats);
 
         // Analyze match timeline
-        const analysis = await analyzePlayerStats(matchEvents, puuid);
+        const analysis = await analyzePlayerStats(matchEvents, puuid, matchStats);
         const individualGameStats = analysis.individualGameStats;
         console.log('Match analysis completed (aggregate):', analysis.aggregateStats);
         console.log('Match analysis completed:', individualGameStats);

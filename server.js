@@ -16,7 +16,8 @@ const httpsAgent = new https.Agent({
     rejectUnauthorized: false, // Disable SSL/TLS certificate verification
   });
 const PORT = 3000;
-const matchCount = 10;
+const matchCount = 20;
+let fetchedMatchIds = [];
 
 // Middleware
 app.use(cors());
@@ -110,6 +111,9 @@ app.get('/api/match-stats', async (req, res) => {
         const matchIds = await matchIdsResponse.json();
         console.log(`Found ${matchIds.length} matches`);
 
+        // fetchedMatchIds = matchIds; 
+        
+
         const matchStats = [];
 
         for (const matchId of matchIds) {
@@ -117,7 +121,7 @@ app.get('/api/match-stats', async (req, res) => {
 
             try {
                 const matchUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${RIOT_API_KEY}`;
-                console.log(`Fetching data for ${gameMode} match ${matchId}`);
+                console.log(`Fetching data for match ${matchId}`);
                 
                 const matchResponse = await fetch(matchUrl);
 
@@ -134,12 +138,14 @@ app.get('/api/match-stats', async (req, res) => {
                     if (matchGameMode === gameMode.toUpperCase()) {
                         matchStats.push(matchData);
                         console.log(`Added ${matchGameMode} match. Current count: ${matchStats.length}/${matchCount}`);
+                        fetchedMatchIds.push(matchId);
                     }
                 } else {
                     matchStats.push(matchData);
                     console.log(`Added ${gameMode} match. Current count: ${matchStats.length}/${matchCount}`);
                 }
-
+                
+                console.log('Stored match IDs:', fetchedMatchIds);
                 // Rate limiting delay
                 await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
@@ -158,7 +164,7 @@ app.get('/api/match-stats', async (req, res) => {
 
 // Match events endpoint
 app.get('/api/match-events', async (req, res) => {
-    console.log('Received request for match stats:', req.query);
+    console.log('Received request for match events:', req.query);
     const { puuid, region } = req.query;
 
     if (!puuid) {
@@ -166,25 +172,16 @@ app.get('/api/match-events', async (req, res) => {
     }
 
     try {
-        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${matchCount}&api_key=${RIOT_API_KEY}`;
-        console.log('Fetching match IDs from Riot API');
-        
-        const matchIdsResponse = await fetch(matchIdsUrl);
-
-        if (!matchIdsResponse.ok) {
-            const errorText = await matchIdsResponse.text();
-            console.error('Match IDs error:', errorText);
-            return res.status(matchIdsResponse.status).json({ 
-                error: 'Riot API error', 
-                details: errorText 
-            });
+        // Use the fetched match IDs from the match-stats endpoint
+        if (fetchedMatchIds.length === 0) {
+            return res.status(400).json({ error: 'No match IDs found. Please fetch match stats first.' });
         }
 
-        const matchIds = await matchIdsResponse.json();
-        console.log(`Found ${matchIds.length} match events`);
+        console.log('Fetching match events for the following matchIds:', fetchedMatchIds); // Log the match IDs being fetched
 
         const matchEvents = [];
-        for (const matchId of matchIds) {
+        for (const matchId of fetchedMatchIds) {
+
             try {
                 const matchUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/${matchId}/timeline?api_key=${RIOT_API_KEY}`;
                 console.log(`Fetching events for match ${matchId}`);
@@ -212,6 +209,9 @@ app.get('/api/match-events', async (req, res) => {
         res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
+
+
+
 
 app.get('/liveclientdata/allgamedata', async (req, res) => {
     try {

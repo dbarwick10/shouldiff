@@ -104,6 +104,7 @@ export function calculatePlayerStats(matchStats, puuid) {
     playerStats.surrenderWinTime = formatTime(playerStats.averageSurrenderWinTime);
     playerStats.surrenderLossTime = formatTime(playerStats.averageSurrenderLossTime);
 
+    console.log('Player stats:', playerStats);
     return playerStats;
 }
 

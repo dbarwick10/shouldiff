@@ -31,8 +31,8 @@ export function displayStats(playerStats, teamStats, enemyTeamStats) {
     const categories = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
     const statSections = [
         { name: `${summonerName}`, data: playerStats },
-        { name: 'Team', data: teamStats },
-        { name: 'Enemy', data: enemyTeamStats }
+        // { name: 'Team', data: teamStats },
+        // { name: 'Enemy', data: enemyTeamStats }
     ];
 
     const rows = categories.flatMap(category =>

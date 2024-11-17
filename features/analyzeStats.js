@@ -1,5 +1,7 @@
+
 import { analyzeMatchTimelineForSummoner } from '../features/matchTimeline.js';
 import { getItemDetails } from '../features/getItemsAndPrices.js';
+import { gameResult } from '../features/endGameResult.js';
 
 const destroyedItems = new Map();
 
@@ -29,20 +31,27 @@ function initializeStats(matchId) {
                 history: []
             }
         },
-        events: []
+        events: [],
+        outcome: {
+            result: null, // 'win', 'loss', 'surrender_win', 'surrender_loss'
+            surrender: false // true if the game ended due to a surrender
+        }
     };
 }
 
-export async function analyzePlayerStats(matchStats, puuid) {
+export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
     try {
         destroyedItems.clear();
 
-        // console.log('matchStats:', matchStats);
         const matches = Array.isArray(matchStats) ? matchStats : matchStats.matches;
         if (!matches || !Array.isArray(matches)) {
             console.error('Invalid matchStats structure:', matchStats);
             return null;
         }
+
+        // Get game results and add debug logging
+        const gameResults = await gameResult(gameResultMatches, puuid);
+        console.log('Game results for analysis:', gameResults);
 
         const matchTimelines = await analyzeMatchTimelineForSummoner({ matches }, puuid);
         if (!Array.isArray(matchTimelines)) {
@@ -59,13 +68,7 @@ export async function analyzePlayerStats(matchStats, puuid) {
 
         const individualGameStats = [];
 
-            // Log the initialized stats
-            // console.log('Aggregate playerStats:', aggregateStats.playerStats);
-            // console.log('Aggregate teamStats:', aggregateStats.teamStats);
-            // console.log('Aggregate enemyStats:', aggregateStats.enemyStats);
-
         for (const match of matchTimelines) {
-            // console.log('Processing match:', match.matchId);
             const { matchId, allEvents, metadata } = match;
             
             if (!allEvents || !Array.isArray(allEvents)) {
@@ -73,17 +76,33 @@ export async function analyzePlayerStats(matchStats, puuid) {
                 continue;
             }
 
-            // Initialize stats for this match
             const gameStats = {
                 playerStats: initializeStats(matchId),
                 teamStats: initializeStats(matchId),
                 enemyStats: initializeStats(matchId)
             };
 
-            // Log the initialized stats for this match
-            // console.log(`PlayerStats match ${matchId}:`, gameStats.playerStats);
-            // console.log(`TeamStats for match ${matchId}:`, gameStats.teamStats);
-            // console.log(`EnemyStats for match ${matchId}:`, gameStats.enemyStats);
+            // Debug log for specific match
+            // console.log(`Processing match ${matchId} for outcome`);
+            
+            // Update game outcome with detailed logging
+            const isWin = gameResults.results.wins.some(game => game.matchId === matchId);
+            const isSurrender = gameResults.results.surrenderWins.some(game => game.matchId === matchId) ||
+                              gameResults.results.surrenderLosses.some(game => game.matchId === matchId);
+
+            // console.log(`Match ${matchId} outcome check:`, {
+            //     isWin,
+            //     isSurrender,
+            //     inWinsArray: gameResults.results.wins.map(g => g.matchId),
+            //     inLossesArray: gameResults.results.losses.map(g => g.matchId)
+            // });
+
+            gameStats.playerStats.outcome.result = isWin 
+                ? (isSurrender ? 'surrenderWin' : 'win')
+                : (isSurrender ? 'surrenderLoss' : 'loss');
+            gameStats.playerStats.outcome.surrender = isSurrender;
+
+            console.log(`Final outcome for match ${matchId}:`, gameStats.playerStats.outcome);
 
             const participantInfo = getParticipantInfo(allEvents);
             if (!participantInfo) {

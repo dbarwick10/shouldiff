@@ -2,73 +2,73 @@ export function calculateAverageEventTimes(individualGameStats) {
     console.log('Starting calculateAverageEventTimes with data:', individualGameStats);
     
     const aggregatedTimestamps = {
-        playerStats: {
-            kills: [],
-            deaths: [],
-            assists: [],
-            outerTowerKills: [],
-            innerTowerKills: [],
-            baseTowerKills: [],
-            nexusTowerKills: [],
-            inhibitorKills: [],
-            eliteMonsterKills: [],
-            itemGold: []
-        },
-        teamStats: {
-            kills: [],
-            deaths: [],
-            assists: [],
-            outerTowerKills: [],
-            innerTowerKills: [],
-            baseTowerKills: [],
-            nexusTowerKills: [],
-            inhibitorKills: [],
-            eliteMonsterKills: [],
-            itemGold: []
-        },
-        enemyStats: {
-            kills: [],
-            deaths: [],
-            assists: [],
-            outerTowerKills: [],
-            innerTowerKills: [],
-            baseTowerKills: [],
-            nexusTowerKills: [],
-            inhibitorKills: [],
-            eliteMonsterKills: [],
-            itemGold: []
-        }
+        playerStats: initializeStats(),
+        teamStats: initializeStats(),
+        enemyStats: initializeStats()
     };
 
     individualGameStats.forEach((match, index) => {
-        console.log(`Processing match ${index}:`, match);
-        aggregatePlayerStats(aggregatedTimestamps.playerStats, match.playerStats);
-        aggregatePlayerStats(aggregatedTimestamps.teamStats, match.teamStats);
-        aggregatePlayerStats(aggregatedTimestamps.enemyStats, match.enemyStats);
+        // Aggregate stats based on match outcome
+        const { outcome } = match.playerStats;
+        const category = getOutcomeCategory(outcome.result);
+
+        if (category) {
+            aggregatePlayerStats(aggregatedTimestamps.playerStats[category], match.playerStats);
+            aggregatePlayerStats(aggregatedTimestamps.teamStats[category], match.teamStats);
+            aggregatePlayerStats(aggregatedTimestamps.enemyStats[category], match.enemyStats);
+        }
     });
 
     console.log('After processing all matches, aggregatedTimestamps:', aggregatedTimestamps);
 
+    // Calculate averages for each category
     const averageEventTimes = {
-        playerStats: calculateAverageTimesForStats(aggregatedTimestamps.playerStats),
-        teamStats: calculateAverageTimesForStats(aggregatedTimestamps.teamStats),
-        enemyStats: calculateAverageTimesForStats(aggregatedTimestamps.enemyStats)
+        playerStats: calculateAverageForCategories(aggregatedTimestamps.playerStats),
+        teamStats: calculateAverageForCategories(aggregatedTimestamps.teamStats),
+        enemyStats: calculateAverageForCategories(aggregatedTimestamps.enemyStats)
     };
 
     console.log('Final averageEventTimes:', averageEventTimes);
     return averageEventTimes;
 }
 
-function aggregateTimestamps(aggregatedArray, timestamps) {
-    if (!Array.isArray(timestamps)) return;
+function initializeStats() {
+    return {
+        wins: initializeAggregatedStats(),
+        losses: initializeAggregatedStats(),
+        surrenderWins: initializeAggregatedStats(),
+        surrenderLosses: initializeAggregatedStats()
+    };
+}
 
-    timestamps.forEach((timestamp, index) => {
-        if (timestamp === undefined || timestamp === null) return;
-        if (!aggregatedArray[index]) {
-            aggregatedArray[index] = [];
-        }
-        aggregatedArray[index].push(timestamp);
-    });
+function initializeAggregatedStats() {
+    return {
+        kills: [],
+        deaths: [],
+        assists: [],
+        outerTowerKills: [],
+        innerTowerKills: [],
+        baseTowerKills: [],
+        nexusTowerKills: [],
+        inhibitorKills: [],
+        eliteMonsterKills: [],
+        itemGold: []
+    };
+}
+
+function getOutcomeCategory(result) {
+    switch (result) {
+        case 'win':
+            return 'wins';
+        case 'loss':
+            return 'losses';
+        case 'surrenderWin':
+            return 'surrenderWins';
+        case 'surrenderLoss':
+            return 'surrenderLosses';
+        default:
+            return null;
+    }
 }
 
 function aggregatePlayerStats(aggregatedStats, stats) {
@@ -92,26 +92,15 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     }
 }
 
-function calculateAverageTimesForStats(aggregatedStats) {
-    return {
-        kills: calculateAverageTimes(aggregatedStats.kills),
-        deaths: calculateAverageTimes(aggregatedStats.deaths),
-        assists: calculateAverageTimes(aggregatedStats.assists),
-        outerTowerKills: calculateAverageTimes(aggregatedStats.outerTowerKills),
-        innerTowerKills: calculateAverageTimes(aggregatedStats.innerTowerKills),
-        baseTowerKills: calculateAverageTimes(aggregatedStats.baseTowerKills),
-        nexusTowerKills: calculateAverageTimes(aggregatedStats.nexusTowerKills),
-        inhibitorKills: calculateAverageTimes(aggregatedStats.inhibitorKills),
-        eliteMonsterKills: calculateAverageTimes(aggregatedStats.eliteMonsterKills),
-        itemGold: calculateAverageItemGold(aggregatedStats.itemGold)
-    };
-}
+function aggregateTimestamps(aggregatedArray, timestamps) {
+    if (!Array.isArray(timestamps)) return;
 
-function calculateAverageTimes(aggregatedArray) {
-    return aggregatedArray.map(timestamps => {
-        if (!timestamps || timestamps.length === 0) return null;
-        const sum = timestamps.reduce((acc, timestamp) => acc + timestamp, 0);
-        return sum / timestamps.length;
+    timestamps.forEach((timestamp, index) => {
+        if (timestamp === undefined || timestamp === null) return;
+        if (!aggregatedArray[index]) {
+            aggregatedArray[index] = [];
+        }
+        aggregatedArray[index].push(timestamp);
     });
 }
 
@@ -134,4 +123,36 @@ function calculateAverageItemGold(itemGoldData) {
         timestamp,
         averageAmount: totalAmount / count
     }));
+}
+
+function calculateAverageForCategories(categories) {
+    return {
+        wins: calculateAverageTimesForStats(categories.wins),
+        losses: calculateAverageTimesForStats(categories.losses),
+        surrenderWins: calculateAverageTimesForStats(categories.surrenderWins),
+        surrenderLosses: calculateAverageTimesForStats(categories.surrenderLosses)
+    };
+}
+
+function calculateAverageTimesForStats(aggregatedStats) {
+    return {
+        kills: calculateAverageTimes(aggregatedStats.kills),
+        deaths: calculateAverageTimes(aggregatedStats.deaths),
+        assists: calculateAverageTimes(aggregatedStats.assists),
+        outerTowerKills: calculateAverageTimes(aggregatedStats.outerTowerKills),
+        innerTowerKills: calculateAverageTimes(aggregatedStats.innerTowerKills),
+        baseTowerKills: calculateAverageTimes(aggregatedStats.baseTowerKills),
+        nexusTowerKills: calculateAverageTimes(aggregatedStats.nexusTowerKills),
+        inhibitorKills: calculateAverageTimes(aggregatedStats.inhibitorKills),
+        eliteMonsterKills: calculateAverageTimes(aggregatedStats.eliteMonsterKills),
+        itemGold: calculateAverageItemGold(aggregatedStats.itemGold)
+    };
+}
+
+function calculateAverageTimes(aggregatedArray) {
+    return aggregatedArray.map(timestamps => {
+        if (!timestamps || timestamps.length === 0) return null;
+        const sum = timestamps.reduce((acc, timestamp) => acc + timestamp, 0);
+        return sum / timestamps.length;
+    });
 }
