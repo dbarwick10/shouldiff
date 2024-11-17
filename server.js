@@ -91,6 +91,9 @@ app.get('/api/match-stats', async (req, res) => {
     }
 
     try {
+        fetchedMatchIds = [];
+        console.log('[] Cleared fetchedMatchIds []');
+
         // Request more matches initially if filtering by game mode to ensure we get enough
         const initialCount = gameMode ? Math.min(100, matchCount * 3) : matchCount;
         
