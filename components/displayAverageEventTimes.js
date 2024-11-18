@@ -1,104 +1,107 @@
-let averageEventTimesChart; // Declare a variable to hold the chart instance
-
-export async function displayAverageEventTimes(averageEventTimes) {
+export async function displayAverageEventTimes(averageEventTimes, liveStatsPromise) {
     const dropdown = document.getElementById('statSelector');
+    let chart, liveStatsInterval;
 
-    // Add an event listener to the dropdown
-    dropdown.addEventListener('change', () => {
-        const selectedStat = dropdown.value; // Get the selected stat
-        updateChart(selectedStat, averageEventTimes);
+    const statOptions = ['kills', 'deaths', 'assists'];
+    const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
+
+    const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+
+    dropdown.innerHTML = '';
+    statOptions.forEach(stat => {
+        const option = document.createElement('option');
+        option.value = stat;
+        option.textContent = capitalizeFirstLetter(stat);
+        dropdown.appendChild(option);
     });
 
-    // Initialize the chart with the default stat (e.g., "kills")
-    updateChart('kills', averageEventTimes);
-}
+    async function updateChart(selectedStat, liveStats = null) {
+        const maxEventCount = Math.max(
+            ...statKeys.map(key => averageEventTimes.playerStats[key][selectedStat]?.length || 0)
+        );
 
-function updateChart(stat, averageEventTimes) {
-    // Dynamically generate labels based on the selected stat's data length
-    const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
-    const maxEventCount = Math.max(
-        ...statKeys.map(key => averageEventTimes.playerStats[key][stat]?.length || 0)
-    );
-    const labels = Array.from({ length: maxEventCount }, (_, index) => `${stat.charAt(0).toUpperCase() + stat.slice(1)} ${index + 1}`);
+        const labels = Array.from(
+            { length: maxEventCount },
+            (_, i) => `${capitalizeFirstLetter(selectedStat)} ${i + 1}`
+        );
 
-    // Prepare datasets for the selected stat
-    const data = {
-        labels: labels,
-        datasets: [
-            {
-                label: `Player ${stat.charAt(0).toUpperCase() + stat.slice(1)} Time (Wins)`,
-                data: averageEventTimes.playerStats.wins[stat],
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: `Player ${stat.charAt(0).toUpperCase() + stat.slice(1)} Time (Losses)`,
-                data: averageEventTimes.playerStats.losses[stat],
-                borderColor: 'rgba(255, 99, 132, 1)',
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: `Player ${stat.charAt(0).toUpperCase() + stat.slice(1)} Time (Surrender Wins)`,
-                data: averageEventTimes.playerStats.surrenderWins[stat],
-                borderColor: 'rgba(54, 162, 235, 1)',
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                fill: true,
-                tension: 0.3
-            },
-            {
-                label: `Player ${stat.charAt(0).toUpperCase() + stat.slice(1)} Time (Surrender Losses)`,
-                data: averageEventTimes.playerStats.surrenderLosses[stat],
-                borderColor: 'rgba(255, 206, 86, 1)',
-                backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                fill: true,
-                tension: 0.3
-            }
-        ]
-    };
+        const datasets = statKeys.map((key, index) => ({
+            label: `Historical ${selectedStat} (${key})`,
+            data: averageEventTimes.playerStats[key][selectedStat] || [],
+            borderColor: `rgba(${index * 50}, ${255 - index * 50}, ${index * 100}, 1)`,
+            backgroundColor: `rgba(${index * 50}, ${255 - index * 50}, ${index * 100}, 0.2)`,
+            fill: true,
+            tension: 0.3,
+        }));
 
-    // Destroy the existing chart if it exists
-    const canvas = document.getElementById('averageEventTimesChart');
-    const ctx = canvas.getContext('2d');
-    if (averageEventTimesChart) {
-        averageEventTimesChart.destroy();
+        // Add live stats dataset only if liveStats exists
+        if (liveStats) {
+            const liveDataset = {
+                label: `Current Game ${selectedStat}`,
+                data: liveStats[selectedStat] || [],
+                borderColor: 'rgba(0, 255, 0, 1)',
+                backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                fill: true,
+                tension: 0.3,
+            };
+            datasets.push(liveDataset);
+        }
+
+        const ctx = document.getElementById('averageEventTimesChart').getContext('2d');
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: `Historical vs Live ${capitalizeFirstLetter(selectedStat)} Times` },
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Time (seconds)' } },
+                },
+                animation: { duration: 0 },
+            },
+        });
+
+        // Set up live stats interval only if liveStats is defined
+        if (liveStats) {
+            if (liveStatsInterval) clearInterval(liveStatsInterval);
+
+            liveStatsInterval = setInterval(async () => {
+                try {
+                    const liveData = await getLiveData();
+                    if (liveData?.events) {
+                        const updatedLiveStats = await calculateLiveStats(liveData.events);
+                        chart.data.datasets[datasets.length - 1].data = updatedLiveStats[selectedStat];
+
+                        if (updatedLiveStats[selectedStat].length > chart.data.labels.length) {
+                            chart.data.labels = Array.from(
+                                { length: updatedLiveStats[selectedStat].length },
+                                (_, i) => `${capitalizeFirstLetter(selectedStat)} ${i + 1}`
+                            );
+                        }
+
+                        chart.update('none');
+                    }
+                } catch (error) {
+                    console.error('Error updating live stats:', error);
+                    clearInterval(liveStatsInterval);
+                }
+            }, FETCH_INTERVAL_MS);
+        }
     }
 
-    // Create a new chart with the selected stat
-    averageEventTimesChart = new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                title: {
-                    display: true,
-                    text: `Average Time Until Each ${stat.charAt(0).toUpperCase() + stat.slice(1)} Event`
-                }
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    position: 'bottom',
-                    title: {
-                        display: true,
-                        text: 'Time (seconds)'
-                    }
-                },
-                x: {
-                    type: 'category',
-                    title: {
-                        display: true,
-                        text: `${stat.charAt(0).toUpperCase() + stat.slice(1)} Index`
-                    }
-                }
-            }
-        }
-    });
+    try {
+        const initialLiveStats = liveStatsPromise ? await liveStatsPromise : null;
+        dropdown.addEventListener('change', (e) => updateChart(e.target.value, initialLiveStats));
+        dropdown.value = 'kills';
+        updateChart('kills', initialLiveStats);
+    } catch (error) {
+        console.error('Error initializing live stats:', error);
+    }
+
+    return { updateChart };
 }

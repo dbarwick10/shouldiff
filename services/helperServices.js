@@ -8,6 +8,8 @@ import { analyzePlayerStats } from "../features/analyzeStats.js";
 import { getItemsAndPrices, clearCacheOnStart } from "../features/getItemsAndPrices.js";
 import { calculateAverageEventTimes } from "../features/avgEventTimesStats.js";
 import { displayAverageEventTimes } from "../components/displayAverageEventTimes.js";
+// import { getLiveData } from "./liveDataServices.js";
+// import { calculateLiveStats } from "../features/liveMatchStats.js";
 
 export async function fetchMatchData() {
 
@@ -58,9 +60,13 @@ export async function fetchMatchData() {
         console.log('Match analysis completed (aggregate):', analysis.aggregateStats);
         console.log('Match analysis completed:', individualGameStats);
 
+        //live game data
+        // const liveStats = await calculateLiveStats();
+
         // Populate Chart
         const averageEventTimes = await calculateAverageEventTimes(individualGameStats);
         const avgStats = await displayAverageEventTimes(averageEventTimes);
+        // const avgStats = await displayAverageEventTimes(averageEventTimes, liveStats);
         avgStats;
 
         return {
@@ -74,6 +80,7 @@ export async function fetchMatchData() {
             ,analysis
             //,averageEventTimes
             ,avgStats
+            // ,liveStats
         };
     } catch (error) {
         console.error('Error fetching match data:', error);

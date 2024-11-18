@@ -16,7 +16,7 @@ const httpsAgent = new https.Agent({
     rejectUnauthorized: false, // Disable SSL/TLS certificate verification
   });
 const PORT = 3000;
-const matchCount = 20;
+const matchCount = 5;
 let fetchedMatchIds = [];
 
 // Middleware
@@ -136,7 +136,7 @@ app.get('/api/match-stats', async (req, res) => {
                 const matchData = await matchResponse.json();
 
                 // Filter by game mode if specified
-                if (gameMode) {
+                if (gameMode && gameMode !== 'ALL') {
                     const matchGameMode = matchData.info.gameMode.toUpperCase();
                     if (matchGameMode === gameMode.toUpperCase()) {
                         matchStats.push(matchData);
@@ -146,6 +146,7 @@ app.get('/api/match-stats', async (req, res) => {
                 } else {
                     matchStats.push(matchData);
                     console.log(`Added ${gameMode} match. Current count: ${matchStats.length}/${matchCount}`);
+                    fetchedMatchIds.push(matchId);
                 }
                 
                 console.log('Stored match IDs:', fetchedMatchIds);
