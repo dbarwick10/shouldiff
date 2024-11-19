@@ -164,6 +164,27 @@ table {
     border: none;
 }
 
+.status-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+    transition: background-color 0.3s ease;
+}
+
+.status-text {
+    color: #666;
+    transition: color 0.3s ease;
+}
+
 #player-summary th {
     background-color: rgba(13, 13, 18, 0.6);
     color: #d4af37;

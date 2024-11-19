@@ -1,9 +1,9 @@
 import { getPuuid } from "../services/riotAPIServices.js";
 import { fetchMatchData } from "../services/helperServices.js";
-//import { fetchMatchEvents } from "../services/riotAPIServices.js";
 import { displayStats } from "../components/displayStatsComp.js";
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM elements loaded:', { statsButton: !!document.getElementById('fetchStatsButton') })
     const analyzeButton = document.getElementById('fetchStatsButton');
     if (analyzeButton) {
         console.log('DOM elements before update:', { statsButton: !!document.getElementById('fetchStatsButton') })
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;  // Prevent double-clicking
             try {
                 const puuid = await getPuuid();
-                const matchStats = await fetchMatchData(puuid, region);
+                const matchStats = await fetchMatchData();
                 if (matchStats) {
                     displayStats(matchStats.playerStats, matchStats.teamStats, matchStats.enemyTeamStats);
                 }

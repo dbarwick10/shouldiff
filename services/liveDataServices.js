@@ -1,4 +1,4 @@
-import { notInAGame } from "../components/updateAllStatsComp.js";
+// import { notInAGame } from "../components/updateAllStatsComp.js";
 
 let cachedGameData = null;
 let lastFetchTime = null;
@@ -23,7 +23,7 @@ export async function getLiveData() {
     // }
 
     try {
-        const TESTING = true; // Toggle for testing or production
+        const TESTING = false; // Toggle for testing or production
         const API_URL = TESTING
             ? '/test/allgamedata.json'
             : "http://127.0.0.1:3000/liveclientdata/allgamedata";
@@ -51,3 +51,4 @@ export async function getLiveData() {
         return null;
     }
 }
+

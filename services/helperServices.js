@@ -8,11 +8,9 @@ import { analyzePlayerStats } from "../features/analyzeStats.js";
 import { getItemsAndPrices, clearCacheOnStart } from "../features/getItemsAndPrices.js";
 import { calculateAverageEventTimes } from "../features/avgEventTimesStats.js";
 import { displayAverageEventTimes } from "../components/displayAverageEventTimes.js";
-// import { getLiveData } from "./liveDataServices.js";
-// import { calculateLiveStats } from "../features/liveMatchStats.js";
+import { calculateLiveStats } from "../features/liveMatchStats.js";
 
 export async function fetchMatchData() {
-
     try {
         // Fetch and cache item prices for the last three versions
         console.log('Clearing item prices cache...');
@@ -34,15 +32,6 @@ export async function fetchMatchData() {
         const playerId = await getPlayerId(matchStats, puuid);
         const events = await analyzeMatchTimelineForSummoner();
 
-        // // Filter matches based on selected game mode
-        // const gameModes = document.getElementById('gameModes').value;
-        // const filteredMatches = matchStats.matches.filter(match => !gameModes || match.info.gameMode === gameModes || gameModes === "");
-
-        // if (filteredMatches.length === 0) {
-        //     console.warn(`No matches found for game mode: ${gameModes}`);
-        //     return;
-        // }
-
         // Fetch match events
         console.log('Fetching match events...');
         const matchEvents = await fetchMatchEvents();
@@ -60,14 +49,17 @@ export async function fetchMatchData() {
         console.log('Match analysis completed (aggregate):', analysis.aggregateStats);
         console.log('Match analysis completed:', individualGameStats);
 
-        //live game data
-        // const liveStats = await calculateLiveStats();
-
-        // Populate Chart
+        // Calculate average event times
         const averageEventTimes = await calculateAverageEventTimes(individualGameStats);
-        const avgStats = await displayAverageEventTimes(averageEventTimes);
-        // const avgStats = await displayAverageEventTimes(averageEventTimes, liveStats);
-        avgStats;
+
+        // Try to get live stats, but don't let it block the chart display if it fails
+        //let liveStats;
+        
+            const liveStats = await calculateLiveStats();
+            
+
+        // Display the chart with or without live stats
+        const avgStats = await displayAverageEventTimes(averageEventTimes, liveStats);
 
         return {
             matches: matchStats.matches,
@@ -76,11 +68,10 @@ export async function fetchMatchData() {
             enemyTeamStats,
             playerTeamId,
             teamMates,
-            playerId
-            ,analysis
-            //,averageEventTimes
-            ,avgStats
-            // ,liveStats
+            playerId,
+            analysis,
+            avgStats,
+            liveStats: liveStats // Only included if available
         };
     } catch (error) {
         console.error('Error fetching match data:', error);
@@ -88,3 +79,5 @@ export async function fetchMatchData() {
         throw error;
     }
 }
+
+
