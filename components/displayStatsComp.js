@@ -50,7 +50,7 @@ export function displayStats(playerStats, teamStats, enemyTeamStats) {
         <div>
             <table>
                 <tr>
-                    <th>Outcome</th><th>Category</th><th>Average KDA</th><th>Average Level</th><th>Average Item Gold</th><th>Average Time Spent Dead</th><th>Average Turrets Killed</th><th>Average Inhibitors Killed</th>
+                    <th>${summonerName}</th><th>Average KDA</th><th>Average Level</th><th>Average Item Gold</th><th>Average Time Spent Dead</th><th>Average Turrets Killed</th><th>Average Inhibitors Killed</th>
                 </tr>
                 ${rows.join('')}
             </table>

@@ -34,7 +34,6 @@ export function generateRow(category, section, playerStats, teamStats, enemyTeam
     return `
         <tr>
             <td>${category}</td>
-            <td>${section.name}</td>
             <td>${avgKDA.toFixed(2)}</td>
             <td>${avgLevel.toFixed(2)}</td>
             <td>${avgItemGold.toFixed(0)}</td>

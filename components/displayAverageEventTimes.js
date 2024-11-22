@@ -10,7 +10,8 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let currentLiveStats = null;
     let refreshInterval;
 
-    const statOptions = ['kills', 'deaths', 'assists'];
+    const statOptions = ['kills', 'deaths', 'assists', 'kda', 'turretKills', 'outerTowerKills', 'innerTowerKills', 'baseTowerKills', 'nexusTowerKills', 'inhibitorKills', 'eliteMonsterKills', 'itemGold'];
+
     const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
     const colorConfig = {
         wins: { borderColor: 'rgb(46, 204, 113, .75)', backgroundColor: 'rgb(46, 204, 113, 0.1)' },
@@ -83,26 +84,33 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
             chart.destroy();
         }
 
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { 
+                    display: true, 
+                    text: `Historical${currentLiveStats ? ' vs Live' : ''} ${capitalizeFirstLetter(selectedStat)} ${selectedStat === 'kda' ? 'Ratio' : 'Times'}` 
+                }
+            },
+            scales: {
+                y: { 
+                    title: { 
+                        display: true, 
+                        text: selectedStat === 'kda' ? 'KDA Ratio' : 'Time (seconds)' 
+                    },
+                    beginAtZero: selectedStat !== 'kda',
+                    min: selectedStat === 'kda' ? -5 : undefined,
+                    max: selectedStat === 'kda' ? 5 : undefined
+                }
+            },
+            animation: { duration: 0 }
+        };
+    
         chart = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    title: { 
-                        display: true, 
-                        text: `Historical${currentLiveStats ? ' vs Live' : ''} ${capitalizeFirstLetter(selectedStat)} Times` 
-                    }
-                },
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        title: { display: true, text: 'Time (seconds)' } 
-                    }
-                },
-                animation: { duration: 0 }
-            }
+            options: chartOptions
         });
         
         console.log(`Chart updated for ${selectedStat}`);

@@ -46,6 +46,8 @@ function initializeAggregatedStats() {
         kills: [],
         deaths: [],
         assists: [],
+        kda: [],
+        turretKills: [],
         outerTowerKills: [],
         innerTowerKills: [],
         baseTowerKills: [],
@@ -80,13 +82,21 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     aggregateTimestamps(aggregatedStats.kills, stats.basicStats?.kills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.deaths, stats.basicStats?.deaths?.timestamps || []);
     aggregateTimestamps(aggregatedStats.assists, stats.basicStats?.assists?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.kda, stats.basicStats?.kda?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.turretKills, stats.objectives?.turretKills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.outerTowerKills, stats.objectives?.towerKills?.outer?.timestamps || []);
     aggregateTimestamps(aggregatedStats.innerTowerKills, stats.objectives?.towerKills?.inner?.timestamps || []);
     aggregateTimestamps(aggregatedStats.baseTowerKills, stats.objectives?.towerKills?.base?.timestamps || []);
     aggregateTimestamps(aggregatedStats.nexusTowerKills, stats.objectives?.towerKills?.nexus?.timestamps || []);
     aggregateTimestamps(aggregatedStats.inhibitorKills, stats.objectives?.inhibitorKills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.eliteMonsterKills, stats.objectives?.eliteMonsterKills?.timestamps || []);
-
+    if (stats.basicStats?.kda?.history?.count && stats.basicStats.kda.history.timestamps) {
+        aggregateKDATimestamps(
+            aggregatedStats.kda, 
+            stats.basicStats.kda.history.count,
+            stats.basicStats.kda.history.timestamps
+        );
+    }
     if (stats.economy?.itemGold?.history) {
         aggregateItemGold(aggregatedStats.itemGold, stats.economy.itemGold.history);
     }
@@ -101,6 +111,23 @@ function aggregateTimestamps(aggregatedArray, timestamps) {
             aggregatedArray[index] = [];
         }
         aggregatedArray[index].push(timestamp);
+    });
+}
+
+function aggregateKDATimestamps(aggregatedArray, kdaValues, timestamps) {
+    if (!Array.isArray(kdaValues) || !Array.isArray(timestamps)) return;
+
+    timestamps.forEach((timestamp, index) => {
+        if (timestamp === undefined || timestamp === null) return;
+        
+        const kdaValue = kdaValues[index];
+        if (kdaValue === undefined) return;
+
+        if (!aggregatedArray[index]) {
+            aggregatedArray[index] = [];
+        }
+        
+        aggregatedArray[index].push(kdaValue);
     });
 }
 
@@ -139,6 +166,8 @@ function calculateAverageTimesForStats(aggregatedStats) {
         kills: calculateAverageTimes(aggregatedStats.kills),
         deaths: calculateAverageTimes(aggregatedStats.deaths),
         assists: calculateAverageTimes(aggregatedStats.assists),
+        kda: calculateAverageTimes(aggregatedStats.kda),
+        turretKills: calculateAverageTimes(aggregatedStats.turretKills),
         outerTowerKills: calculateAverageTimes(aggregatedStats.outerTowerKills),
         innerTowerKills: calculateAverageTimes(aggregatedStats.innerTowerKills),
         baseTowerKills: calculateAverageTimes(aggregatedStats.baseTowerKills),

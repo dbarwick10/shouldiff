@@ -40,6 +40,27 @@ export async function getActivePlayerTeam() {
     }
 }
 
+export async function getActivePlayer() {
+    try {
+        const allGameData = await getLiveData(); // Use cached game data
+        const activePlayerName = allGameData.activePlayer.riotIdGameName; // Get active player name
+
+        // Find the active player in the 'allPlayers' list
+        const activePlayer = allGameData.allPlayers.find(player => player.riotIdGameName === activePlayerName);
+        
+        if (activePlayer) {
+            //console.log("Active player team:", activePlayer.team); // Log the active player's team
+            return activePlayer; // Return the active player's team if found
+        } else {
+            //console.log("Active player not found."); // Log if active player is not found
+            return null; // Return null if player is not found
+        }
+    } catch (error) {
+        console.error('Error fetching active player or player list:', error);
+        return null; // Return null on error
+    }
+}
+
 export async function getGameTime() {
     const time = allGameData.gameData.gameTime
     const minutes = Math.floor(time / 60)
