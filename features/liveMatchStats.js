@@ -1,11 +1,11 @@
 import { getLiveData } from "../services/liveDataServices.js";
 
 export async function calculateLiveStats() {
-    console.log('Entering calculateLiveStats'); // Added logging
+    console.log('Entering calculateLiveStats');
 
     try {
         const gameData = await getLiveData();
-        console.log('Received game data:', gameData); // Log received data
+        console.log('Received game data:', gameData);
 
         // Explicit, verbose null/undefined checks
         if (!gameData) {
@@ -33,7 +33,7 @@ export async function calculateLiveStats() {
         }
 
         const events = gameData.events.Events;
-        console.log('Events found:', events.length); // Log number of events
+        console.log('Events found:', events.length);
         
         // Track events for the active player only
         const activePlayerStats = { 
@@ -48,14 +48,19 @@ export async function calculateLiveStats() {
         const activePlayerName = gameData?.activePlayer?.riotIdGameName;
         console.log('Active player name:', activePlayerName);
 
-        const allPlayers = allGameData.allPlayers;
-            if (!allPlayers || !allGameData.events || !allGameData.events.Events) {
-                console.error('Required data not found in game data');
-                return;
-            }
-        const teamPlayers = allPlayers
-            .filter(player => player.team === team) 
-            .map(player => player.riotIdGameName); 
+        // Fixed: Use gameData instead of allGameData
+        const allPlayers = gameData.allPlayers;
+        if (!allPlayers || !gameData.events || !gameData.events.Events) {
+            console.error('Required data not found in game data');
+            return activePlayerStats; // Return empty stats instead of undefined
+        }
+
+        // Note: The team filtering might not be needed if we're only tracking active player
+        // But if you need it, you'll need to get the team from gameData.activePlayer
+        // const team = gameData.activePlayer.team;
+        // const teamPlayers = allPlayers
+        //     .filter(player => player.team === team)
+        //     .map(player => player.riotIdGameName);
 
         events.forEach(event => {
             if (event.EventName === "ChampionKill") {
@@ -64,7 +69,7 @@ export async function calculateLiveStats() {
                 if (activePlayerName) {
                     // Record kills
                     if (KillerName === activePlayerName) {
-                        activePlayerStats.kills.push(event.EventTime);
+                        activePlayerStats.kills.push(EventTime);
                     }
                     
                     // Record deaths
@@ -77,59 +82,40 @@ export async function calculateLiveStats() {
                         activePlayerStats.assists.push(EventTime);
                     }
 
+                    // Update KDA after each relevant event
                     if (KillerName === activePlayerName || VictimName === activePlayerName || Assisters.includes(activePlayerName)) {
-                        const kda = (activePlayerStats.kills.length + activePlayerStats.assists.length) / (activePlayerStats.deaths.length || 1);
-                        activePlayerStats.kda.push(kda);
+                        const kda = (activePlayerStats.kills.length + activePlayerStats.assists.length) / 
+                                  (activePlayerStats.deaths.length || 1);
+                        activePlayerStats.kda.push(parseFloat(kda.toFixed(2))); // Round to 2 decimal places
                     }
                 }
-            } else if (event.EventName === "TurretKilled") 
-            {
+            } else if (event.EventName === "TurretKilled") {
                 const { KillerName, EventTime } = event;
                 
-                if (activePlayerName) {
-                    // Record turret kills
-                    if (KillerName === activePlayerName) {
-                        activePlayerStats.turretKills.push(EventTime);
-                    }
+                if (activePlayerName && KillerName === activePlayerName) {
+                    activePlayerStats.turretKills.push(EventTime);
                 }
-            } else if (event.EventName === "InhibitorKilled") 
-            {
+            } else if (event.EventName === "InhibitorKilled") {
                 const { KillerName, EventTime } = event;
                 
-                if (activePlayerName) {
-                    // Record inhibitor kills
-                    if (KillerName === activePlayerName) {
-                        activePlayerStats.inhibitorKills.push(EventTime);
-                    }
+                if (activePlayerName && KillerName === activePlayerName) {
+                    activePlayerStats.inhibitorKills.push(EventTime);
                 }
             }
         });
         
         console.log('Calculated active player stats:', activePlayerStats);
         return activePlayerStats;
+
     } catch (error) {
         console.error('Complete error in calculateLiveStats:', error);
-        return { kills: [], deaths: [], assists: [] };
+        return { 
+            kills: [], 
+            deaths: [], 
+            assists: [], 
+            kda: [],
+            turretKills: [],
+            inhibitorKills: []
+        };
     }
 }
-
-// let timeoutId;
-// const refreshTime = 1000; // 1 second
-
-// async function autoRefresh() {
-//     const gameData = await getLiveData();
-
-//     clearTimeout(timeoutId); 
-//     // console.log("Auto-refresh triggered");
-//     // console.log("Memory usage:", performance.memory.usedJSHeapSize);
-
-//      if (gameData) {
-//         calculateLiveStats; // Call your function to update stats based on new data
-        
-//     }
-    
-
-//     timeoutId = setTimeout(autoRefresh, refreshTime); 
-// }
-
-// autoRefresh();

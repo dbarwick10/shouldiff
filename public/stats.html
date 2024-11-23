@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>League of Legends Stats</title>
-    <link rel="stylesheet" href="/css/analysis-styles.css">
+    <link rel="stylesheet" href="/css/statStyle.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -26,19 +26,9 @@
                 <option value="ultbook">ULTBOOK</option>
                 <option value="all" selected>All selected</option>
             </select>
-            <label for="statSelector">Choose a stat:</label>
-            <select id="statSelector">
-                <option value="kills" selected>Kills</option>
-                <option value="deaths">Deaths</option>
-                <option value="assists">Assists</option>
-                <option value="kda">KDA</option>
-                <option value="turretKills">Turret Kills</option>
-                <option value="inhibitorKills">Inhibitor Kills</option>
-            </select>
             <button id="fetchStatsButton">Fetch Stats</button>
         </div>
         <div id="player-summary">
-            
         </div>
         <div id="output-container">
             <table id="output">
@@ -55,12 +45,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Stats data will be populated here -->
                 </tbody>
             </table>
         </div>
         <div>
-            <canvas id="averageEventTimesChart" width="400" height="200"></canvas>
+            <!-- <canvas id="sharedLegendChart" style="height: 80px;"></canvas> -->
+            <div class="chart-container">
+                <div class="chart-wrapper">
+                    <canvas id="killsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="deathsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="assistsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="kdaChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
     <script type="module" src="indexStats.js"></script>

@@ -103,13 +103,13 @@ th, td {
 
 table {
     border-collapse: collapse;
-    width: 80%;
+    width: 100%;
     margin-top: 15px;
 }
 
 .table {
     border-collapse: collapse;
-    width: 80%;
+    width: 100%;
     margin-top: 15px;
 }
 
@@ -164,6 +164,27 @@ table {
     border: none;
 }
 
+.status-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+    transition: background-color 0.3s ease;
+}
+
+.status-text {
+    color: #666;
+    transition: color 0.3s ease;
+}
+
 #player-summary th {
     background-color: rgba(13, 13, 18, 0.6);
     color: #d4af37;
@@ -198,6 +219,35 @@ button:hover {
     box-shadow: 0 0 12px rgba(114, 137, 218, 0.8);
     color: #ffffff;
 }
+
+/* Chart Container Styling */
+.chart-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-template-rows: repeat(2, auto);  /* Adjust rows based on content */
+    gap: 20px; /* Space between charts */
+    margin-top: 20px; /* Space above the chart section */
+    padding: 20px;
+    background-color: rgba(28, 36, 52, 0.85); /* Matches overall theme */
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6);
+}
+
+/* Individual Chart Wrapper Styling */
+.chart-wrapper {
+    position: relative; /* For responsive canvas sizing */
+    background: rgba(13, 13, 18, 0.6); /* Slightly darker background */
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(114, 137, 218, 0.4); /* Subtle glow effect */
+}
+
+/* Canvas Styling */
+canvas {
+    width: 100% !important; /* Ensure canvas resizes to fit the container */
+    height: auto !important;
+}
+
 
 /**
  * ==============================================
@@ -250,15 +300,6 @@ button:hover {
      */
     animation-fill-mode: both;
     font-size: 5em;
-}
-
-.saving span:nth-child(1) {
-    /**
-     * Starts the animation of the third dot
-     * with a delay of .2s, otherwise all dots
-     * would animate at the same time
-     */
-    animation-delay: .0s;
 }
 
 .saving span:nth-child(2) {

@@ -23,7 +23,7 @@ export async function getLiveData() {
     // }
 
     try {
-        const TESTING = true; // Toggle for testing or production
+        const TESTING = false; // Toggle for testing or production
         const API_URL = TESTING
             ? '/test/allgamedata.json'
             : "http://127.0.0.1:3000/liveclientdata/allgamedata";
@@ -42,12 +42,12 @@ export async function getLiveData() {
             return newData;
         } else {
             console.error('Error fetching data:', response.status, response.statusText);
-            notInAGame(); // Trigger UI update or state change
+            // notInAGame(); // Trigger UI update or state change
             return null;
         }
     } catch (error) {
         console.error('Request failed:', error);
-        notInAGame(); // Handle the error gracefully
+        // notInAGame(); // Handle the error gracefully
         return null;
     }
 }
