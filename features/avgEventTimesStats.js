@@ -90,16 +90,12 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     aggregateTimestamps(aggregatedStats.nexusTowerKills, stats.objectives?.towerKills?.nexus?.timestamps || []);
     aggregateTimestamps(aggregatedStats.inhibitorKills, stats.objectives?.inhibitorKills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.eliteMonsterKills, stats.objectives?.eliteMonsterKills?.timestamps || []);
+    aggregateItemGold(aggregatedStats.itemGold, stats.economy.itemGold.history.count, stats.economy.itemGold.history.timestamps);
     if (stats.basicStats?.kda?.history?.count && stats.basicStats.kda.history.timestamps) {
-        aggregateKDATimestamps(
-            aggregatedStats.kda, 
-            stats.basicStats.kda.history.count,
-            stats.basicStats.kda.history.timestamps
-        );
+        aggregateKDATimestamps(aggregatedStats.kda, stats.basicStats.kda.history.count, stats.basicStats.kda.history.timestamps);
     }
-    if (stats.economy?.itemGold?.history) {
-        aggregateItemGold(aggregatedStats.itemGold, stats.economy.itemGold.history);
-    }
+    
+    
 }
 
 function aggregateTimestamps(aggregatedArray, timestamps) {
@@ -118,38 +114,64 @@ function aggregateKDATimestamps(aggregatedArray, kdaValues, timestamps) {
     if (!Array.isArray(kdaValues) || !Array.isArray(timestamps)) return;
 
     timestamps.forEach((timestamp, index) => {
-        if (timestamp === undefined || timestamp === null) return;
-        
-        const kdaValue = kdaValues[index];
-        if (kdaValue === undefined) return;
+        // Ensure both timestamp and kdaValue are valid
+        if (
+            timestamp === undefined || 
+            timestamp === null || 
+            kdaValues[index] === undefined || 
+            kdaValues[index] === null ||
+            isNaN(timestamp) ||
+            isNaN(kdaValues[index])
+        ) return;
 
         if (!aggregatedArray[index]) {
             aggregatedArray[index] = [];
         }
         
-        aggregatedArray[index].push(kdaValue);
+        aggregatedArray[index].push({
+            timestamp: Number(timestamp),
+            kdaValue: Number(kdaValues[index])
+        });
     });
 }
 
 // Aggregate item gold data
-function aggregateItemGold(aggregatedArray, itemGoldHistory) {
-    itemGoldHistory.forEach(({ amount, timestamp }) => {
-        const existingEntry = aggregatedArray.find(entry => entry.timestamp === timestamp);
-        if (existingEntry) {
-            existingEntry.totalAmount += amount;
-            existingEntry.count += 1;
-        } else {
-            aggregatedArray.push({ timestamp, totalAmount: amount, count: 1 });
-        }
-    });
-}
+function aggregateItemGold(aggregatedArray, amounts, timestamps) {
+    console.log('aggregateItemGold called with:', { amounts, timestamps });
 
-// Calculate average item gold at each timestamp
-function calculateAverageItemGold(itemGoldData) {
-    return itemGoldData.map(({ timestamp, totalAmount, count }) => ({
-        timestamp,
-        averageAmount: totalAmount / count
-    }));
+    if (!Array.isArray(timestamps) || !Array.isArray(amounts)) {
+        console.error('Invalid data passed to aggregateItemGold:', { timestamps, amounts });
+        return;
+    }
+
+    timestamps.forEach((timestamp, index) => {
+        console.log('Processing timestamp and amount:', { timestamp, amount: amounts[index] });
+
+        if (
+            timestamp === undefined || 
+            timestamp === null || 
+            amounts[index] === undefined || 
+            amounts[index] === null ||
+            isNaN(timestamp) ||
+            isNaN(amounts[index])
+        ) {
+            console.warn('Skipping invalid data:', { timestamp, amount: amounts[index] });
+            return;
+        }
+
+        console.log('Adding item gold data:', { timestamp, amount: amounts[index] });
+        if (!aggregatedArray[index]) {
+            aggregatedArray[index] = [];
+        }
+
+        console.log('Pushing item gold data:', { timestamp, amount: amounts[index] });
+        aggregatedArray[index].push({
+            timestamp: Number(timestamp),
+            amount: Number(amounts[index])
+        });
+    });
+
+    console.log('Final aggregatedArray:', aggregatedArray);
 }
 
 function calculateAverageForCategories(categories) {
@@ -166,7 +188,7 @@ function calculateAverageTimesForStats(aggregatedStats) {
         kills: calculateAverageTimes(aggregatedStats.kills),
         deaths: calculateAverageTimes(aggregatedStats.deaths),
         assists: calculateAverageTimes(aggregatedStats.assists),
-        kda: calculateAverageTimes(aggregatedStats.kda),
+        kda: calculateAverageKDATimes(aggregatedStats.kda),
         turretKills: calculateAverageTimes(aggregatedStats.turretKills),
         outerTowerKills: calculateAverageTimes(aggregatedStats.outerTowerKills),
         innerTowerKills: calculateAverageTimes(aggregatedStats.innerTowerKills),
@@ -184,4 +206,24 @@ function calculateAverageTimes(aggregatedArray) {
         const sum = timestamps.reduce((acc, timestamp) => acc + timestamp, 0);
         return sum / timestamps.length;
     });
+}
+
+function calculateAverageKDATimes(aggregatedArray) {
+    return aggregatedArray.map(subArray => {
+        const totalEntries = subArray.length;
+        const totalTimestamp = subArray.reduce((sum, {timestamp}) => sum + timestamp, 0);
+        const totalKDAValue = subArray.reduce((sum, {kdaValue}) => sum + kdaValue, 0);
+        
+        return {
+            timestamp: totalTimestamp / totalEntries,
+            kdaValue: totalKDAValue / totalEntries
+        };
+    });
+}
+
+function calculateAverageItemGold(itemGoldData) {
+    return itemGoldData.map(({ timestamp, totalAmount, count }) => ({
+        timestamp,
+        averageAmount: totalAmount / count
+    }));
 }

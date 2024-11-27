@@ -202,11 +202,11 @@ export async function getPlayerTeamMatesAndEnemies(matchData, puuid) {
                 }
             }
 
-            console.log(`Processed match ${matchId}:`, {
-                gameMode: gameMode,
-                teammateCount: teammatesByMatch[matchId].length,
-                enemyCount: match.info.participants.length - teammatesByMatch[matchId].length
-            });
+            // console.log(`Processed match ${matchId}:`, {
+            //     gameMode: gameMode,
+            //     teammateCount: teammatesByMatch[matchId].length,
+            //     enemyCount: match.info.participants.length - teammatesByMatch[matchId].length
+            // });
         }
 
         console.log('Teammates by match:', teammatesByMatch);

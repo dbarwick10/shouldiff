@@ -32,7 +32,7 @@ function initializeStats(matchId) {
             itemPurchases: { count: 0, timestamps: [], items: [] },
             itemGold: { 
                 total: 0, 
-                history: []
+                history: { count: [], timestamps: [] }
             }
         },
         events: [],
@@ -106,7 +106,7 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
                 : (isSurrender ? 'surrenderLoss' : 'loss');
             gameStats.playerStats.outcome.surrender = isSurrender;
 
-            console.log(`Final outcome for match ${matchId}:`, gameStats.playerStats.outcome);
+            // console.log(`Final outcome for match ${matchId}:`, gameStats.playerStats.outcome);
 
             const participantInfo = getParticipantInfo(allEvents);
             if (!participantInfo) {
@@ -402,45 +402,52 @@ export async function processItemPurchase(event, playerParticipantId, teamPartic
     // Ensure stats object and its nested properties are initialized
     stats.economy = stats.economy || {};
     stats.economy.itemPurchases = stats.economy.itemPurchases || { count: 0, timestamps: [], items: [] };
-    stats.economy.itemGold = stats.economy.itemGold || { total: 0, history: [] };
-    stats.playerStats = stats.playerStats || { events: [] };
-    stats.teamStats = stats.teamStats || { events: [] };
-    stats.enemyStats = stats.enemyStats || { events: [] };
+    stats.economy.itemGold = stats.economy.itemGold || { total: 0, history: { count: 0, timestamps: [] } };
+    stats.playerStats = stats.playerStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
+    stats.teamStats = stats.teamStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
+    stats.enemyStats = stats.enemyStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
 
     if (event.participantId === playerParticipantId) {
         stats.playerStats.economy.itemPurchases.count++;
         stats.playerStats.economy.itemPurchases.timestamps.push(timestamp);
         stats.playerStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         stats.playerStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.playerStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });
+        stats.playerStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        stats.playerStats.economy.itemGold.history.timestamps.push(timestamp);
         gameStats.playerStats.economy.itemPurchases.count++;
         gameStats.playerStats.economy.itemPurchases.timestamps.push(timestamp);
+        gameStats.playerStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         gameStats.playerStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.playerStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });    
+        gameStats.playerStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        gameStats.playerStats.economy.itemGold.history.timestamps.push(timestamp);
     } else if (teamParticipantIds.includes(event.participantId)) {
         stats.teamStats.economy.itemPurchases.count++;
         stats.teamStats.economy.itemPurchases.timestamps.push(timestamp);
         stats.teamStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         stats.teamStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.teamStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });
+        stats.teamStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        stats.teamStats.economy.itemGold.history.timestamps.push(timestamp);
         stats.teamStats.events.push({ ...event, timestamp, itemDetails });
         gameStats.teamStats.economy.itemPurchases.count++;
         gameStats.teamStats.economy.itemPurchases.timestamps.push(timestamp);
         gameStats.teamStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         gameStats.teamStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.teamStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });
+        gameStats.teamStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        gameStats.teamStats.economy.itemGold.history.timestamps.push(timestamp);
     } else {
         stats.enemyStats.economy.itemPurchases.count++;
         stats.enemyStats.economy.itemPurchases.timestamps.push(timestamp);
         stats.enemyStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         stats.enemyStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.enemyStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });
+        stats.enemyStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        stats.enemyStats.economy.itemGold.history.timestamps.push(timestamp);
         stats.enemyStats.events.push({ ...event, timestamp, itemDetails });
         gameStats.enemyStats.economy.itemPurchases.count++;
         gameStats.enemyStats.economy.itemPurchases.timestamps.push(timestamp);
         gameStats.enemyStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
         gameStats.enemyStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.enemyStats.economy.itemGold.history.push({ amount: itemDetails?.gold?.total || 0, timestamp });
+        gameStats.enemyStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
+        gameStats.enemyStats.economy.itemGold.history.timestamps.push(timestamp);
     }
 
     return stats;

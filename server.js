@@ -17,6 +17,7 @@ const httpsAgent = new https.Agent({
   });
 const PORT = 3000;
 const matchCount = 10;
+const delayBetweenMatchRequests = 0;
 let fetchedMatchIds = [];
 
 // Middleware
@@ -90,14 +91,35 @@ app.get('/api/match-stats', async (req, res) => {
         return res.status(400).json({ error: 'Missing puuid parameter' });
     }
 
+    // Define queue numbers for different game modes
+    const queueMappings = {
+        'aram': 450,       // ARAM
+        'normal': 400,     // Normal 5v5 Draft Pick
+        'blind': 430,      // Normal 5v5 Blind Pick
+        'ranked': 420,     // Ranked Solo/Duo
+        'flex': 440,       // Ranked Flex
+        'urf': 1020,       // Ultra Rapid Fire
+        'ultbook': 1400,      // ultimate spellbook
+        'all': null,       // All queues
+    };
+
     try {
         fetchedMatchIds = [];
         console.log('[] Cleared fetchedMatchIds []');
 
+        // Determine queue number based on gameMode
+        const queue = gameMode && queueMappings[gameMode.toLowerCase()] 
+            ? queueMappings[gameMode.toLowerCase()] 
+            : null;
+
         // Request more matches initially if filtering by game mode to ensure we get enough
-        const initialCount = gameMode ? Math.min(100, matchCount * 3) : matchCount;
+        const initialCount = queue ? Math.min(100, matchCount * 30) : matchCount;
         
-        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`;
+        // Construct URL with queue parameter if specified
+        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids` +
+            (queue != null ? `?queue=${encodeURIComponent(queue)}` : '') + 
+            `&start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`;
+        
         console.log('Fetching match IDs from Riot API');
         
         const matchIdsResponse = await fetch(matchIdsUrl);
@@ -113,9 +135,6 @@ app.get('/api/match-stats', async (req, res) => {
 
         const matchIds = await matchIdsResponse.json();
         console.log(`Found ${matchIds.length} matches`);
-
-        // fetchedMatchIds = matchIds; 
-        
 
         const matchStats = [];
 
@@ -135,30 +154,23 @@ app.get('/api/match-stats', async (req, res) => {
 
                 const matchData = await matchResponse.json();
 
-                // Filter by game mode if specified
-                if (gameMode && gameMode !== 'ALL') {
-                    const matchGameMode = matchData.info.gameMode.toUpperCase();
-                    if (matchGameMode === gameMode.toUpperCase()) {
-                        matchStats.push(matchData);
-                        console.log(`Added ${matchGameMode} match. Current count: ${matchStats.length}/${matchCount}`);
-                        fetchedMatchIds.push(matchId);
-                    }
-                } else {
+                // Additional filtering if needed
+                if (!queue || matchData.info.queueId === queue) {
                     matchStats.push(matchData);
-                    console.log(`Added ${gameMode} match. Current count: ${matchStats.length}/${matchCount}`);
+                    console.log(`Added match. Current count: ${matchStats.length}/${matchCount}`);
                     fetchedMatchIds.push(matchId);
                 }
                 
                 console.log('Stored match IDs:', fetchedMatchIds);
                 // Rate limiting delay
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, `${delayBetweenMatchRequests}`));
             } catch (error) {
                 console.error(`Error fetching match ${matchId}:`, error);
             }
         }
 
-        console.log(`Returning ${matchStats.length} matches`);
-        // Send just the array of matches instead of an object
+        console.log(`Returning ${matchStats.length}/${matchCount} matches`);
+
         res.json(matchStats);
     } catch (error) {
         console.error('Server error in /api/match-stats:', error);
@@ -201,7 +213,7 @@ app.get('/api/match-events', async (req, res) => {
                 matchEvents.push(matchData);
 
                 // Rate limiting delay
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, `${delayBetweenMatchRequests}`));
             } catch (error) {
                 console.error(`Error fetching match ${matchId}:`, error);
             }

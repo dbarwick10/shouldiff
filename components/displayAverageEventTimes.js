@@ -68,55 +68,77 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
 
     function renderAllCharts() {
         destroyExistingCharts();
-
+    
         const newCharts = {};
-
+    
         chartsToRender.forEach(stat => {
             const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
-            
-            const maxEventCount = Math.max(
-                ...statKeys.map(key => {
-                    return averageEventTimes.playerStats[key][stat]?.length || 0;
-                }),
-                currentLiveStats?.[stat]?.length || 0,
-                previousGameStats?.[stat]?.length || 0
-            );
-
-            const labels = Array.from(
-                { length: maxEventCount },
-                (_, i) => `${capitalizeFirstLetter(stat)} ${i + 1}`
-            );
-
-            const datasets = statKeys.map((key) => ({
-                label: `Historical ${stat} (${key})`,
-                data: averageEventTimes.playerStats[key][stat] || [],
-                borderColor: colorConfig[key].borderColor,
-                backgroundColor: colorConfig[key].backgroundColor,
-                fill: true,
-                tension: 0.3,
-                pointRadius: 1, 
-                pointHoverRadius: 1
-            }));
-
-            // Add previous game data if it exists
+    
+            const datasets = statKeys.map((key) => {
+                let data;
+                if (stat === 'kda') {
+                    data = (averageEventTimes.playerStats[key][stat] || []).map((kdaEntry) => ({
+                        x: kdaEntry.timestamp,
+                        y: kdaEntry.kdaValue
+                    }));
+                } else {
+                    data = (averageEventTimes.playerStats[key][stat] || []).map((time, index) => ({
+                        x: time,
+                        y: index + 1
+                    }));
+                }
+    
+                // console.log(`Data for ${stat} (${key}):`, data);
+    
+                return {
+                    label: `Historical ${stat} (${key})`,
+                    data: data,
+                    borderColor: colorConfig[key].borderColor,
+                    backgroundColor: colorConfig[key].backgroundColor,
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 1,
+                    pointHoverRadius: 1
+                };
+            });
+    
             if (previousGameStats && previousGameStats[stat]?.length > 0) {
+                const dataToAdd = stat === 'kda'
+                    ? previousGameStats[stat].map((kdaEntry) => ({
+                        x: kdaEntry.timestamp,
+                        y: kdaEntry.kdaValue
+                    }))
+                    : previousGameStats[stat].map((time, index) => ({
+                        x: time,
+                        y: index + 1
+                    }));
+    
                 datasets.push({
                     label: `Previous Game ${stat}`,
-                    data: previousGameStats[stat],
+                    data: dataToAdd,
                     borderColor: colorConfig.previousGame.borderColor,
                     backgroundColor: colorConfig.previousGame.backgroundColor,
-                    fill: true,
+                    fill: false,
                     tension: 0.3,
                     pointRadius: 1,
                     pointHoverRadius: 1
                 });
             }
-
-            // Add current game data if it exists
+    
             if (currentLiveStats && currentLiveStats[stat]?.length > 0) {
+                const dataToAdd = stat === 'kda'
+                    ? currentLiveStats[stat].map((kdaEntry) => ({
+                        x: kdaEntry.timestamp,
+                        y: kdaEntry.kdaValue
+                    }))
+                    : currentLiveStats[stat].map((time, index) => ({
+                        x: time,
+                        y: index + 1
+                    }));
+    
                 datasets.push({
                     label: `Current Game ${stat}`,
-                    data: currentLiveStats[stat],
+                    data: dataToAdd,
                     borderColor: colorConfig.live.borderColor,
                     backgroundColor: colorConfig.live.backgroundColor,
                     fill: true,
@@ -125,14 +147,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                     pointHoverRadius: 1
                 });
             }
-
-            const kdasToPlot = datasets.flatMap(dataset => 
-                dataset.data.filter(value => value !== null && value !== undefined)
-            );
-
-            const maxKDA = kdasToPlot.length > 0 ? Math.max(...kdasToPlot.map(Math.abs)) : 10;
-            const minKDA = kdasToPlot.length > 0 ? Math.min(...kdasToPlot.map(Math.abs)) : 10;
-
+    
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: true,
@@ -147,34 +162,72 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                     },
                     tooltip: {
                         enabled: false
+                    },
+                    legend: {
+                        display: false
                     }
                 },
-                scales: {
-                    x: {
-                        ticks: {
-                            display: false
+                scales: stat === 'kda' 
+                    ? {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { 
+                                display: true, 
+                                text: 'Time' 
+                            },
+                            ticks: {
+                                display: true
+                            }
+                        },
+                        y: { 
+                            title: { 
+                                display: true, 
+                                text: 'KDA' 
+                            },
+                            min: Math.floor(0, Math.min(...datasets.flatMap(d => d.data.map(point => point.y))) - 1),
+                            max: Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1,
+                            ticks: {
+                                stepSize: 1,
+                                display: true
+                            }
+                        }
+                    }
+                    : {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { 
+                                display: true, 
+                                text: 'Time' 
+                            },
+                            ticks: {
+                                display: true
+                            }
+                        },
+                        y: { 
+                            title: { 
+                                display: true, 
+                                text: `${capitalizeFirstLetter(stat)}`
+                            },
+                            ticks: {
+                                stepSize: 5,
+                                display: true
+                            }
                         }
                     },
-                    y: { 
-                        title: { 
-                            display: true, 
-                            text: stat === 'kda' ? 'KDA' : 'Time (seconds)' 
-                        },
-                        beginAtZero: stat !== 'kda',
-                        min: stat === 'kda' ? Math.floor(minKDA) - 1 : undefined,
-                        max: stat === 'kda' ? Math.round(maxKDA) + 1 : undefined
-                    }
-                },
                 animation: { duration: 0 }
             };
-
+    
             newCharts[stat] = new Chart(ctx, {
                 type: 'line',
-                data: { labels, datasets },
+                data: { 
+                    datasets 
+                },
                 options: chartOptions
             });
         });
-
+    
         return newCharts;
     }
 
