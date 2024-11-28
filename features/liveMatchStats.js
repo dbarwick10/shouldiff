@@ -85,8 +85,12 @@ export async function calculateLiveStats() {
                     // Update KDA after each relevant event
                     if (KillerName === activePlayerName || VictimName === activePlayerName || Assisters.includes(activePlayerName)) {
                         const kda = (activePlayerStats.kills.length + activePlayerStats.assists.length) / 
-                                  (activePlayerStats.deaths.length || 1);
-                        activePlayerStats.kda.push(parseFloat(kda.toFixed(2))); // Round to 2 decimal places
+                                    (activePlayerStats.deaths.length || 1);
+                        
+                        activePlayerStats.kda.push({
+                            timestamp: EventTime,  // Use the current event time
+                            kdaValue: parseFloat(kda.toFixed(2))  // Rounded KDA value
+                        });
                     }
                 }
             } else if (event.EventName === "TurretKilled") {

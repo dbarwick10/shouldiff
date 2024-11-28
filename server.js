@@ -116,9 +116,12 @@ app.get('/api/match-stats', async (req, res) => {
         const initialCount = queue ? Math.min(100, matchCount * 30) : matchCount;
         
         // Construct URL with queue parameter if specified
-        const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids` +
-            (queue != null ? `?queue=${encodeURIComponent(queue)}` : '') + 
-            `&start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`;
+        const matchIdsUrl = queue != null ? `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?queue=${encodeURIComponent(queue)}&start=0&count=${initialCount}&api_key=${RIOT_API_KEY}` : 
+        `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids?start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`
+
+        // const matchIdsUrl = `https://${encodeURIComponent(region)}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodeURIComponent(puuid)}/ids` +
+        //     (queue != null ? `?queue=${encodeURIComponent(queue)}` : '') + 
+        //     `&start=0&count=${initialCount}&api_key=${RIOT_API_KEY}`;
         
         console.log('Fetching match IDs from Riot API');
         
@@ -225,9 +228,6 @@ app.get('/api/match-events', async (req, res) => {
         res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
-
-
-
 
 app.get('/liveclientdata/allgamedata', async (req, res) => {
     try {

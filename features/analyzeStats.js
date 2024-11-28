@@ -29,7 +29,11 @@ function initializeStats(matchId) {
             eliteMonsterKills: { count: [], timestamps: [] }
         },
         economy: {
-            itemPurchases: { count: 0, timestamps: [], items: [] },
+            itemPurchases: { 
+                count: 0, 
+                timestamps: [], 
+                items: [] 
+            },
             itemGold: { 
                 total: 0, 
                 history: { count: [], timestamps: [] }
@@ -364,90 +368,127 @@ function processMonsterKill(event, playerParticipantId, teamParticipantIds, stat
     //stats.events.push({ type: 'monsterKill', timestamp, details: event });
 }
 
-function trackDestroyedItem(participantId, itemId) {
+
+
+// Helper function to initialize economy stats
+function initializeEconomyStats(target) {
+    target.economy = target.economy || {};
+    target.economy.itemPurchases = target.economy.itemPurchases || { count: 0, timestamps: [], items: [] };
+    target.economy.itemGold = target.economy.itemGold || { total: 0, history: { count: [], timestamps: [] } };
+    target.events = target.events || [];
+}
+
+// Helper function to update stats
+function updateStats(target, event, itemDetails, timestamp) {
+    // Add running total to item purchases
+    const itemGold = itemDetails?.gold?.base || 0;
+    const lastTotal = target.economy.itemPurchases.items.length > 0 
+    ? target.economy.itemPurchases.items[target.economy.itemPurchases.items.length - 1].totalGold 
+    : 0;
+    const totalGold = lastTotal + itemGold;
+
+    target.economy.itemPurchases.count++;
+    target.economy.itemPurchases.timestamps.push(timestamp);
+    target.economy.itemPurchases.items.push({
+        itemName: itemDetails.name || 'Unknown',
+        itemId: event.itemId,
+        timestamp,
+        gold: itemDetails.gold.base || 0,
+        totalGold: totalGold
+    });
+    target.economy.itemGold.total += itemDetails.gold.base || 0;
+    target.economy.itemGold.history.count.push(itemDetails.gold.base || 0);
+    target.economy.itemGold.history.timestamps.push(timestamp);
+    target.events.push({ ...event, timestamp, itemDetails });
+}
+
+// Track destroyed items, including multiple instances of the same item
+function trackDestroyedItems(participantId, componentIds) {
     if (!destroyedItems.has(participantId)) {
-        destroyedItems.set(participantId, new Set());
+        destroyedItems.set(participantId, new Map());
     }
-    destroyedItems.get(participantId).add(itemId);
+    const participantDestroyedItems = destroyedItems.get(participantId);
+
+    componentIds.forEach(itemId => {
+        participantDestroyedItems.set(
+            itemId,
+            (participantDestroyedItems.get(itemId) || 0) + 1
+        );
+    });
 }
 
+// Check if an item is destroyed and reduce its count if so
 function wasItemDestroyed(participantId, itemId) {
-    return destroyedItems.get(participantId)?.has(itemId) || false;
+    const participantDestroyedItems = destroyedItems.get(participantId);
+    if (!participantDestroyedItems || !participantDestroyedItems.has(itemId)) {
+        return false;
+    }
+    const count = participantDestroyedItems.get(itemId);
+    if (count > 1) {
+        participantDestroyedItems.set(itemId, count - 1);
+    } else {
+        participantDestroyedItems.delete(itemId);
+    }
+    return true;
 }
 
+// Process when an item is destroyed explicitly
 export function processItemDestroyed(event) {
     if (event.type === 'ITEM_DESTROYED') {
-        trackDestroyedItem(event.participantId, event.itemId);
+        trackDestroyedItems(event.participantId, [event.itemId]);
     }
 }
 
+// Process item purchase with component tracking
 export async function processItemPurchase(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId) {
     if (event.type !== 'ITEM_PURCHASED') return stats;
 
     event.matchId = matchId;
-    if (wasItemDestroyed(event.participantId, event.itemId)) return stats;
 
-    let itemDetails;
+    // Fetch item details
+    let itemDetails = { gold: { total: 0 }, from: [] };
     try {
         if (event.itemId) {
             itemDetails = await getItemDetails(event.itemId.toString());
         }
     } catch (error) {
-        console.warn(`Failed to fetch details for item ${event.itemId}, proceeding without gold calculations:`, error);
-        itemDetails = { gold: { total: 0 } };
+        console.warn(`Failed to fetch details for item ${event.itemId}, proceeding without component logic:`, error);
     }
 
-    const timestamp = (event.timestamp / 1000);
+    const timestamp = event.timestamp / 1000;
 
-    // Ensure stats object and its nested properties are initialized
-    stats.economy = stats.economy || {};
-    stats.economy.itemPurchases = stats.economy.itemPurchases || { count: 0, timestamps: [], items: [] };
-    stats.economy.itemGold = stats.economy.itemGold || { total: 0, history: { count: 0, timestamps: [] } };
-    stats.playerStats = stats.playerStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
-    stats.teamStats = stats.teamStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
-    stats.enemyStats = stats.enemyStats || { economy: { itemPurchases: { count: 0, timestamps: [], items: [] }, itemGold: { total: 0, history: { count: [], timestamps: [] } } }, events: [] };
+    // Check if the item is built from components
+    if (itemDetails.from && itemDetails.from.length > 0) {
+        const components = [...itemDetails.from];
+        const destroyed = [];
+        for (const component of components) {
+            if (!wasItemDestroyed(event.participantId, component)) {
+                destroyed.push(component);
+            }
+        }
+        // Track components used for the new item
+        trackDestroyedItems(event.participantId, destroyed);
+    }
+
+    // Prevent processing if the item itself was already destroyed
+    if (wasItemDestroyed(event.participantId, event.itemId)) return stats;
+
+    // Initialize stats objects
+    [stats, gameStats].forEach(target => {
+        initializeEconomyStats(target.playerStats || {});
+        initializeEconomyStats(target.teamStats || {});
+        initializeEconomyStats(target.enemyStats || {});
+    });
 
     if (event.participantId === playerParticipantId) {
-        stats.playerStats.economy.itemPurchases.count++;
-        stats.playerStats.economy.itemPurchases.timestamps.push(timestamp);
-        stats.playerStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        stats.playerStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.playerStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        stats.playerStats.economy.itemGold.history.timestamps.push(timestamp);
-        gameStats.playerStats.economy.itemPurchases.count++;
-        gameStats.playerStats.economy.itemPurchases.timestamps.push(timestamp);
-        gameStats.playerStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        gameStats.playerStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.playerStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        gameStats.playerStats.economy.itemGold.history.timestamps.push(timestamp);
+        updateStats(stats.playerStats, event, itemDetails, timestamp);
+        updateStats(gameStats.playerStats, event, itemDetails, timestamp);
     } else if (teamParticipantIds.includes(event.participantId)) {
-        stats.teamStats.economy.itemPurchases.count++;
-        stats.teamStats.economy.itemPurchases.timestamps.push(timestamp);
-        stats.teamStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        stats.teamStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.teamStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        stats.teamStats.economy.itemGold.history.timestamps.push(timestamp);
-        stats.teamStats.events.push({ ...event, timestamp, itemDetails });
-        gameStats.teamStats.economy.itemPurchases.count++;
-        gameStats.teamStats.economy.itemPurchases.timestamps.push(timestamp);
-        gameStats.teamStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        gameStats.teamStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.teamStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        gameStats.teamStats.economy.itemGold.history.timestamps.push(timestamp);
+        updateStats(stats.teamStats, event, itemDetails, timestamp);
+        updateStats(gameStats.teamStats, event, itemDetails, timestamp);
     } else {
-        stats.enemyStats.economy.itemPurchases.count++;
-        stats.enemyStats.economy.itemPurchases.timestamps.push(timestamp);
-        stats.enemyStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        stats.enemyStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        stats.enemyStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        stats.enemyStats.economy.itemGold.history.timestamps.push(timestamp);
-        stats.enemyStats.events.push({ ...event, timestamp, itemDetails });
-        gameStats.enemyStats.economy.itemPurchases.count++;
-        gameStats.enemyStats.economy.itemPurchases.timestamps.push(timestamp);
-        gameStats.enemyStats.economy.itemPurchases.items.push({ itemId: event.itemId, timestamp, gold: itemDetails?.gold?.total || 0 });
-        gameStats.enemyStats.economy.itemGold.total += itemDetails?.gold?.total || 0;
-        gameStats.enemyStats.economy.itemGold.history.count.push(itemDetails?.gold?.total || 0);
-        gameStats.enemyStats.economy.itemGold.history.timestamps.push(timestamp);
+        updateStats(stats.enemyStats, event, itemDetails, timestamp);
+        updateStats(gameStats.enemyStats, event, itemDetails, timestamp);
     }
 
     return stats;
