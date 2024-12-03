@@ -263,9 +263,9 @@ app.use(express.static(path.join(__dirname, 'services')));
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log('Available endpoints:');
-    console.log('  - GET /api/test');
-    console.log('  - GET /api/puuid');
-    console.log('  - GET /api/match-stats');
-    console.log('  - GET /api/match-events');
+    // console.log('  - GET /api/test');
+    // console.log('  - GET /api/puuid');
+    // console.log('  - GET /api/match-stats');
+    // console.log('  - GET /api/match-events');
     console.log('  - GET /api/liveclientdata/allgamedata');
 });
