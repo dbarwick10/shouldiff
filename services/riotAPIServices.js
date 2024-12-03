@@ -1,9 +1,4 @@
-// import { calculatePlayerStats, getPlayerTeamId, getPlayerTeamMatesAndEnemies, getPlayerId } from "../features/playerStats.js";
-// import { displayStats } from "../components/displayStatsComp.js";
-// import { calculateTeamStats } from "../features/teamStats.js";
-// import { calculateEnemyTeamStats } from "../features/enemyTeamStats.js";
-// import { analyzeMatchTimelineForSummoner } from "../features/matchTimeline.js";
-// import { analyzePlayerStats } from "../features/analyzeStats.js";
+// https://dashboard.render.com/web/srv-ct7lusa3esus73b74960/env
 
 let puuid;
 const region = document.getElementById('region').value;
@@ -23,7 +18,7 @@ export async function getPuuid() {
     try {
         const tag = tagline.replace(/[^a-zA-Z0-9 ]/g, "");
         console.log(`Fetching PUUID for ${summonerName} (${tagline}) in ${region}`);
-        const puuidResponse = await fetch(`http://localhost:3000/api/puuid?summonerName=${encodeURIComponent(summonerName)}&region=${encodeURIComponent(region)}&tagline=${encodeURIComponent(tag)}`);
+        const puuidResponse = await fetch(`https://shouldiff.onrender.com/api/puuid?summonerName=${encodeURIComponent(summonerName)}&region=${encodeURIComponent(region)}&tagline=${encodeURIComponent(tag)}`);
         
         if (!puuidResponse.ok) {
             const errorDetail = await puuidResponse.text();
@@ -49,7 +44,7 @@ export async function fetchMatchStats() {
             <span>.</span><span>.</span><span>.</span></div>
         `;
 
-        const response = await fetch(`http://localhost:3000/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}&gameMode=${encodeURIComponent(gameMode)}`);
+        const response = await fetch(`https://shouldiff.onrender.com/api/match-stats?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}&gameMode=${encodeURIComponent(gameMode)}`);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to fetch match stats: ${errorText}`);
@@ -65,7 +60,7 @@ export async function fetchMatchStats() {
 export async function fetchMatchEvents() {
     try {
         // console.log('Fetching match events...');
-        const response = await fetch(`http://localhost:3000/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
+        const response = await fetch(`https://shouldiff.onrender.com/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
 
         if (!response.ok) {
             const errorText = await response.text();
