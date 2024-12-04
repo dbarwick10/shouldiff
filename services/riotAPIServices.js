@@ -17,6 +17,10 @@ export async function getPuuid() {
 
     try {
         const tag = tagline.replace(/[^a-zA-Z0-9 ]/g, "");
+        document.getElementById('output').innerHTML = `
+            <div class="saving"><strong>Fetching Player Information</strong>
+            <span>.</span><span>.</span><span>.</span></div>
+        `;
         console.log(`Fetching PUUID for ${summonerName} (${tagline}) in ${region}`);
         const puuidResponse = await fetch(`https://shouldiffServer.onrender.com/api/puuid?summonerName=${encodeURIComponent(summonerName)}&region=${encodeURIComponent(region)}&tagline=${encodeURIComponent(tag)}`);
         
@@ -60,6 +64,10 @@ export async function fetchMatchStats() {
 export async function fetchMatchEvents() {
     try {
         // console.log('Fetching match events...');
+        document.getElementById('output').innerHTML = `
+            <div class="saving"><strong>Preparing Previous Game Data</strong>
+            <span>.</span><span>.</span><span>.</span></div>
+        `;
         const response = await fetch(`https://shouldiffServer.onrender.com/api/match-events?puuid=${encodeURIComponent(puuid)}&region=${encodeURIComponent(region)}`);
 
         if (!response.ok) {

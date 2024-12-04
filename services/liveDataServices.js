@@ -1,7 +1,7 @@
 // import { notInAGame } from "../components/updateAllStatsComp.js";
 
-let cachedGameData = null;
-let lastFetchTime = null;
+// let cachedGameData = null;
+// let lastFetchTime = null;
 let refreshTime = 1000;
 
 const FETCH_INTERVAL_MS = refreshTime;
@@ -15,7 +15,7 @@ export function setRefreshTime(newTime) {
 }
 
 export async function getLiveData() {
-    const currentTime = Date.now();
+    // const currentTime = Date.now();
 
     // Caching logic
     // if (cachedGameData && lastFetchTime && (currentTime - lastFetchTime < FETCH_INTERVAL_MS)) {
@@ -23,7 +23,7 @@ export async function getLiveData() {
     // }
 
     try {
-        const TESTING = false; // Toggle for testing or production
+        const TESTING = true; // Toggle for testing or production
         const API_URL = TESTING
             ? '/test/allgamedata.json'
             : "http://127.0.0.1:3000/liveclientdata/allgamedata";
