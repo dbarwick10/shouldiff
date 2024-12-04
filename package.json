@@ -19,10 +19,8 @@
     "node-fetch": "^3.2.10"
   },
   "devDependencies": {
-    "@electron/packager": "^18.3.5",
+    "@electron/packager": "^18.3.6",
     "electron": "^33.0.2",
-    "electron-packager": "^17.1.2",
-    "javascript-obfuscator": "^4.1.1",
     "pkg": "^5.8.1",
     "webpack": "^5.96.1",
     "webpack-obfuscator": "^3.5.1"

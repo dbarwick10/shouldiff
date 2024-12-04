@@ -1,0 +1,7 @@
+# dotenv
+.env
+
+# nodes
+node_modules/
+
+package-lock.js
