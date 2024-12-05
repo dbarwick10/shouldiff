@@ -25,7 +25,7 @@ export async function getLiveData() {
     try {
         const TESTING = true; // Toggle for testing or production
         const API_URL = TESTING
-            ? '/test/allgamedata.json'
+            ? './test/allgamedata.json'
             : "http://127.0.0.1:3000/liveclientdata/allgamedata";
 
         const response = await fetch(API_URL, {
