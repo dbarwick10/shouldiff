@@ -16,8 +16,8 @@ function createWindow() {
         },
     });
 
-    win.loadFile(path.join('public', 'stats.html'));
-	//win.setMenu(null)
+    win.loadFile(path.join(app.getAppPath(), 'index.html'));
+	win.setMenu(null)
 }
 
     app.whenReady().then(() => {
