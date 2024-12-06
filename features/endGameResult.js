@@ -29,7 +29,7 @@ export async function gameResult(matchStats, puuid) {
 
         playerResults.matchID = match.metadata.matchId;
 
-        console.log('Player results:', player.win);
+        // console.log('Player results:', player.win);
 
         if (player.win) {
             playerResults.results.wins.push(gameData);

@@ -24,7 +24,7 @@ export async function calculateLiveStats() {
 
         // Determine active player's team
         const activePlayerTeam = findPlayerTeam(allPlayers, activePlayerName);
-        console.log('Active player team:', activePlayerTeam);
+        // console.log('Active player team:', activePlayerTeam);
 
         // Initialize team stats
         const teamStats = {

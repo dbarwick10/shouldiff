@@ -47,14 +47,18 @@ function initializeAggregatedStats() {
         deaths: [],
         assists: [],
         kda: [],
-        turretKills: [],
+        turrets: [],
         outerTowerKills: [],
         innerTowerKills: [],
         baseTowerKills: [],
         nexusTowerKills: [],
-        inhibitorKills: [],
+        inhibitors: [],
         eliteMonsterKills: [],
-        itemGold: []
+        barons: [],
+        dragons: [],
+        elders: [],
+        itemGold: [],
+        timeSpentDead: []
     };
 }
 
@@ -83,13 +87,16 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     aggregateTimestamps(aggregatedStats.deaths, stats.basicStats?.deaths?.timestamps || []);
     aggregateTimestamps(aggregatedStats.assists, stats.basicStats?.assists?.timestamps || []);
     aggregateTimestamps(aggregatedStats.kda, stats.basicStats?.kda?.timestamps || []);
-    aggregateTimestamps(aggregatedStats.turretKills, stats.objectives?.turretKills?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.turrets, stats.objectives?.turrets?.timestamps || []);
     aggregateTimestamps(aggregatedStats.outerTowerKills, stats.objectives?.towerKills?.outer?.timestamps || []);
     aggregateTimestamps(aggregatedStats.innerTowerKills, stats.objectives?.towerKills?.inner?.timestamps || []);
     aggregateTimestamps(aggregatedStats.baseTowerKills, stats.objectives?.towerKills?.base?.timestamps || []);
     aggregateTimestamps(aggregatedStats.nexusTowerKills, stats.objectives?.towerKills?.nexus?.timestamps || []);
-    aggregateTimestamps(aggregatedStats.inhibitorKills, stats.objectives?.inhibitorKills?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.inhibitors, stats.objectives?.inhibitors?.timestamps || []);
     aggregateTimestamps(aggregatedStats.eliteMonsterKills, stats.objectives?.eliteMonsterKills?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.barons, stats.objectives?.barons?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.dragons, stats.objectives?.dragons?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.elders, stats.objectives?.elders?.timestamps || []);
     aggregateGoldTimestamps(aggregatedStats.itemGold, stats.economy?.itemPurchases?.items);
 
     if (stats.basicStats?.kda?.history?.count && stats.basicStats.kda.history.timestamps) {
@@ -274,13 +281,16 @@ function calculateAverageTimesForStats(aggregatedStats) {
         deaths: calculateAverageTimes(aggregatedStats.deaths),
         assists: calculateAverageTimes(aggregatedStats.assists),
         kda: calculateAverageKDATimes(aggregatedStats.kda),
-        turretKills: calculateAverageTimes(aggregatedStats.turretKills),
+        turrets: calculateAverageTimes(aggregatedStats.turrets),
         outerTowerKills: calculateAverageTimes(aggregatedStats.outerTowerKills),
         innerTowerKills: calculateAverageTimes(aggregatedStats.innerTowerKills),
         baseTowerKills: calculateAverageTimes(aggregatedStats.baseTowerKills),
         nexusTowerKills: calculateAverageTimes(aggregatedStats.nexusTowerKills),
-        inhibitorKills: calculateAverageTimes(aggregatedStats.inhibitorKills),
+        inhibitors: calculateAverageTimes(aggregatedStats.inhibitors),
         eliteMonsterKills: calculateAverageTimes(aggregatedStats.eliteMonsterKills),
+        barons: calculateAverageTimes(aggregatedStats.barons),
+        dragons: calculateAverageTimes(aggregatedStats.dragons),
+        elders: calculateAverageTimes(aggregatedStats.elders),
         itemGold: calculateAverageItemGold(aggregatedStats.itemGold)
     };
 }

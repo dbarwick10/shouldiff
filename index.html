@@ -28,9 +28,13 @@
             </select>
             <button id="fetchStatsButton">Fetch Stats</button>
         </div>
-        <div id="player-summary">
+        <div id="player-summary"> 
+            <!-- displaying none currently change to flex in css -->
         </div>
-        <div id="output-container">
+        <div id="loading">
+        </div>
+        <div id="output-container"> 
+            <!-- displaying none currently change to flex in css-->
             <table id="output">
                 <thead>
                     <tr>
@@ -88,6 +92,21 @@
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="kdaChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="turretsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="inhibitorsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="dragonsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="baronsChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="eldersChart"></canvas>
                 </div>
             </div>
         </div>

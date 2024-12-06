@@ -11,7 +11,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let charts = {};
 
     const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
-    const chartsToRender = ['kills', 'deaths', 'assists', 'kda'];
+    const chartsToRender = ['kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors'];
     
     const colorConfig = {
         wins: { borderColor: 'rgb(46, 204, 113, .75)', backgroundColor: 'rgb(46, 204, 113, 0.1)' },
@@ -24,14 +24,14 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
 
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-    // Move destroyExistingCharts function definition to the top
-    function destroyExistingCharts() {
-        chartsToRender.forEach(stat => {
-            if (charts[stat]) {
-                charts[stat].destroy();
-            }
-        });
-    }
+    // // Move destroyExistingCharts function definition to the top
+    // function destroyExistingCharts() {
+    //     chartsToRender.forEach(stat => {
+    //         if (charts[stat]) {
+    //             charts[stat].destroy();
+    //         }
+    //     });
+    // }
 
     // Helper function to detect if this is a new game
     function isNewGame(newStats, currentStats) {
@@ -67,7 +67,16 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     }
 
     function renderAllCharts() {
-        destroyExistingCharts();
+        
+        chartsToRender.forEach(stat => {
+            const canvas = document.getElementById(`${stat}Chart`);
+            if (canvas) {
+                const existingChart = Chart.getChart(canvas);
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+            }
+        });
     
         const newCharts = {};
     
@@ -186,7 +195,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                                 text: 'KDA' 
                             },
                             min: Math.floor(0, Math.min(...datasets.flatMap(d => d.data.map(point => point.y))) - 1),
-                            max: Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1,
+                            max: Math.round(Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1),
                             ticks: {
                                 stepSize: 1,
                                 display: true

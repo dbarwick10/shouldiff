@@ -13,12 +13,12 @@ import { calculateLiveStats } from "../features/liveMatchStats.js";
 export async function fetchMatchData() {
     try {
         // Fetch and cache item prices for the last three versions
-        console.log('Clearing item prices cache...');
+        // console.log('Clearing item prices cache...');
         clearCacheOnStart();
-        console.log('Fetching and caching item prices...');
+        // console.log('Fetching and caching item prices...');
         const itemsAndPrices = await getItemsAndPrices();
         itemsAndPrices; // Avoid linter warning
-        console.log('Item prices cached', itemsAndPrices);
+        // console.log('Item prices cached', itemsAndPrices);
 
         // Fetch match stats
         console.log('Fetching match stats...');
