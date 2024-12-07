@@ -65,7 +65,17 @@ export async function fetchMatchStats() {
             throw new Error(`Failed to fetch match stats: ${errorText}`);
         }
 
-        return await response.json();
+        const matchStats = await response.json();
+
+        // Debug log to see the structure of matchStats
+        // console.log('Received match events structure:', {
+        //     isArray: Array.isArray(matchStats),
+        //     length: matchStats?.length,
+        //     firstMatchKeys: matchStats?.[0] ? Object.keys(matchStats[0]) : 'no matches',
+        //     sampleMatch: matchStats?.[0]
+        // });
+        return matchStats;
+
     } catch (error) {
         console.error('Error fetching match stats:', error);
         inputSection.style.display = 'block';

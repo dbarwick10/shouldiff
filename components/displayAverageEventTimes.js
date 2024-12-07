@@ -11,7 +11,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let charts = {};
 
     const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
-    const chartsToRender = ['kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors'];
+    const chartsToRender = ['kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'];
     
     const colorConfig = {
         wins: { borderColor: 'rgb(46, 204, 113, .75)', backgroundColor: 'rgb(46, 204, 113, 0.1)' },
