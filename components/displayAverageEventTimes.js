@@ -23,8 +23,45 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         previousGame: { borderColor: 'rgb(149, 165, 166, .75)', backgroundColor: 'rgb(149, 165, 166, 0.1)' }
     };
 
+    // Helper function to check if a dataset has any data points
+    function hasData(datasets) {
+        return datasets.some(dataset => dataset.data && dataset.data.length > 0);
+    }
+
+    // Helper function to check if a category has data for a specific stat
+    function hasCategoryData(category, stat) {
+        // Check historical data
+        const hasHistoricalData = statKeys.some(key => {
+            const categoryData = averageEventTimes[category][key];
+            return categoryData && categoryData[stat] && categoryData[stat].length > 0;
+        });
+
+        // Check live game data
+        const hasLiveData = currentLiveStats && currentLiveStats[stat] && currentLiveStats[stat].length > 0;
+
+        // Check previous game data
+        const hasPreviousData = previousGameStats && previousGameStats[stat] && previousGameStats[stat].length > 0;
+
+        return hasHistoricalData || hasLiveData || hasPreviousData;
+    }
+
+    // Helper function to hide/show chart container
+    function toggleChartVisibility(stat, visible) {
+        const container = document.getElementById(`${stat}Chart`).parentElement;
+        if (container) {
+            container.style.display = visible ? 'block' : 'none';
+        }
+    }
+
+    // Update chart visibility for current category
+    function updateChartVisibility() {
+        chartsToRender.forEach(stat => {
+            const hasDataForStat = hasCategoryData(currentCategory, stat);
+            toggleChartVisibility(stat, hasDataForStat);
+        });
+    }
+
     function toggleStats(category) {
-        // Update button styles
         document.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.style.backgroundColor = '#e0e0e0';
             btn.style.color = 'black';
@@ -32,29 +69,16 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         document.getElementById(`${category}Btn`).style.backgroundColor = '#3498db';
         document.getElementById(`${category}Btn`).style.color = 'white';
         
-        // Update current category
         currentCategory = category;
-        
-        // Re-render charts with new category
+        updateChartVisibility();
         charts = renderAllCharts();
     }
 
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-    // // Move destroyExistingCharts function definition to the top
-    // function destroyExistingCharts() {
-    //     chartsToRender.forEach(stat => {
-    //         if (charts[stat]) {
-    //             charts[stat].destroy();
-    //         }
-    //     });
-    // }
-
-    // Helper function to detect if this is a new game
     function isNewGame(newStats, currentStats) {
         if (!newStats || !currentStats) return true;
         
-        // Check if the number of events has decreased (indicating a new game)
         for (const stat of chartsToRender) {
             const newStatArray = newStats[stat] || [];
             const currentStatArray = currentStats[stat] || [];
@@ -65,7 +89,6 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return false;
     }
 
-    // Helper function to check if live stats have changed
     function haveLiveStatsChanged(newStats, currentStats) {
         if (!newStats || !currentStats) return true;
         
@@ -97,11 +120,13 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         const newCharts = {};
     
         chartsToRender.forEach(stat => {
-            const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
-    
+            // Skip rendering if there's no data for this stat in the current category
+            if (!hasCategoryData(currentCategory, stat)) {
+                return;
+            }
+
             const datasets = statKeys.map((key) => {
                 let data;
-                // Use the current category's data
                 const categoryData = averageEventTimes[currentCategory][key];
                 
                 if (stat === 'deathTimers') {
@@ -203,6 +228,8 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                     pointHoverRadius: 1
                 });
             }
+
+            const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
     
             const chartOptions = {
                 responsive: true,
@@ -324,19 +351,19 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 console.log('Refreshed live stats:', newLiveStats);
     
                 if (newLiveStats) {
-                    // Check if this is a new game
                     if (isNewGame(newLiveStats, currentLiveStats)) {
                         console.log('New game detected, storing previous game data...');
                         if (currentLiveStats) {
                             previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
                         }
                         currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
+                        updateChartVisibility();
                         charts = renderAllCharts();
                     }
-                    // Update current game stats if they've changed
                     else if (haveLiveStatsChanged(newLiveStats, currentLiveStats)) {
                         console.log('Live stats changed, refreshing charts...');
                         currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
+                        updateChartVisibility();
                         charts = renderAllCharts();
                     } else {
                         console.log('No changes in live stats detected');
@@ -352,11 +379,11 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     }
 
     try {
-        // Add event listeners for toggle buttons
         document.getElementById('playerStatsBtn').addEventListener('click', () => toggleStats('playerStats'));
         document.getElementById('teamStatsBtn').addEventListener('click', () => toggleStats('teamStats'));
         document.getElementById('enemyStatsBtn').addEventListener('click', () => toggleStats('enemyStats'));
             
+        updateChartVisibility();
         charts = renderAllCharts();
         
         if (calculateStats) {
@@ -375,11 +402,9 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 }
                 Object.values(charts).forEach(chart => chart.destroy());
                 
-                // Remove event listeners
                 document.getElementById('playerStatsBtn').removeEventListener('click', () => toggleStats('playerStats'));
                 document.getElementById('teamStatsBtn').removeEventListener('click', () => toggleStats('teamStats'));
                 document.getElementById('enemyStatsBtn').removeEventListener('click', () => toggleStats('enemyStats'));
-           
             }
         };
     } catch (error) {
