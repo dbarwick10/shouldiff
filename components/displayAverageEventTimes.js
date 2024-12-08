@@ -9,6 +9,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let currentGameId = null;
     let refreshInterval;
     let charts = {};
+    let currentCategory = 'playerStats';
 
     const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
     const chartsToRender = ['kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'];
@@ -21,6 +22,22 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         live: { borderColor: 'rgb(155, 89, 182, .75)', backgroundColor: 'rgb(155, 89, 182, 0.1)' },
         previousGame: { borderColor: 'rgb(149, 165, 166, .75)', backgroundColor: 'rgb(149, 165, 166, 0.1)' }
     };
+
+    function toggleStats(category) {
+        // Update button styles
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.style.backgroundColor = '#e0e0e0';
+            btn.style.color = 'black';
+        });
+        document.getElementById(`${category}Btn`).style.backgroundColor = '#3498db';
+        document.getElementById(`${category}Btn`).style.color = 'white';
+        
+        // Update current category
+        currentCategory = category;
+        
+        // Re-render charts with new category
+        charts = renderAllCharts();
+    }
 
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
@@ -84,22 +101,24 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     
             const datasets = statKeys.map((key) => {
                 let data;
+                // Use the current category's data
+                const categoryData = averageEventTimes[currentCategory][key];
+                
                 if (stat === 'deathTimers') {
-                    // Special handling for death timers
-                    const deaths = averageEventTimes.playerStats[key].deaths || [];
-                    const timeSpentDead = averageEventTimes.playerStats[key].timeSpentDead || [];
+                    const deaths = categoryData.deaths || [];
+                    const timeSpentDead = categoryData.timeSpentDead || [];
                     
                     data = deaths.map((deathTime, index) => ({
                         x: deathTime,
                         y: timeSpentDead[index] || 0
                     })).filter(point => point.x != null && point.y != null);
                 } else if (stat === 'kda') {
-                    data = (averageEventTimes.playerStats[key][stat] || []).map((kdaEntry) => ({
+                    data = (categoryData[stat] || []).map((kdaEntry) => ({
                         x: kdaEntry.timestamp,
                         y: kdaEntry.kdaValue
                     }));
                 } else {
-                    data = (averageEventTimes.playerStats[key][stat] || []).map((time, index) => ({
+                    data = (categoryData[stat] || []).map((time, index) => ({
                         x: time,
                         y: index + 1
                     }));
@@ -333,6 +352,11 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     }
 
     try {
+        // Add event listeners for toggle buttons
+        document.getElementById('playerStatsBtn').addEventListener('click', () => toggleStats('playerStats'));
+        document.getElementById('teamStatsBtn').addEventListener('click', () => toggleStats('teamStats'));
+        document.getElementById('enemyStatsBtn').addEventListener('click', () => toggleStats('enemyStats'));
+            
         charts = renderAllCharts();
         
         if (calculateStats) {
@@ -350,6 +374,12 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                     clearInterval(refreshInterval);
                 }
                 Object.values(charts).forEach(chart => chart.destroy());
+                
+                // Remove event listeners
+                document.getElementById('playerStatsBtn').removeEventListener('click', () => toggleStats('playerStats'));
+                document.getElementById('teamStatsBtn').removeEventListener('click', () => toggleStats('teamStats'));
+                document.getElementById('enemyStatsBtn').removeEventListener('click', () => toggleStats('enemyStats'));
+           
             }
         };
     } catch (error) {

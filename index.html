@@ -52,9 +52,8 @@
                 </tbody>
             </table>
         </div>
-        <div>
-            <!-- <canvas id="sharedLegendChart" style="height: 80px;"></canvas> -->
-            <div id="chartLegend" class="chart-legend">
+        <div id="chartLegend" class="chart-legend">
+            <div class="legend-section">
                 <div class="legend-item">
                     <div class="legend-item-color wins-color"></div>
                     <span>Wins</span>
@@ -80,6 +79,12 @@
                     <span>Current Game</span>
                 </div>
             </div>
+            <div class="toggle-container">
+                <button id="playerStatsBtn" class="toggle-btn active">Player Stats</button>
+                <button id="teamStatsBtn" class="toggle-btn">Team Stats</button>
+                <button id="enemyStatsBtn" class="toggle-btn">Enemy Stats</button>
+            </div>
+        </div>
             <div class="chart-container">
                 <div class="chart-wrapper">
                     <canvas id="killsChart"></canvas>
