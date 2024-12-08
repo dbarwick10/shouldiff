@@ -14,14 +14,26 @@ function initializeStats(matchId) {
                 count: 0, 
                 timestamps: [], 
                 timers: [],
-                totalTimeDead: 0,
+                totalDeathTime: [],
                 levelAtDeath: []
             },
             assists: { count: 0, timestamps: [] },
+            timeSpentDead: {
+                deathMinute: [],
+                deathLevel: [],
+                expectedDeathTimer: [],
+                totalDeathTime: [], 
+                history: {
+                    deathMinute: [],
+                    deathLevel: [],
+                    expectedDeathTimer: [],
+                    totalDeathTime: []
+                },
             kda: {
                 total: 0,
                 history: { count: 0, timestamps: [] }
-            }
+               }
+            },
         },
         objectives: {
             turrets: { count: 0, timestamps: [] },
@@ -68,7 +80,7 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
 
         // Get game results and add debug logging
         const gameResults = await gameResult(gameResultMatches, puuid);
-        console.log('Game results for analysis:', gameResults);
+        // console.log('Game results for analysis:', gameResults);
 
         const matchTimelines = await analyzeMatchTimelineForSummoner({ matches }, puuid);
         if (!Array.isArray(matchTimelines)) {
@@ -82,6 +94,8 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
             teamStats: initializeStats(matchId),
             enemyStats: initializeStats(matchId)
         };
+
+
 
         const individualGameStats = [];
 
@@ -109,28 +123,28 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
             };
 
             // Debug log for specific match
-            console.log(`Processing match ${matchId} for outcome`);
+            // console.log(`Processing match ${matchId} for outcome`);
 
             // Update game outcome with detailed logging
             const isWin = gameResults.results.wins.some(game => game.matchId === matchId);
             const isSurrender = gameResults.results.surrenderWins.some(game => game.matchId === matchId) ||
                               gameResults.results.surrenderLosses.some(game => game.matchId === matchId);
-            const gameMode = document.getElementById('gameMode').value.toUpperCase();
+            const gameMode = gameResultMatches.find(m => m.metadata.matchId === matchId)?.info?.gameMode;
 
-            console.log(`Match ${matchId} outcome check:`, {
-                gameMode,
-                isWin,
-                isSurrender,
-                inWinsArray: gameResults.results.wins.map(g => g.matchId),
-                inLossesArray: gameResults.results.losses.map(g => g.matchId)
-            });
+            // console.log(`Match ${matchId} outcome check:`, {
+            //     gameMode: gameMode,
+            //     isWin,
+            //     isSurrender,
+            //     inWinsArray: gameResults.results.wins.map(g => g.matchId),
+            //     inLossesArray: gameResults.results.losses.map(g => g.matchId)
+            // });
 
             gameStats.playerStats.outcome.result = isWin 
                 ? (isSurrender ? 'surrenderWin' : 'win')
                 : (isSurrender ? 'surrenderLoss' : 'loss');
             gameStats.playerStats.outcome.surrender = isSurrender;
 
-            console.log(`Final outcome for match ${matchId}:`, gameStats.playerStats.outcome);
+            // console.log(`Final outcome for match ${matchId}:`, gameStats.playerStats.outcome);
 
             const participantInfo = getParticipantInfo(allEvents);
             if (!participantInfo) {
@@ -146,7 +160,7 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
 
             const teamParticipantIds = playerParticipantId <= 5 ? [1, 2, 3, 4, 5] : [6, 7, 8, 9, 10];
 
-            processMatchEvents(allEvents, playerParticipantId, teamParticipantIds, aggregateStats, gameStats, matchId, matchStats, frames);
+            processMatchEvents(allEvents, playerParticipantId, teamParticipantIds, aggregateStats, gameStats, matchId, matchStats, frames, gameResultMatches);
 
             individualGameStats.push(gameStats);
         }
@@ -181,10 +195,10 @@ function getParticipantInfo(events) {
     );
 }
 
-function processMatchEvents(events, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames) {
+function processMatchEvents(events, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames, gameResultMatches) {
     events.forEach(event => {
         switch (event.type) {
-            case 'CHAMPION_KILL': processChampionKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames); break;
+            case 'CHAMPION_KILL': processChampionKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames, gameResultMatches); break;
             case 'BUILDING_KILL': processBuildingKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId); break;
             case 'ELITE_MONSTER_KILL': processMonsterKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId); break;
             case 'ITEM_PURCHASED': processItemPurchase(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId); break;
@@ -192,7 +206,7 @@ function processMatchEvents(events, playerParticipantId, teamParticipantIds, sta
     });
 }
 
-async function processChampionKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats) {
+async function processChampionKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames, gameResultMatches) {
     event.matchId = matchId;
     const timestamp = (event.timestamp / 1000) / 60;
 
@@ -383,8 +397,8 @@ async function processChampionKill(event, playerParticipantId, teamParticipantId
         return 1;
     }
 
-    const updateTimeSpentDead = async (statsObj, victimId, timestamp, matchStats) => {
-        // Ensure proper initialization of the data structure
+    async function updateTimeSpentDead(statsObj, victimId, timestamp, matchStats) {
+        // Initialize if needed
         if (!statsObj.basicStats) {
             statsObj.basicStats = {
                 timeSpentDead: {
@@ -398,101 +412,59 @@ async function processChampionKill(event, playerParticipantId, teamParticipantId
                         expectedDeathTimer: [],
                         totalDeathTime: []
                     }
-                }
-            };
-        }
-
-        // Ensure timeSpentDead exists and has proper structure
-        if (!statsObj.basicStats.timeSpentDead) {
-            statsObj.basicStats.timeSpentDead = {
-                deathMinute: [],
-                deathLevel: [],
-                expectedDeathTimer: [],
-                totalDeathTime: [],
-                history: {
-                    deathMinute: [],
-                    deathLevel: [],
-                    expectedDeathTimer: [],
+                },
+                deaths: {
+                    count: 0,
+                    timestamps: [],
                     totalDeathTime: []
                 }
             };
         }
-
-        // Ensure history exists
-        if (!statsObj.basicStats.timeSpentDead.history) {
-            statsObj.basicStats.timeSpentDead.history = {
-                deathMinute: [],
-                deathLevel: [],
-                expectedDeathTimer: [],
-                totalDeathTime: []
-            };
+    
+        // Get match info for level calculation
+        const matchInfo = matchStats.find(match => match.info);
+        if (!matchInfo) {
+            console.warn('No match info found in matchStats:', { matchStats });
+            return; // Early return is fine since we're using mutations
         }
-
+    
+        // Build level timeline if needed
+        if (!matchInfo.levelTimeline) {
+            matchInfo.levelTimeline = buildLevelTimeline(matchInfo);
+        }
+    
+        // Get death information
+        const gameMode = gameResultMatches.find(m => m.metadata.matchId === matchId)?.info?.gameMode;
         const currentMinutes = Math.floor(timestamp);
-
-         // Get match info
-    const matchInfo = matchStats.find(match => match.info);
-    if (!matchInfo) {
-        console.warn('No match info found in matchStats:', { matchStats });
-        return;
-    }
-
-    // Debug: Log frame data
-    // console.log('Match info frames:', {
-    //     frameCount: matchInfo.info.frames.length,
-    //     firstFrame: matchInfo.info.frames[0],
-    //     lastFrame: matchInfo.info.frames[matchInfo.info.frames.length - 1]
-    // });
-
-    // Build level timeline if not already cached
-    if (!matchInfo.levelTimeline) {
-        console.log('Building new level timeline...');
-        matchInfo.levelTimeline = buildLevelTimeline(matchInfo);
-    }
-
-    // Get champion level at time of death
-    // console.log('Getting level for death at:', {
-    //     victimId,
-    //     timestamp
-    // });
+        const level = getChampionLevel(matchInfo.levelTimeline, victimId, timestamp);
+        const deathTimer = calculateDeathTimer(currentMinutes, level, gameMode);
     
-    const level = getChampionLevel(matchInfo.levelTimeline, victimId, timestamp);
-    
-    // Debug: Log final level determination
-    // console.log('Determined level for death:', {
-    //     victimId,
-    //     timestamp,
-    //     determinedLevel: level
-    // });
-        
-        const deathTimer = await calculateDeathTimer(currentMinutes, level);
-
-        // Calculate total death time
+        // Calculate total death time using existing data
         const previousTotalTimeSpentDead = 
             statsObj.basicStats.timeSpentDead.history.totalDeathTime.length > 0
                 ? statsObj.basicStats.timeSpentDead.history.totalDeathTime[
                     statsObj.basicStats.timeSpentDead.history.totalDeathTime.length - 1
-                ]
+                  ]
                 : 0;
         
         const totalTimeSpentDead = previousTotalTimeSpentDead + deathTimer;
-
-        // Update both main arrays and history
-        // Main arrays
+    
+        // Update all arrays through direct mutation
+        statsObj.basicStats.deaths.totalDeathTime.push(totalTimeSpentDead);
         statsObj.basicStats.timeSpentDead.deathMinute.push(Number(timestamp));
         statsObj.basicStats.timeSpentDead.deathLevel.push(level);
         statsObj.basicStats.timeSpentDead.expectedDeathTimer.push(deathTimer);
-        statsObj.basicStats.timeSpentDead.totalDeathTime.push(totalTimeSpentDead);
-
-        // History arrays
+        statsObj.basicStats.timeSpentDead.totalDeathTime.push(Number(totalTimeSpentDead));
+    
+        // Update history arrays
         statsObj.basicStats.timeSpentDead.history.deathMinute.push(Number(timestamp));
         statsObj.basicStats.timeSpentDead.history.deathLevel.push(level);
         statsObj.basicStats.timeSpentDead.history.expectedDeathTimer.push(deathTimer);
-        statsObj.basicStats.timeSpentDead.history.totalDeathTime.push(totalTimeSpentDead);
+        statsObj.basicStats.timeSpentDead.history.totalDeathTime.push(Number(Math.round(totalTimeSpentDead)));
     };
     const participantType = getParticipantType(event.victimId);
-    await updateTimeSpentDead(stats[participantType], event.victimId, timestamp, matchStats);
-    await updateTimeSpentDead(gameStats[participantType], event.victimId, timestamp, matchStats);
+    updateTimeSpentDead(stats[participantType], event.victimId, timestamp, matchStats);
+    updateTimeSpentDead(gameStats[participantType], event.victimId, timestamp, matchStats);
 }
 
 function processBuildingKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId) {
@@ -775,9 +747,7 @@ export async function processItemPurchase(event, playerParticipantId, teamPartic
     return stats;
 }
 
-const BRW = [10, 10, 12, 12, 14, 16, 20, 25, 28, 32.5, 35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5];
-
-async function getTimeIncreaseFactor(currentMinutes) {
+function getTimeIncreaseFactor(currentMinutes) {
     if (currentMinutes < 15) return 0;
     if (currentMinutes < 30) {
         return Math.min(Math.ceil(2 * (currentMinutes - 15)) * 0.00425, 0.1275);
@@ -789,18 +759,17 @@ async function getTimeIncreaseFactor(currentMinutes) {
     return 0.50; // Cap at 50%
 }
 
-async function calculateDeathTimer(currentMinutes, level) {
-    const gameMode = document.getElementById('gameMode').value.toUpperCase();
-    
+function calculateDeathTimer(currentMinutes, level, gameMode) {
     if (gameMode === 'ARAM') {
-        // ARAM death timer formula
         const deathTimer = level * 2 + 4;
+
         return deathTimer;
     } else {
+    const BRW = [10, 10, 12, 12, 14, 16, 20, 25, 28, 32.5, 35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5];
     const baseRespawnWait = BRW[level - 1];
-    const timeIncreaseFactor = await getTimeIncreaseFactor(currentMinutes);
+    const timeIncreaseFactor = getTimeIncreaseFactor(currentMinutes);
     const deathTimer = baseRespawnWait + (baseRespawnWait * timeIncreaseFactor);
-        
+    
     return deathTimer;
     }
 }

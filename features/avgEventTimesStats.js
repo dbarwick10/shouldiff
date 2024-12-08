@@ -78,13 +78,28 @@ function getOutcomeCategory(result) {
 }
 
 function aggregatePlayerStats(aggregatedStats, stats) {
+    
     if (!stats) {
         console.warn('Received null or undefined stats');
         return;
     }
 
+    // console.log('Comparing death data formats:', {
+    //     deathTimestamps: {
+    //         data: stats.basicStats?.deaths?.timestamps,
+    //         type: typeof stats.basicStats?.deaths?.timestamps?.[0],
+    //         sample: stats.basicStats?.deaths?.timestamps?.[0]
+    //     },
+    //     totalDeathTime: {
+    //         data: stats.basicStats?.timeSpentDead?.totalDeathTime,
+    //         type: typeof stats.basicStats?.timeSpentDead?.totalDeathTime?.[0],
+    //         sample: stats.basicStats?.timeSpentDead?.totalDeathTime?.[0]
+    //     }
+    // });
+
     aggregateTimestamps(aggregatedStats.kills, stats.basicStats?.kills?.timestamps || []);
     aggregateTimestamps(aggregatedStats.deaths, stats.basicStats?.deaths?.timestamps || []);
+    aggregateTimestamps(aggregatedStats.timeSpentDead, stats.basicStats.timeSpentDead.totalDeathTime);
     aggregateTimestamps(aggregatedStats.assists, stats.basicStats?.assists?.timestamps || []);
     aggregateTimestamps(aggregatedStats.kda, stats.basicStats?.kda?.timestamps || []);
     aggregateTimestamps(aggregatedStats.turrets, stats.objectives?.turrets?.timestamps || []);
@@ -97,6 +112,7 @@ function aggregatePlayerStats(aggregatedStats, stats) {
     aggregateTimestamps(aggregatedStats.barons, stats.objectives?.barons?.timestamps || []);
     aggregateTimestamps(aggregatedStats.dragons, stats.objectives?.dragons?.timestamps || []);
     aggregateTimestamps(aggregatedStats.elders, stats.objectives?.elders?.timestamps || []);
+
     aggregateGoldTimestamps(aggregatedStats.itemGold, stats.economy?.itemPurchases?.items);
 
     if (stats.basicStats?.kda?.history?.count && stats.basicStats.kda.history.timestamps) {
@@ -114,6 +130,32 @@ function aggregateTimestamps(aggregatedArray, timestamps) {
         }
         aggregatedArray[index].push(timestamp);
     });
+}
+
+function aggregateDeathTimes(aggregatedArray, timestamps) {
+    console.log('Original timestamps:', timestamps);
+    
+    // Convert to array using Object.values
+    const actualTimestamps = Object.values(timestamps);
+    
+    // Try alternate methods if first one fails
+    if (actualTimestamps.length === 0 && timestamps && typeof timestamps === 'object') {
+        const keys = Object.keys(timestamps).filter(k => !isNaN(parseInt(k)));
+        const manualArray = keys.map(k => timestamps[k]);
+        
+
+        // Use the manual array if it has values
+        if (manualArray.length > 0) {
+            manualArray.forEach((timestamp, index) => {
+                if (timestamp === undefined || timestamp === null) return;
+                if (!aggregatedArray[index]) {
+                    aggregatedArray[index] = [];
+                }
+                aggregatedArray[index].push(timestamp);
+            });
+        }
+    }
+
 }
 
 function aggregateKDATimestamps(aggregatedArray, kdaValues, timestamps) {
@@ -291,6 +333,7 @@ function calculateAverageTimesForStats(aggregatedStats) {
         barons: calculateAverageTimes(aggregatedStats.barons),
         dragons: calculateAverageTimes(aggregatedStats.dragons),
         elders: calculateAverageTimes(aggregatedStats.elders),
+        timeSpentDead: calculateAverageTimes(aggregatedStats.timeSpentDead),
         itemGold: calculateAverageItemGold(aggregatedStats.itemGold)
     };
 }

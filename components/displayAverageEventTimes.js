@@ -67,7 +67,6 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     }
 
     function renderAllCharts() {
-        
         chartsToRender.forEach(stat => {
             const canvas = document.getElementById(`${stat}Chart`);
             if (canvas) {
@@ -85,7 +84,16 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     
             const datasets = statKeys.map((key) => {
                 let data;
-                if (stat === 'kda') {
+                if (stat === 'deathTimers') {
+                    // Special handling for death timers
+                    const deaths = averageEventTimes.playerStats[key].deaths || [];
+                    const timeSpentDead = averageEventTimes.playerStats[key].timeSpentDead || [];
+                    
+                    data = deaths.map((deathTime, index) => ({
+                        x: deathTime,
+                        y: timeSpentDead[index] || 0
+                    })).filter(point => point.x != null && point.y != null);
+                } else if (stat === 'kda') {
                     data = (averageEventTimes.playerStats[key][stat] || []).map((kdaEntry) => ({
                         x: kdaEntry.timestamp,
                         y: kdaEntry.kdaValue
@@ -96,8 +104,6 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                         y: index + 1
                     }));
                 }
-    
-                // console.log(`Data for ${stat} (${key}):`, data);
     
                 return {
                     label: `Historical ${stat} (${key})`,
@@ -112,15 +118,26 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
             });
     
             if (previousGameStats && previousGameStats[stat]?.length > 0) {
-                const dataToAdd = stat === 'kda'
-                    ? previousGameStats[stat].map((kdaEntry) => ({
+                let dataToAdd;
+                if (stat === 'deathTimers') {
+                    const deaths = previousGameStats.deaths || [];
+                    const timeSpentDead = previousGameStats.timeSpentDead || [];
+                    
+                    dataToAdd = deaths.map((deathTime, index) => ({
+                        x: deathTime,
+                        y: timeSpentDead[index] || 0
+                    })).filter(point => point.x != null && point.y != null);
+                } else if (stat === 'kda') {
+                    dataToAdd = previousGameStats[stat].map((kdaEntry) => ({
                         x: kdaEntry.timestamp,
                         y: kdaEntry.kdaValue
-                    }))
-                    : previousGameStats[stat].map((time, index) => ({
+                    }));
+                } else {
+                    dataToAdd = previousGameStats[stat].map((time, index) => ({
                         x: time,
                         y: index + 1
                     }));
+                }
     
                 datasets.push({
                     label: `Previous Game ${stat}`,
@@ -135,15 +152,26 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
             }
     
             if (currentLiveStats && currentLiveStats[stat]?.length > 0) {
-                const dataToAdd = stat === 'kda'
-                    ? currentLiveStats[stat].map((kdaEntry) => ({
+                let dataToAdd;
+                if (stat === 'deathTimers') {
+                    const deaths = currentLiveStats.deaths || [];
+                    const timeSpentDead = currentLiveStats.timeSpentDead || [];
+                    
+                    dataToAdd = deaths.map((deathTime, index) => ({
+                        x: deathTime,
+                        y: timeSpentDead[index] || 0
+                    })).filter(point => point.x != null && point.y != null);
+                } else if (stat === 'kda') {
+                    dataToAdd = currentLiveStats[stat].map((kdaEntry) => ({
                         x: kdaEntry.timestamp,
                         y: kdaEntry.kdaValue
-                    }))
-                    : currentLiveStats[stat].map((time, index) => ({
+                    }));
+                } else {
+                    dataToAdd = currentLiveStats[stat].map((time, index) => ({
                         x: time,
                         y: index + 1
                     }));
+                }
     
                 datasets.push({
                     label: `Current Game ${stat}`,
@@ -163,7 +191,8 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 plugins: {
                     title: { 
                         display: true, 
-                        text: `${capitalizeFirstLetter(stat) === 'Kda' ? 'KDA' : capitalizeFirstLetter(stat)} Over Time`,
+                        text: stat === 'deathTimers' ? 'Total Time Spent Dead' : 
+                              (stat === 'kda' ? 'KDA' : capitalizeFirstLetter(stat)) + ' Over Time',
                         font: {
                             size: 16,
                             weight: 'bold'
@@ -176,55 +205,80 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                         display: false
                     }
                 },
-                scales: stat === 'kda' 
+                scales: stat === 'deathTimers' 
                     ? {
                         x: {
                             type: 'linear',
                             position: 'bottom',
                             title: { 
                                 display: true, 
-                                text: 'Time' 
+                                text: 'Time of Death (Minutes)' 
                             },
                             ticks: {
+                                stepSize: 5,
                                 display: true
                             }
                         },
                         y: { 
                             title: { 
                                 display: true, 
-                                text: 'KDA' 
-                            },
-                            min: Math.floor(0, Math.min(...datasets.flatMap(d => d.data.map(point => point.y))) - 1),
-                            max: Math.round(Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1),
-                            ticks: {
-                                stepSize: 1,
-                                display: true
-                            }
-                        }
-                    }
-                    : {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom',
-                            title: { 
-                                display: true, 
-                                text: 'Time' 
-                            },
-                            ticks: {
-                                display: true
-                            }
-                        },
-                        y: { 
-                            title: { 
-                                display: true, 
-                                text: `${capitalizeFirstLetter(stat)}`
+                                text: 'Time Spent Dead (Seconds)' 
                             },
                             ticks: {
                                 stepSize: 5,
                                 display: true
                             }
                         }
-                    },
+                    }
+                    : (stat === 'kda' 
+                        ? {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: { 
+                                    display: true, 
+                                    text: 'Time (Minutes)' 
+                                },
+                                ticks: {
+                                    display: true
+                                }
+                            },
+                            y: { 
+                                title: { 
+                                    display: true, 
+                                    text: 'KDA' 
+                                },
+                                min: Math.floor(0, Math.min(...datasets.flatMap(d => d.data.map(point => point.y))) - 1),
+                                max: Math.round(Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1),
+                                ticks: {
+                                    stepSize: 1,
+                                    display: true
+                                }
+                            }
+                        }
+                        : {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                title: { 
+                                    display: true, 
+                                    text: 'Time (Minutes)' 
+                                },
+                                ticks: {
+                                    display: true
+                                }
+                            },
+                            y: { 
+                                title: { 
+                                    display: true, 
+                                    text: `${capitalizeFirstLetter(stat)}`
+                                },
+                                ticks: {
+                                    stepSize: 5,
+                                    display: true
+                                }
+                            }
+                        }),
                 animation: { duration: 0 }
             };
     

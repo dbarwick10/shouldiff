@@ -2,6 +2,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    scrollbar-gutter: stable;
 }
 
 /* General Reset */
@@ -14,7 +15,7 @@ html, body {
 
 /* Body Background */
 body {
-    background: linear-gradient(120deg, #2b2d42, #0d0d12); /* Dark gradient for background */
+    background: linear-gradient(120deg, #2b2d42, #0d0d12) no-repeat center center fixed;
     color: #d6d6e5;
     font-size: 16px;
     line-height: 1.6;
