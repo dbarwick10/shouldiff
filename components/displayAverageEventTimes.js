@@ -519,8 +519,63 @@ async function startLiveDataRefresh() {
         clearInterval(refreshInterval);
     }
 
+    let lastCleanupTime = Date.now();
+    const CLEANUP_INTERVAL = 5 * 60 * 1000; // Clean up every 5 minutes
+    const MAX_DATA_AGE = 20 * 60 * 1000;    // Keep only last 20 minutes of data
+
+    const cleanupOldData = () => {
+        console.log('Running memory cleanup...');
+        const cutoffTime = Date.now() - MAX_DATA_AGE;
+
+        if (!currentLiveStats) return;
+
+        for (const category of ['playerStats', 'teamStats', 'enemyStats']) {
+            for (const stat of ['kills', 'deaths', 'assists', 'timeSpentDead', 'totalTimeSpentDead',
+                              'turrets', 'dragons', 'barons', 'elders', 'inhibitors']) {
+                if (Array.isArray(currentLiveStats[category]?.[stat])) {
+                    const gameStartTime = currentLiveStats.teamStats?.gameStartRealTime || 0;
+                    currentLiveStats[category][stat] = currentLiveStats[category][stat].filter(time => {
+                        const eventRealTime = gameStartTime + (time * 1000); // Convert game time to real time
+                        return eventRealTime >= cutoffTime;
+                    });
+                }
+            }
+        }
+
+        // Force garbage collection if available (Chrome DevTools)
+        if (window.gc) {
+            window.gc();
+        }
+
+        // Clear old chart data
+        Object.values(charts).forEach(chart => {
+            if (chart.data && chart.data.datasets) {
+                chart.data.datasets.forEach(dataset => {
+                    if (Array.isArray(dataset.data)) {
+                        const gameStartTime = currentLiveStats.teamStats?.gameStartRealTime || 0;
+                        dataset.data = dataset.data.filter(point => {
+                            const eventRealTime = gameStartTime + (point.x * 60 * 1000); // Convert minutes to milliseconds
+                            return eventRealTime >= cutoffTime;
+                        });
+                    }
+                });
+            }
+            chart.update('none'); // Update without animation
+        });
+
+        console.log('Memory cleanup complete');
+    };
+
     const updateLiveData = async () => {
         try {
+            const currentTime = Date.now();
+            
+            // Run cleanup if enough time has passed
+            if (currentTime - lastCleanupTime > CLEANUP_INTERVAL) {
+                cleanupOldData();
+                lastCleanupTime = currentTime;
+            }
+
             const newLiveStats = await calculateLiveStats();
             
             if (newLiveStats) {
@@ -544,8 +599,72 @@ async function startLiveDataRefresh() {
         }
     };
 
+    const cleanup = () => {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+        Object.values(charts).forEach(chart => chart.destroy());
+        
+        document.getElementById('playerStatsBtn').removeEventListener('click', () => toggleStats('playerStats'));
+        document.getElementById('teamStatsBtn').removeEventListener('click', () => toggleStats('teamStats'));
+        document.getElementById('enemyStatsBtn').removeEventListener('click', () => toggleStats('enemyStats'));
+        
+        // Clear data references
+        currentLiveStats = null;
+        previousGameStats = null;
+        charts = {};
+    };
+
     await updateLiveData();
     refreshInterval = setInterval(updateLiveData, FETCH_INTERVAL_MS);
+
+    return { cleanup };
+}
+
+function cleanupAndRestartDataRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+    
+    // Clear existing data
+    currentLiveStats = null;
+    previousGameStats = null;
+    
+    // Destroy existing charts
+    Object.values(charts).forEach(chart => chart.destroy());
+    charts = {};
+    
+    // Force garbage collection if available
+    if (window.gc) {
+        window.gc();
+    }
+    
+    // Restart data refresh
+    startLiveDataRefresh();
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Page is hidden, clean up resources
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    } else {
+        // Page is visible again, restart
+        cleanupAndRestartDataRefresh();
+    }
+});
+
+if ('memory' in performance) {
+    setInterval(() => {
+        const usedJSHeapSize = performance.memory.usedJSHeapSize;
+        const jsHeapSizeLimit = performance.memory.jsHeapSizeLimit;
+        
+        if (usedJSHeapSize > jsHeapSizeLimit * 0.8) { // If using more than 80% of heap
+            console.log('High memory usage detected, cleaning up...');
+            cleanupAndRestartDataRefresh();
+        }
+    }, 60000); // Check every minute
 }
 
     try {
