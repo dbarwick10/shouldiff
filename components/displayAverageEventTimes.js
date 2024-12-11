@@ -1,4 +1,5 @@
-import { calculateLiveStats } from "../features/liveMatchStats.js";    
+import { calculateLiveStats } from "../features/liveMatchStats.js";
+// import { cloneDeep } from 'https://cdn.skypack.dev/lodash';
 
 export async function displayAverageEventTimes(averageEventTimes, calculateStats) {
     console.log('Initializing displayAverageEventTimes');
@@ -207,13 +208,48 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 let dataToAdd = [];
     
                 if (stat === 'deathTimers') {
-                    if (previousGameStats.deaths?.length > 0 && previousGameStats.timeSpentDead?.length > 0) {
-                        dataToAdd = previousGameStats.deaths
-                            .map((deathTime, index) => ({
-                                x: deathTime / 60,
-                                y: previousGameStats.timeSpentDead[index]
-                            }))
-                            .filter(point => point.x != null && point.y != null);
+                    // console.log('Processing Death Timer Data:', {
+                    //     currentCategory,
+                    //     stats: currentLiveStats?.[currentCategory]
+                    // });
+                
+                    if (currentLiveStats?.[currentCategory]?.deaths?.length > 0 && 
+                        currentLiveStats?.[currentCategory]?.timeSpentDead?.length > 0) {
+                        
+                        // Ensure arrays are properly initialized
+                        const deaths = currentLiveStats[currentCategory].deaths || [];
+                        const timers = currentLiveStats[currentCategory].timeSpentDead || [];
+                        
+                        // console.log('Death Timer Arrays:', {
+                        //     deaths,
+                        //     timers,
+                        //     deathsLength: deaths.length,
+                        //     timersLength: timers.length
+                        // });
+                
+                        dataToAdd = deaths
+                            .map((deathTime, index) => {
+                                if (timers[index] === undefined) {
+                                    console.warn(`Missing timer for death at index ${index}`);
+                                    return null;
+                                }
+                                
+                                const point = {
+                                    x: deathTime / 60,  // Convert to minutes
+                                    y: timers[index]    // Use individual death timer
+                                };
+                                
+                                // console.log(`Mapped point ${index}:`, point);
+                                return point;
+                            })
+                            .filter(point => point !== null);
+                        
+                        // console.log('Final Death Timer Dataset:', dataToAdd);
+                    } else {
+                        console.log('Insufficient death timer data:', {
+                            hasDeaths: Boolean(currentLiveStats?.[currentCategory]?.deaths?.length),
+                            hasTimers: Boolean(currentLiveStats?.[currentCategory]?.timeSpentDead?.length)
+                        });
                     }
                 } else if (stat === 'kda') {
                     dataToAdd = generateKDAData(
@@ -247,15 +283,24 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 let dataToAdd = [];
             
                 if (stat === 'deathTimers') {
+                    // console.log('Processing Death Timers for Live Data:', {
+                    //     category: currentCategory,
+                    //     test: currentLiveStats?.[currentCategory],
+                    //     deaths: currentLiveStats?.[currentCategory]?.deaths,
+                    //     timeSpentDead: currentLiveStats?.[currentCategory]?.timeSpentDead,
+                    //     totalTimeSpentDead: currentLiveStats?.[currentCategory]?.totalTimeSpentDead
+                    // });
+
                     if (currentLiveStats[currentCategory].deaths?.length > 0 && 
-                        currentLiveStats[currentCategory].timeSpentDead?.length > 0) {
+                        currentLiveStats[currentCategory].totalTimeSpentDead?.length > 0) {
                         dataToAdd = currentLiveStats[currentCategory].deaths
                             .map((deathTime, index) => ({
                                 x: deathTime / 60,  // Convert to minutes for x-axis
-                                y: currentLiveStats[currentCategory].timeSpentDead[index] // Use individual death timer
+                                y: currentLiveStats[currentCategory].totalTimeSpentDead[index] // Use individual death timer
                             }))
                             .filter(point => point.x != null && point.y != null);
                     }
+                    // console.log('Final Death Timer Data Points:', dataToAdd);
                 } else if (stat === 'kda') {
                     dataToAdd = generateKDAData(
                         currentLiveStats[currentCategory].kills || [],
@@ -440,24 +485,28 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return false;
     }
     
-    // Update haveLiveStatsChanged function to use nested structure
     function haveLiveStatsChanged(newStats, currentStats) {
         if (!newStats || !currentStats) return true;
         
+        const category = currentCategory;
         const statsToCheck = [
-            'kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'
+            'kills', 'deaths', 'assists', 'timeSpentDead', 'totalTimeSpentDead',
+            'turrets', 'dragons', 'barons', 'elders', 'inhibitors'
         ];
         
-        const category = currentCategory; // Use the current selected category
-        
+        // Only compare array lengths and last values instead of deep comparison
         for (const stat of statsToCheck) {
-            const newStatArray = newStats[category]?.[stat] || [];
-            const currentStatArray = currentStats[category]?.[stat] || [];
+            const newArray = newStats[category]?.[stat] || [];
+            const currentArray = currentStats[category]?.[stat] || [];
             
-            if (newStatArray.length !== currentStatArray.length) return true;
+            if (newArray.length !== currentArray.length) {
+                return true;
+            }
             
-            for (let i = 0; i < newStatArray.length; i++) {
-                if (newStatArray[i] !== currentStatArray[i]) return true;
+            // Only compare the last value if arrays have elements
+            if (newArray.length > 0 && 
+                newArray[newArray.length - 1] !== currentArray[currentArray.length - 1]) {
+                return true;
             }
         }
         
@@ -473,25 +522,20 @@ async function startLiveDataRefresh() {
     const updateLiveData = async () => {
         try {
             const newLiveStats = await calculateLiveStats();
-            console.log('Refreshed live stats:', newLiveStats);
-
+            
             if (newLiveStats) {
-                // Deep copy the new stats to avoid reference issues
-                const newStatsCopy = JSON.parse(JSON.stringify(newLiveStats));
-
-                if (isNewGame(newStatsCopy, currentLiveStats)) {
-                    console.log('New game detected, storing previous game data...');
+                if (isNewGame(newLiveStats, currentLiveStats)) {
+                    // Only do deep clone when necessary - new game
                     if (currentLiveStats) {
-                        previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
+                        previousGameStats = JSON.parse(JSON.stringify(newLiveStats));
                     }
-                    currentLiveStats = newStatsCopy;
+                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 }
-                else if (haveLiveStatsChanged(newStatsCopy, currentLiveStats)) {
-                    console.log('Live stats changed, refreshing charts...');
-                    currentLiveStats = newStatsCopy;
+                else if (haveLiveStatsChanged(newLiveStats, currentLiveStats)) {
+                    // Use structured clone instead of lodash
+                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 }
                 
-                // Always update visibility and charts when we get new data
                 updateChartVisibility();
                 charts = renderAllCharts();
             }
