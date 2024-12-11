@@ -104,7 +104,7 @@ export function calculatePlayerStats(matchStats, puuid) {
     playerStats.surrenderWinTime = formatTime(playerStats.averageSurrenderWinTime);
     playerStats.surrenderLossTime = formatTime(playerStats.averageSurrenderLossTime);
 
-    console.log('Player stats:', playerStats);
+    // console.log('Player stats:', playerStats);
     return playerStats;
 }
 
@@ -209,7 +209,7 @@ export async function getPlayerTeamMatesAndEnemies(matchData, puuid) {
             // });
         }
 
-        console.log('Teammates by match:', teammatesByMatch);
+        // console.log('Teammates by match:', teammatesByMatch);
 
         return {
             teamMates,
@@ -247,7 +247,7 @@ export async function getPlayerId(matchData, puuid) {
 
             const playerParticipant = match.info.participants.find(p => p.puuid === puuid);
             if (playerParticipant) {
-                console.log(`Found player ID for puuid ${puuid} in match ${matchId}`);
+                // console.log(`Found player ID for puuid ${puuid} in match ${matchId}`);
                 return {
                     participantId: playerParticipant.participantId,
                     matchId

@@ -2,10 +2,10 @@ export async function analyzeMatchTimelineForSummoner(matchStats, puuid) {
     try {
         // Input validation
         if (!matchStats || !puuid) {
-            console.error('Missing required parameters:', { 
-                hasMatchStats: !!matchStats, 
-                hasPuuid: !!puuid 
-            });
+            // console.error('Missing required parameters:', { 
+            //     hasMatchStats: !!matchStats, 
+            //     hasPuuid: !!puuid 
+            // });
             return null;
         }
 
