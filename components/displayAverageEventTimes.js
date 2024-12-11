@@ -28,23 +28,6 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return datasets.some(dataset => dataset.data && dataset.data.length > 0);
     }
 
-    // Helper function to check if a category has data for a specific stat
-    function hasCategoryData(category, stat) {
-        // Check historical data
-        const hasHistoricalData = statKeys.some(key => {
-            const categoryData = averageEventTimes[category][key];
-            return categoryData && categoryData[stat] && categoryData[stat].length > 0;
-        });
-
-        // Check live game data
-        const hasLiveData = currentLiveStats && currentLiveStats[stat] && currentLiveStats[stat].length > 0;
-
-        // Check previous game data
-        const hasPreviousData = previousGameStats && previousGameStats[stat] && previousGameStats[stat].length > 0;
-
-        return hasHistoricalData || hasLiveData || hasPreviousData;
-    }
-
     // Helper function to hide/show chart container
     function toggleChartVisibility(stat, visible) {
         const container = document.getElementById(`${stat}Chart`).parentElement;
@@ -76,34 +59,84 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
 
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-    function isNewGame(newStats, currentStats) {
-        if (!newStats || !currentStats) return true;
-        
-        for (const stat of chartsToRender) {
-            const newStatArray = newStats[stat] || [];
-            const currentStatArray = currentStats[stat] || [];
-            
-            if (newStatArray.length < currentStatArray.length) return true;
+
+    function hasCategoryData(category, stat) {
+        // Special check for deathTimers
+        if (stat === 'deathTimers') {
+            // Check historical data
+            const hasHistoricalData = statKeys.some(key => {
+                const categoryData = averageEventTimes[category][key];
+                return categoryData?.deaths?.length > 0 && categoryData?.timeSpentDead?.length > 0;
+            });
+    
+            // Check live game data - Now using nested structure
+            const hasLiveData = currentLiveStats?.[category]?.deaths?.length > 0 && 
+                              currentLiveStats?.[category]?.timeSpentDead?.length > 0;
+    
+            // Check previous game data - Now using nested structure
+            const hasPreviousData = previousGameStats?.[category]?.deaths?.length > 0 && 
+                                  previousGameStats?.[category]?.timeSpentDead?.length > 0;
+    
+            return hasHistoricalData || hasLiveData || hasPreviousData;
         }
+    
+        // Check historical data
+        const hasHistoricalData = statKeys.some(key => {
+            const categoryData = averageEventTimes[category][key];
+            return categoryData && Array.isArray(categoryData[stat]) && categoryData[stat].length > 0;
+        });
+    
+        // Check live game data - Modified to handle nested structure
+        const hasLiveData = currentLiveStats?.[category] && (
+            (stat === 'kda' && (
+                currentLiveStats[category].kills?.length > 0 ||
+                currentLiveStats[category].deaths?.length > 0 ||
+                currentLiveStats[category].assists?.length > 0
+            )) ||
+            (currentLiveStats[category][stat]?.length > 0)
+        );
+    
+        // Check previous game data - Modified to handle nested structure
+        const hasPreviousData = previousGameStats?.[category] && (
+            (stat === 'kda' && (
+                previousGameStats[category].kills?.length > 0 ||
+                previousGameStats[category].deaths?.length > 0 ||
+                previousGameStats[category].assists?.length > 0
+            )) ||
+            (previousGameStats[category][stat]?.length > 0)
+        );
+    
+        return hasHistoricalData || hasLiveData || hasPreviousData;
+    }
+    
+     // Helper function to calculate KDA at a specific timestamp
+     function calculateKDAAtTime(kills, deaths, assists, timestamp) {
+        const killsBeforeTime = kills.filter(time => time <= timestamp).length;
+        const deathsBeforeTime = deaths.filter(time => time <= timestamp).length;
+        const assistsBeforeTime = assists.filter(time => time <= timestamp).length;
         
-        return false;
+        // Avoid division by zero
+        return deathsBeforeTime === 0 ? 
+            killsBeforeTime + assistsBeforeTime : 
+            ((killsBeforeTime + assistsBeforeTime) / deathsBeforeTime).toFixed(2);
     }
 
-    function haveLiveStatsChanged(newStats, currentStats) {
-        if (!newStats || !currentStats) return true;
+    // Helper function to generate KDA data points from individual events
+    function generateKDAData(kills, deaths, assists) {
+        if (!kills?.length && !deaths?.length && !assists?.length) return [];
         
-        for (const stat of chartsToRender) {
-            const newStatArray = newStats[stat] || [];
-            const currentStatArray = currentStats[stat] || [];
-            
-            if (newStatArray.length !== currentStatArray.length) return true;
-            
-            for (let i = 0; i < newStatArray.length; i++) {
-                if (newStatArray[i] !== currentStatArray[i]) return true;
-            }
-        }
-        
-        return false;
+        // Combine all timestamps and sort them
+        const allEvents = [
+            ...(kills || []).map(time => ({ time, type: 'kill' })),
+            ...(deaths || []).map(time => ({ time, type: 'death' })),
+            ...(assists || []).map(time => ({ time, type: 'assist' }))
+        ].sort((a, b) => a.time - b.time);
+
+        // Generate KDA value for each event
+        return allEvents.map(event => ({
+            x: event.time / 60,
+            y: Number(calculateKDAAtTime(kills || [], deaths || [], assists || [], event.time))
+        }));
     }
 
     function renderAllCharts() {
@@ -120,124 +153,147 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         const newCharts = {};
     
         chartsToRender.forEach(stat => {
-            // Skip rendering if there's no data for this stat in the current category
             if (!hasCategoryData(currentCategory, stat)) {
                 return;
             }
-
-            const datasets = statKeys.map((key) => {
-                let data;
+    
+            const datasets = [];
+    
+            // Add historical data
+            statKeys.forEach((key) => {
                 const categoryData = averageEventTimes[currentCategory][key];
+                if (!categoryData) return;
+    
+                let data = [];
                 
                 if (stat === 'deathTimers') {
-                    const deaths = categoryData.deaths || [];
-                    const timeSpentDead = categoryData.timeSpentDead || [];
-                    
-                    data = deaths.map((deathTime, index) => ({
-                        x: deathTime,
-                        y: timeSpentDead[index] || 0
-                    })).filter(point => point.x != null && point.y != null);
+                    if (categoryData.deaths?.length > 0 && categoryData.timeSpentDead?.length > 0) {
+                        data = categoryData.deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,
+                                y: categoryData.timeSpentDead[index]
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    }
                 } else if (stat === 'kda') {
-                    data = (categoryData[stat] || []).map((kdaEntry) => ({
-                        x: kdaEntry.timestamp,
-                        y: kdaEntry.kdaValue
-                    }));
-                } else {
-                    data = (categoryData[stat] || []).map((time, index) => ({
-                        x: time,
+                    data = generateKDAData(
+                        categoryData.kills || [],
+                        categoryData.deaths || [],
+                        categoryData.assists || []
+                    );
+                } else if (Array.isArray(categoryData[stat])) {
+                    data = categoryData[stat].map((time, index) => ({
+                        x: time / 60,
                         y: index + 1
                     }));
                 }
     
-                return {
-                    label: `Historical ${stat} (${key})`,
-                    data: data,
-                    borderColor: colorConfig[key].borderColor,
-                    backgroundColor: colorConfig[key].backgroundColor,
-                    fill: false,
-                    tension: 0.3,
-                    pointRadius: 1,
-                    pointHoverRadius: 1
-                };
+                if (data.length > 0) {
+                    datasets.push({
+                        label: `Historical ${stat} (${key})`,
+                        data: data,
+                        borderColor: colorConfig[key].borderColor,
+                        backgroundColor: colorConfig[key].backgroundColor,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 1,
+                        pointHoverRadius: 1
+                    });
+                }
             });
     
-            if (previousGameStats && previousGameStats[stat]?.length > 0) {
-                let dataToAdd;
+            // Add previous game data
+            if (previousGameStats) {
+                let dataToAdd = [];
+    
                 if (stat === 'deathTimers') {
-                    const deaths = previousGameStats.deaths || [];
-                    const timeSpentDead = previousGameStats.timeSpentDead || [];
-                    
-                    dataToAdd = deaths.map((deathTime, index) => ({
-                        x: deathTime,
-                        y: timeSpentDead[index] || 0
-                    })).filter(point => point.x != null && point.y != null);
+                    if (previousGameStats.deaths?.length > 0 && previousGameStats.timeSpentDead?.length > 0) {
+                        dataToAdd = previousGameStats.deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,
+                                y: previousGameStats.timeSpentDead[index]
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    }
                 } else if (stat === 'kda') {
-                    dataToAdd = previousGameStats[stat].map((kdaEntry) => ({
-                        x: kdaEntry.timestamp,
-                        y: kdaEntry.kdaValue
-                    }));
-                } else {
+                    dataToAdd = generateKDAData(
+                        previousGameStats.kills || [],
+                        previousGameStats.deaths || [],
+                        previousGameStats.assists || []
+                    );
+                } else if (Array.isArray(previousGameStats[stat])) {
                     dataToAdd = previousGameStats[stat].map((time, index) => ({
-                        x: time,
+                        x: time / 60,
                         y: index + 1
                     }));
                 }
     
-                datasets.push({
-                    label: `Previous Game ${stat}`,
-                    data: dataToAdd,
-                    borderColor: colorConfig.previousGame.borderColor,
-                    backgroundColor: colorConfig.previousGame.backgroundColor,
-                    fill: false,
-                    tension: 0.3,
-                    pointRadius: 1,
-                    pointHoverRadius: 1
-                });
+                if (dataToAdd.length > 0) {
+                    datasets.push({
+                        label: `Previous Game ${stat}`,
+                        data: dataToAdd,
+                        borderColor: colorConfig.previousGame.borderColor,
+                        backgroundColor: colorConfig.previousGame.backgroundColor,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 1,
+                        pointHoverRadius: 1
+                    });
+                }
             }
     
-            if (currentLiveStats && currentLiveStats[stat]?.length > 0) {
-                let dataToAdd;
+            // Add live game data
+            if (currentLiveStats?.[currentCategory]) {
+                let dataToAdd = [];
+            
                 if (stat === 'deathTimers') {
-                    const deaths = currentLiveStats.deaths || [];
-                    const timeSpentDead = currentLiveStats.timeSpentDead || [];
-                    
-                    dataToAdd = deaths.map((deathTime, index) => ({
-                        x: deathTime,
-                        y: timeSpentDead[index] || 0
-                    })).filter(point => point.x != null && point.y != null);
+                    if (currentLiveStats[currentCategory].deaths?.length > 0 && 
+                        currentLiveStats[currentCategory].timeSpentDead?.length > 0) {
+                        dataToAdd = currentLiveStats[currentCategory].deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,  // Convert to minutes for x-axis
+                                y: currentLiveStats[currentCategory].timeSpentDead[index] // Use individual death timer
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    }
                 } else if (stat === 'kda') {
-                    dataToAdd = currentLiveStats[stat].map((kdaEntry) => ({
-                        x: kdaEntry.timestamp,
-                        y: kdaEntry.kdaValue
-                    }));
-                } else {
-                    dataToAdd = currentLiveStats[stat].map((time, index) => ({
-                        x: time,
+                    dataToAdd = generateKDAData(
+                        currentLiveStats[currentCategory].kills || [],
+                        currentLiveStats[currentCategory].deaths || [],
+                        currentLiveStats[currentCategory].assists || []
+                    );
+                } else if (Array.isArray(currentLiveStats[currentCategory][stat])) {
+                    dataToAdd = currentLiveStats[currentCategory][stat].map((time, index) => ({
+                        x: time / 60,
                         y: index + 1
                     }));
                 }
-    
-                datasets.push({
-                    label: `Current Game ${stat}`,
-                    data: dataToAdd,
-                    borderColor: colorConfig.live.borderColor,
-                    backgroundColor: colorConfig.live.backgroundColor,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 1,
-                    pointHoverRadius: 1
-                });
+            
+                if (dataToAdd.length > 0) {
+                    datasets.push({
+                        label: `Current Game ${stat}`,
+                        data: dataToAdd,
+                        borderColor: colorConfig.live.borderColor,
+                        backgroundColor: colorConfig.live.backgroundColor,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 1,
+                        pointHoverRadius: 1
+                    });
+                }
             }
-
-            const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
     
+            if (datasets.length === 0) return;
+    
+            const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
+            
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
                     title: { 
                         display: true, 
-                        text: stat === 'deathTimers' ? 'Total Time Spent Dead' : 
+                        text: stat === 'deathTimers' ? 'Time Spent Dead vs Time of Death' : 
                               (stat === 'kda' ? 'KDA' : capitalizeFirstLetter(stat)) + ' Over Time',
                         font: {
                             size: 16,
@@ -245,10 +301,27 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                         }
                     },
                     tooltip: {
-                        enabled: false
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                const time = context.parsed.x.toFixed(1);
+                                if (stat === 'deathTimers') {
+                                    return `${label}: ${value.toFixed(1)}s at ${time} min`;
+                                } else if (stat === 'kda') {
+                                    return `${label}: ${value.toFixed(2)} at ${time} min`;
+                                } else {
+                                    return `${label}: ${value} at ${time} min`;
+                                }
+                            }
+                        }
                     },
                     legend: {
-                        display: false
+                        display: false,
+                        position: 'top'
                     }
                 },
                 scales: stat === 'deathTimers' 
@@ -258,22 +331,24 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                             position: 'bottom',
                             title: { 
                                 display: true, 
-                                text: 'Time of Death (Minutes)' 
+                                text: 'Time of Death (Minutes)',
+                                font: {
+                                    weight: 'bold'
+                                }
                             },
                             ticks: {
-                                stepSize: 5,
-                                display: true
+                                callback: value => value.toFixed(0)
                             }
                         },
                         y: { 
                             title: { 
                                 display: true, 
-                                text: 'Time Spent Dead (Seconds)' 
+                                text: 'Time Spent Dead (Seconds)',
+                                font: {
+                                    weight: 'bold'
+                                }
                             },
-                            ticks: {
-                                stepSize: 5,
-                                display: true
-                            }
+                            beginAtZero: true
                         }
                     }
                     : (stat === 'kda' 
@@ -283,23 +358,24 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                                 position: 'bottom',
                                 title: { 
                                     display: true, 
-                                    text: 'Time (Minutes)' 
+                                    text: 'Time (Minutes)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
                                 },
                                 ticks: {
-                                    display: true
+                                    callback: value => value.toFixed(0)
                                 }
                             },
                             y: { 
                                 title: { 
                                     display: true, 
-                                    text: 'KDA' 
+                                    text: 'KDA Ratio',
+                                    font: {
+                                        weight: 'bold'
+                                    }
                                 },
-                                min: Math.floor(0, Math.min(...datasets.flatMap(d => d.data.map(point => point.y))) - 1),
-                                max: Math.round(Math.max(...datasets.flatMap(d => d.data.map(point => point.y))) + 1),
-                                ticks: {
-                                    stepSize: 1,
-                                    display: true
-                                }
+                                beginAtZero: true
                             }
                         }
                         : {
@@ -308,20 +384,26 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                                 position: 'bottom',
                                 title: { 
                                     display: true, 
-                                    text: 'Time (Minutes)' 
+                                    text: 'Time (Minutes)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
                                 },
                                 ticks: {
-                                    display: true
+                                    callback: value => value.toFixed(0)
                                 }
                             },
                             y: { 
                                 title: { 
                                     display: true, 
-                                    text: `${capitalizeFirstLetter(stat)}`
+                                    text: `Total ${capitalizeFirstLetter(stat)}`,
+                                    font: {
+                                        weight: 'bold'
+                                    }
                                 },
+                                beginAtZero: true,
                                 ticks: {
-                                    stepSize: 5,
-                                    display: true
+                                    stepSize: 1
                                 }
                             }
                         }),
@@ -330,9 +412,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     
             newCharts[stat] = new Chart(ctx, {
                 type: 'line',
-                data: { 
-                    datasets 
-                },
+                data: { datasets },
                 options: chartOptions
             });
         });
@@ -340,43 +420,89 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return newCharts;
     }
 
-    async function startLiveDataRefresh() {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
+    // Update the isNewGame function
+    function isNewGame(newStats, currentStats) {
+        if (!newStats || !currentStats) return true;
+        
+        const statsToCheck = [
+            'kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'
+        ];
+        
+        const category = currentCategory; // Use the current selected category
+        
+        for (const stat of statsToCheck) {
+            const newStatArray = newStats[category]?.[stat] || [];
+            const currentStatArray = currentStats[category]?.[stat] || [];
+            
+            if (newStatArray.length < currentStatArray.length) return true;
         }
-    
-        const updateLiveData = async () => {
-            try {
-                const newLiveStats = await calculateLiveStats();
-                console.log('Refreshed live stats:', newLiveStats);
-    
-                if (newLiveStats) {
-                    if (isNewGame(newLiveStats, currentLiveStats)) {
-                        console.log('New game detected, storing previous game data...');
-                        if (currentLiveStats) {
-                            previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
-                        }
-                        currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
-                        updateChartVisibility();
-                        charts = renderAllCharts();
-                    }
-                    else if (haveLiveStatsChanged(newLiveStats, currentLiveStats)) {
-                        console.log('Live stats changed, refreshing charts...');
-                        currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
-                        updateChartVisibility();
-                        charts = renderAllCharts();
-                    } else {
-                        console.log('No changes in live stats detected');
-                    }
-                }
-            } catch (error) {
-                console.error('Error refreshing live stats:', error);
-            }
-        };
-    
-        await updateLiveData();
-        refreshInterval = setInterval(updateLiveData, FETCH_INTERVAL_MS);
+        
+        return false;
     }
+    
+    // Update haveLiveStatsChanged function to use nested structure
+    function haveLiveStatsChanged(newStats, currentStats) {
+        if (!newStats || !currentStats) return true;
+        
+        const statsToCheck = [
+            'kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'
+        ];
+        
+        const category = currentCategory; // Use the current selected category
+        
+        for (const stat of statsToCheck) {
+            const newStatArray = newStats[category]?.[stat] || [];
+            const currentStatArray = currentStats[category]?.[stat] || [];
+            
+            if (newStatArray.length !== currentStatArray.length) return true;
+            
+            for (let i = 0; i < newStatArray.length; i++) {
+                if (newStatArray[i] !== currentStatArray[i]) return true;
+            }
+        }
+        
+        return false;
+    }
+
+// Update the startLiveDataRefresh function
+async function startLiveDataRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+
+    const updateLiveData = async () => {
+        try {
+            const newLiveStats = await calculateLiveStats();
+            console.log('Refreshed live stats:', newLiveStats);
+
+            if (newLiveStats) {
+                // Deep copy the new stats to avoid reference issues
+                const newStatsCopy = JSON.parse(JSON.stringify(newLiveStats));
+
+                if (isNewGame(newStatsCopy, currentLiveStats)) {
+                    console.log('New game detected, storing previous game data...');
+                    if (currentLiveStats) {
+                        previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
+                    }
+                    currentLiveStats = newStatsCopy;
+                }
+                else if (haveLiveStatsChanged(newStatsCopy, currentLiveStats)) {
+                    console.log('Live stats changed, refreshing charts...');
+                    currentLiveStats = newStatsCopy;
+                }
+                
+                // Always update visibility and charts when we get new data
+                updateChartVisibility();
+                charts = renderAllCharts();
+            }
+        } catch (error) {
+            console.error('Error refreshing live stats:', error);
+        }
+    };
+
+    await updateLiveData();
+    refreshInterval = setInterval(updateLiveData, FETCH_INTERVAL_MS);
+}
 
     try {
         document.getElementById('playerStatsBtn').addEventListener('click', () => toggleStats('playerStats'));

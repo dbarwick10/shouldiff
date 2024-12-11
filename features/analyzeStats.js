@@ -208,7 +208,7 @@ function processMatchEvents(events, playerParticipantId, teamParticipantIds, sta
 
 async function processChampionKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId, matchStats, frames, gameResultMatches) {
     event.matchId = matchId;
-    const timestamp = (event.timestamp / 1000) / 60;
+    const timestamp = (event.timestamp / 1000);
 
     // Determine participant type
     const getParticipantType = (participantId) => {
@@ -348,7 +348,7 @@ async function processChampionKill(event, playerParticipantId, teamParticipantId
                 }
                 levels.push({
                     level: event.level,
-                    timestamp: event.timestamp / 60000
+                    timestamp: event.timestamp / 1000
                 });
             }
         }
@@ -469,7 +469,7 @@ async function processChampionKill(event, playerParticipantId, teamParticipantId
 
 function processBuildingKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId) {
     event.matchId = matchId;
-    const timestamp = (event.timestamp / 1000) / 60;
+    const timestamp = (event.timestamp / 1000);
 
     if (event.killerId === playerParticipantId) {
         stats.playerStats.objectives.turrets.count++;
@@ -533,7 +533,7 @@ function processBuildingKill(event, playerParticipantId, teamParticipantIds, sta
 
 function processMonsterKill(event, playerParticipantId, teamParticipantIds, stats, gameStats, matchId) {
     event.matchId = matchId;
-    const timestamp = (event.timestamp / 1000) / 60;
+    const timestamp = (event.timestamp / 1000);
 
     if (event.killerId === playerParticipantId) {
         stats.playerStats.objectives.eliteMonsterKills.count++;
@@ -708,7 +708,7 @@ export async function processItemPurchase(event, playerParticipantId, teamPartic
         console.warn(`Failed to fetch details for item ${event.itemId}, proceeding without component logic:`, error);
     }
 
-    const timestamp = (event.timestamp / 1000) / 60;
+    const timestamp = (event.timestamp / 1000);
 
     // Check if the item is built from components
     if (itemDetails.from && itemDetails.from.length > 0) {
