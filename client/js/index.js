@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 loading.style.display = 'flex';
 
                 // Fetch data from server
-                const response = await fetch('http://localhost:3000/api/stats', {
+                const response = await fetch('https://shouldiffserver-new.onrender.com/api/stats', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
