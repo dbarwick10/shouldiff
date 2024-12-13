@@ -2,7 +2,7 @@
   "name": "shouldiff_app",
   "version": "1.0.0",
   "type": "module",
-  "main": "server/server.js",
+  "main": "js/index.js",
   "scripts": {
     "start": "node server/server.js",
     "stop": "taskkill /F /IM node.exe",
