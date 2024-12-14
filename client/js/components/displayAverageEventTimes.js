@@ -4,13 +4,15 @@
 export async function displayAverageEventTimes(averageEventTimes, calculateStats) {
     console.log('Initializing displayAverageEventTimes');
     
-    const FETCH_INTERVAL_MS = 1000;
+    const FETCH_INTERVAL_MS = 1000; // Regular polling interval
+    const RETRY_INTERVAL_MS = 120000; // Longer interval for retrying when server is down
     let currentLiveStats = null;
     let previousGameStats = null;
-    let currentGameId = null;
     let refreshInterval;
+    let retryTimeout;
     let charts = {};
     let currentCategory = 'playerStats';
+    let isPolling = false;
 
     const statKeys = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];
     const chartsToRender = ['kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'];
@@ -522,16 +524,37 @@ async function startLiveDataRefresh() {
         clearInterval(refreshInterval);
     }
 
+    if (retryTimeout) {
+        clearTimeout(retryTimeout);
+    }
+
     async function updateLiveData() {
         try {
-            const response = await fetch('http://localhost:3000/api/live-stats');
+            const response = await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
+            
             if (!response.ok) {
-                console.log('No live game data available');
-                return null;
+                // If server is running but no game is active
+                if (response.status === 404) {
+                    console.log('No active game found');
+                    return null;
+                }
+                
+                // If server is running but live stats temporarily unavailable
+                if (response.status === 503) {
+                    console.log('Live stats temporarily unavailable, will retry...');
+                    return null;
+                }
+
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const newLiveStats = await response.json();
-            console.log('Received live stats:', newLiveStats); // Debug log
+            
+            // Successfully connected - switch to regular polling interval
+            if (!isPolling) {
+                isPolling = true;
+                restartPolling(FETCH_INTERVAL_MS);
+            }
             
             if (newLiveStats) {
                 if (isNewGame(newLiveStats, currentLiveStats)) {
@@ -548,45 +571,74 @@ async function startLiveDataRefresh() {
                 charts = renderAllCharts();
             }
         } catch (error) {
-            console.error('Error refreshing live stats:', error);
+            // Handle connection errors (server not running)
+            if (error.message.includes('Failed to fetch') || error.message.includes('HTTP error')) {
+                console.log('Live stats server not available, will retry later...');
+                
+                // Switch to retry mode with longer interval
+                if (isPolling) {
+                    isPolling = false;
+                    restartPolling(RETRY_INTERVAL_MS);
+                }
+            } else {
+                console.error('Error refreshing live stats:', error);
+            }
         }
     }
 
+    function restartPolling(interval) {
+        // Clear existing intervals/timeouts
+        if (refreshInterval) clearInterval(refreshInterval);
+        if (retryTimeout) clearTimeout(retryTimeout);
+        
+        // Start new polling interval
+        refreshInterval = setInterval(updateLiveData, interval);
+    }
+
+    // Initial attempt
     await updateLiveData();
-    refreshInterval = setInterval(updateLiveData, FETCH_INTERVAL_MS);
+    
+    // Start with retry interval - will switch to regular interval when connection succeeds
+    if (!isPolling) {
+        restartPolling(RETRY_INTERVAL_MS);
+    }
 }
 
-    try {
-        document.getElementById('playerStatsBtn').addEventListener('click', () => toggleStats('playerStats'));
-        document.getElementById('teamStatsBtn').addEventListener('click', () => toggleStats('teamStats'));
-        document.getElementById('enemyStatsBtn').addEventListener('click', () => toggleStats('enemyStats'));
-            
-        updateChartVisibility();
-        charts = renderAllCharts();
+try {
+    // Add event listeners
+    document.getElementById('playerStatsBtn').addEventListener('click', () => toggleStats('playerStats'));
+    document.getElementById('teamStatsBtn').addEventListener('click', () => toggleStats('teamStats'));
+    document.getElementById('enemyStatsBtn').addEventListener('click', () => toggleStats('enemyStats'));
         
-        if (calculateStats) {
-            console.log('Starting live data refresh...');
-            await startLiveDataRefresh();
-        } else {
-            console.log('No live stats promise provided, running in historical-only mode');
-        }
-        
-        console.log('Chart initialization complete');
-        
-        return {
-            cleanup: () => {
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
-                }
-                Object.values(charts).forEach(chart => chart.destroy());
-                
-                document.getElementById('playerStatsBtn').removeEventListener('click', () => toggleStats('playerStats'));
-                document.getElementById('teamStatsBtn').removeEventListener('click', () => toggleStats('teamStats'));
-                document.getElementById('enemyStatsBtn').removeEventListener('click', () => toggleStats('enemyStats'));
-            }
-        };
-    } catch (error) {
-        console.error('Error displaying average event times:', error);
-        throw error;
+    updateChartVisibility();
+    charts = renderAllCharts();
+    
+    if (calculateStats) {
+        console.log('Starting live data refresh...');
+        await startLiveDataRefresh();
+    } else {
+        console.log('No live stats promise provided, running in historical-only mode');
     }
+    
+    console.log('Chart initialization complete');
+    
+    return {
+        cleanup: () => {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            if (retryTimeout) {
+                clearTimeout(retryTimeout);
+            }
+            Object.values(charts).forEach(chart => chart.destroy());
+            
+            document.getElementById('playerStatsBtn').removeEventListener('click', () => toggleStats('playerStats'));
+            document.getElementById('teamStatsBtn').removeEventListener('click', () => toggleStats('teamStats'));
+            document.getElementById('enemyStatsBtn').removeEventListener('click', () => toggleStats('enemyStats'));
+        }
+    };
+} catch (error) {
+    console.error('Error displaying average event times:', error);
+    throw error;
+}
 }
