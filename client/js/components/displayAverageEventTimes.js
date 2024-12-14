@@ -1,11 +1,12 @@
 // import { calculateLiveStats } from "../features/liveMatchStats.js";
 // import { cloneDeep } from 'https://cdn.skypack.dev/lodash';
+import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS } from "./config/constraints.js"; 
 
 export async function displayAverageEventTimes(averageEventTimes, calculateStats) {
     console.log('Initializing displayAverageEventTimes');
     
-    const FETCH_INTERVAL_MS = 1000; // Regular polling interval
-    const RETRY_INTERVAL_MS = 120000; // Longer interval for retrying when server is down
+    // const FETCH_INTERVAL_MS = 1000; // Regular polling interval
+    // const RETRY_INTERVAL_MS = 120000; // Longer interval for retrying when server is down
     let currentLiveStats = null;
     let previousGameStats = null;
     let refreshInterval;
