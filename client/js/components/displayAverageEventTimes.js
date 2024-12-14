@@ -530,7 +530,7 @@ async function startLiveDataRefresh() {
 
     async function updateLiveData() {
         try {
-            const response = await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
+            const response = await fetch('https://shouldiffserver-new.onrender.com/api/stats');
             
             if (!response.ok) {
                 // If server is running but no game is active
