@@ -6,6 +6,7 @@
 
 # nodes
 node_modules/
+.vscode/
 
 # dist
 dist/
