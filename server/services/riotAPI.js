@@ -1,4 +1,4 @@
-import { MATCH_COUNT, DELAY_BETWEEN_REQUESTS, QUEUE_MAPPINGS } from '../config/constraints.js';
+import { MATCH_COUNT, DELAY_BETWEEN_REQUESTS, QUEUE_MAPPINGS } from './server/config/constraints.js';
 
 
 class RiotAPIService {
@@ -31,8 +31,8 @@ class RiotAPIService {
             }
 
             const matchIds = await response.json();
-            console.log(`Found ${matchIds.length} matches`);
-            
+            console.log(`Received ${matchIds.length} matches from API, will process up to ${MATCH_COUNT}`);
+                        
             // Store the match IDs
             this.matchIds.set(puuid, matchIds);
 

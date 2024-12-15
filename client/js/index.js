@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const data = await response.json();
-                console.log('Received data:', data); // Add this debug log
+                // console.log('Received data:', data); // Add this debug log
 
                 // Verify data structure before passing to display functions
                 if (!data.playerStats || !data.teamStats || !data.enemyTeamStats) {
