@@ -1,6 +1,6 @@
 // import { displayStats } from './components/displayStats.js';
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
-import { LOCAL_TESTING } from "./config/constraints.js"; 
+import { LOCAL_TESTING } from "./components/config/constraints.js"; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('fetchStatsButton');
@@ -34,14 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 loading.style.display = 'flex';
 
                 // Fetch data from server
-                const response = LOCAL_TESTING ? await fetch('http://127.0.0.1:3000/api/stats', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                })
-                : await fetch('https://shouldiffserver-new.onrender.com/api/stats', {
+
+                const localURL = 'http://127.0.0.1:3000';
+                const prodURL = 'https://shouldiffserver-new.onrender.com';
+
+                const response = await fetch(`${LOCAL_TESTING ? localURL : prodURL}/api/stats`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
