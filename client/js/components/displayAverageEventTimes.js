@@ -1,6 +1,6 @@
 // import { calculateLiveStats } from "../features/liveMatchStats.js";
 // import { cloneDeep } from 'https://cdn.skypack.dev/lodash';
-import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS } from "./config/constraints.js"; 
+import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS, LOCAL_TESTING } from "./config/constraints.js"; 
 
 export async function displayAverageEventTimes(averageEventTimes, calculateStats) {
     console.log('Initializing displayAverageEventTimes');
@@ -528,10 +528,11 @@ async function startLiveDataRefresh() {
     if (retryTimeout) {
         clearTimeout(retryTimeout);
     }
-
+    
     async function updateLiveData() {
         try {
-            const response = await fetch('http://127.0.0.1:3000/api/live-stats');
+            const response = LOCAL_TESTING ? await fetch('http://127.0.0.1:3000/api/live-stats')
+            : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
             
             if (!response.ok) {
                 // If server is running but no game is active
