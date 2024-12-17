@@ -100,6 +100,7 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
         const individualGameStats = [];
 
         for (const match of matchTimelines) {
+            destroyedItems.clear();
             const { matchId, allEvents, metadata, frames } = match;
 
             // Ensure the matchId matches in both matchStats and gameResultMatches
@@ -163,6 +164,15 @@ export async function analyzePlayerStats(matchStats, puuid, gameResultMatches) {
             processMatchEvents(allEvents, playerParticipantId, teamParticipantIds, aggregateStats, gameStats, matchId, matchStats, frames, gameResultMatches);
 
             individualGameStats.push(gameStats);
+
+            match.allEvents = null;
+            match.frames = null;
+
+            if (global.gc) {
+                try {
+                    global.gc();
+                } catch (e) {}
+            }
         }
 
         return { 

@@ -562,17 +562,17 @@ async function startLiveDataRefresh() {
         }
 
         // Check if game data is insufficient
-        const hasInsufficientData = !newLiveStats[currentCategory] || 
-            Object.values(newLiveStats[currentCategory]).every(arr => !arr || arr.length === 0);
+        // const hasInsufficientData = !newLiveStats[currentCategory] || 
+        //     Object.values(newLiveStats[currentCategory]).every(arr => !arr || arr.length === 0);
             
-        if (hasInsufficientData) {
-            console.log('Insufficient game data - delaying next check');
-            if (isPolling) {
-                isPolling = false;
-                restartPolling(RETRY_INTERVAL_MS);
-            }
-            return null;
-        }
+        // if (hasInsufficientData) {
+        //     console.log('Insufficient game data - delaying next check');
+        //     if (isPolling) {
+        //         isPolling = false;
+        //         restartPolling(RETRY_INTERVAL_MS);
+        //     }
+        //     return null;
+        // }
             
             // Successfully connected - switch to regular polling interval
             if (!isPolling) {
@@ -582,13 +582,14 @@ async function startLiveDataRefresh() {
             
             if (newLiveStats) {
                 if (isNewGame(newLiveStats, currentLiveStats)) {
+                    // Only do deep clone when necessary - new game
                     if (currentLiveStats) {
-                        previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
+                        previousGameStats = JSON.parse(JSON.stringify(newLiveStats));
                     }
-                    currentLiveStats = newLiveStats;
+                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 }
                 else if (haveLiveStatsChanged(newLiveStats, currentLiveStats)) {
-                    currentLiveStats = newLiveStats;
+                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 }
                 
                 updateChartVisibility();
