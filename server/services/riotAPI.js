@@ -1,5 +1,18 @@
-import { MATCH_COUNT, DELAY_BETWEEN_REQUESTS, QUEUE_MAPPINGS } from './server/config/constraints.js';
+// import { MATCH_COUNT, DELAY_BETWEEN_REQUESTS, QUEUE_MAPPINGS } from './config/constraints.js';
 
+export const MATCH_COUNT = 5;
+export const DELAY_BETWEEN_REQUESTS = 0;
+
+export const QUEUE_MAPPINGS = {
+    'aram': 450,       // ARAM
+    'normal': 400,     // Normal 5v5 Draft Pick
+    'blind': 430,      // Normal 5v5 Blind Pick
+    'ranked': 420,     // Ranked Solo/Duo
+    'flex': 440,       // Ranked Flex
+    'urf': 1020,       // Ultra Rapid Fire
+    'ultbook': 1400,   // Ultimate Spellbook
+    'all': null        // All queues
+};
 
 class RiotAPIService {
     constructor() {
@@ -32,7 +45,7 @@ class RiotAPIService {
 
             const matchIds = await response.json();
             console.log(`Received ${matchIds.length} matches from API, will process up to ${MATCH_COUNT}`);
-                        
+
             // Store the match IDs
             this.matchIds.set(puuid, matchIds);
 

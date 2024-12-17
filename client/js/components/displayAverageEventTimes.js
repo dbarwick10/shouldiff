@@ -531,7 +531,7 @@ async function startLiveDataRefresh() {
 
     async function updateLiveData() {
         try {
-            const response = await fetch('https://127.0.0.1:3000/api/live-stats');
+            const response = await fetch('http://127.0.0.1:3000/api/live-stats');
             
             if (!response.ok) {
                 // If server is running but no game is active
@@ -550,6 +550,29 @@ async function startLiveDataRefresh() {
             }
             
             const newLiveStats = await response.json();
+
+            // Handle insufficient game data or null response
+        if (!newLiveStats || newLiveStats === null) {
+            console.log('Received null game data - delaying next check');
+            if (isPolling) {
+                isPolling = false;
+                restartPolling(RETRY_INTERVAL_MS);
+            }
+            return null;
+        }
+
+        // Check if game data is insufficient
+        const hasInsufficientData = !newLiveStats[currentCategory] || 
+            Object.values(newLiveStats[currentCategory]).every(arr => !arr || arr.length === 0);
+            
+        if (hasInsufficientData) {
+            console.log('Insufficient game data - delaying next check');
+            if (isPolling) {
+                isPolling = false;
+                restartPolling(RETRY_INTERVAL_MS);
+            }
+            return null;
+        }
             
             // Successfully connected - switch to regular polling interval
             if (!isPolling) {
