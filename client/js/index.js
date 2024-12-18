@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const localURL = 'http://127.0.0.1:3000';
                 const prodURL = 'https://shouldiffserver-new.onrender.com';
 
-                const response = await fetch(`${LOCAL_TESTING ? localURL : prodURL}/api/stats`, {
+                const response = await fetch(`https://shouldiffserver-new.onrender.com/api/stats`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

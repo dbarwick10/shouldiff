@@ -532,12 +532,16 @@ async function startLiveDataRefresh() {
     async function updateLiveData() {
         try {
             const response = LOCAL_TESTING ? await fetch('http://127.0.0.1:3000/api/live-stats')
-            : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
+                : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
             
             if (!response.ok) {
                 // If server is running but no game is active
                 if (response.status === 404) {
                     console.log('No active game found');
+                    // Keep previous game data intact when no active game is found
+                    currentLiveStats = null;
+                    updateChartVisibility();
+                    charts = renderAllCharts();
                     return null;
                 }
                 
@@ -546,34 +550,25 @@ async function startLiveDataRefresh() {
                     console.log('Live stats temporarily unavailable, will retry...');
                     return null;
                 }
-
+    
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const newLiveStats = await response.json();
-
+    
             // Handle insufficient game data or null response
-        if (!newLiveStats || newLiveStats === null) {
-            console.log('Received null game data - delaying next check');
-            if (isPolling) {
-                isPolling = false;
-                restartPolling(RETRY_INTERVAL_MS);
+            if (!newLiveStats || newLiveStats === null) {
+                console.log('Received null game data - delaying next check');
+                // Keep previous game data intact when receiving null data
+                currentLiveStats = null;
+                updateChartVisibility();
+                charts = renderAllCharts();
+                if (isPolling) {
+                    isPolling = false;
+                    restartPolling(RETRY_INTERVAL_MS);
+                }
+                return null;
             }
-            return null;
-        }
-
-        // Check if game data is insufficient
-        // const hasInsufficientData = !newLiveStats[currentCategory] || 
-        //     Object.values(newLiveStats[currentCategory]).every(arr => !arr || arr.length === 0);
-            
-        // if (hasInsufficientData) {
-        //     console.log('Insufficient game data - delaying next check');
-        //     if (isPolling) {
-        //         isPolling = false;
-        //         restartPolling(RETRY_INTERVAL_MS);
-        //     }
-        //     return null;
-        // }
             
             // Successfully connected - switch to regular polling interval
             if (!isPolling) {
@@ -583,9 +578,10 @@ async function startLiveDataRefresh() {
             
             if (newLiveStats) {
                 if (isNewGame(newLiveStats, currentLiveStats)) {
-                    // Only do deep clone when necessary - new game
+                    // Save the current game as previous game before updating
                     if (currentLiveStats) {
-                        previousGameStats = JSON.parse(JSON.stringify(newLiveStats));
+                        previousGameStats = JSON.parse(JSON.stringify(currentLiveStats));
+                        console.log('Saved previous game data:', previousGameStats);
                     }
                     currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 }
