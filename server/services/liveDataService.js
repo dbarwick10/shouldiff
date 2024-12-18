@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import https from 'https';
+import { LIVE_POLLING_RATE, LIVE_STATS_ENABLED } from '../config/constaints.js';
 
 const httpsAgent = new https.Agent({
     rejectUnauthorized: false
@@ -7,12 +8,19 @@ const httpsAgent = new https.Agent({
 
 let cachedData = null;
 let pollingInterval = null;
-const POLLING_RATE = 1000; // 1 second
 
 export async function getLiveData() {
+    if (!LIVE_STATS_ENABLED) {
+        console.log('Live stats are disabled');
+        return null;
+    }
+
     try {
-        // If polling isn't started, start it
+        // If polling isn't started, start it and do initial fetch
         if (!pollingInterval) {
+            await fetchLiveGameData().then(data => {
+                cachedData = data;
+            });
             startPolling();
         }
         
@@ -24,6 +32,9 @@ export async function getLiveData() {
 }
 
 async function fetchLiveGameData() {
+    if (!LIVE_STATS_ENABLED) {
+        return null;
+    }
     try {
         const response = await fetch('https://127.0.0.1:2999/liveclientdata/allgamedata', {
             method: 'GET',
@@ -48,6 +59,11 @@ async function fetchLiveGameData() {
 }
 
 function startPolling() {
+    if (!LIVE_STATS_ENABLED) {
+        console.log('Live stats are disabled - polling not started');
+        return;
+    }
+
     console.log('Starting live game data polling...');
     
     // Initial fetch
@@ -62,7 +78,7 @@ function startPolling() {
             cachedData = newData;
             console.log('Live game data updated');
         }
-    }, POLLING_RATE);
+    }, LIVE_POLLING_RATE);
 }
 
 function stopPolling() {
@@ -77,9 +93,3 @@ function stopPolling() {
 // Clean up when the process exits
 process.on('SIGTERM', stopPolling);
 process.on('SIGINT', stopPolling);
-
-export const liveDataService = {
-    getLiveData,
-    startPolling,
-    stopPolling
-};

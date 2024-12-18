@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import https from 'https';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -17,12 +16,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
+    console.log('Memory usage before request:', getMemoryStats());
+
     console.log('Request received:', {
         url: req.url,
         method: req.method,
         origin: req.headers.origin,
         path: req.path
     });
+
+    res.on('finish', () => {
+        console.log(`Memory usage after ${req.method} ${req.url}:`, getMemoryStats());
+    });
+
     next();
 });
 
@@ -38,6 +44,27 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({ error: err.message });
 });
 
+// Function to format memory usage
+function formatMemoryUsage(bytes) {
+    return `${Math.round(bytes / 1024 / 1024 * 100) / 100} MB`;
+}
+
+// Function to get memory stats
+function getMemoryStats() {
+    const memoryData = process.memoryUsage();
+    return {
+        rss: formatMemoryUsage(memoryData.rss), // RSS: total memory allocated
+        heapTotal: formatMemoryUsage(memoryData.heapTotal), // Total size of allocated heap
+        heapUsed: formatMemoryUsage(memoryData.heapUsed), // Actual memory used
+        external: formatMemoryUsage(memoryData.external) // Memory used by external C++ objects
+    };
+}
+
+const MEMORY_LOG_INTERVAL = 60000; // Log every minute
+setInterval(() => {
+    console.log('Periodic memory check:', getMemoryStats());
+}, MEMORY_LOG_INTERVAL);
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
@@ -46,4 +73,21 @@ app.listen(PORT, () => {
     console.log('  - GET /api/puuid');
     console.log('  - GET /api/match-stats');
     console.log('  - GET /api/match-events');
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+        console.log('Server shut down.');
+        process.exit(0);
+    });
+});
+
+process.on('SIGTERM', () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+        console.log('Server shut down.');
+        process.exit(0);
+    });
 });

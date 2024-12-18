@@ -1,5 +1,6 @@
 // import { displayStats } from './components/displayStats.js';
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
+import { LOCAL_TESTING } from "./components/config/constraints.js"; 
 
 document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('fetchStatsButton');
@@ -33,7 +34,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 loading.style.display = 'flex';
 
                 // Fetch data from server
-                const response = await fetch('https://shouldiffserver-new.onrender.com/api/stats', {
+
+                const localURL = 'http://127.0.0.1:3000';
+                const prodURL = 'https://shouldiffserver-new.onrender.com';
+
+                const response = await fetch(`${LOCAL_TESTING ? localURL : prodURL}/api/stats`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -46,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const data = await response.json();
-                console.log('Received data:', data); // Add this debug log
+                // console.log('Received data:', data); // Add this debug log
 
                 // Verify data structure before passing to display functions
                 if (!data.playerStats || !data.teamStats || !data.enemyTeamStats) {
