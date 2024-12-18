@@ -66,11 +66,28 @@ setInterval(() => {
 }, MEMORY_LOG_INTERVAL);
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Available endpoints:');
     console.log('  - GET /api/test');
     console.log('  - GET /api/puuid');
     console.log('  - GET /api/match-stats');
     console.log('  - GET /api/match-events');
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+        console.log('Server shut down.');
+        process.exit(0);
+    });
+});
+
+process.on('SIGTERM', () => {
+    console.log('Shutting down server...');
+    server.close(() => {
+        console.log('Server shut down.');
+        process.exit(0);
+    });
 });
