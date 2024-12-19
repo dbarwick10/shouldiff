@@ -58,6 +58,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         const surrenderWinsLegend = document.querySelector('.legend-item.surrender-wins');
         const surrenderLossesLegend = document.querySelector('.legend-item.surrender-losses');
         const currentGameLegend = document.querySelector('.legend-item.current-game');
+        const previousGameLegend = document.querySelector('.legend-item.previous-game')
     
         // Update visibility
         winsLegend.style.display = hasWins ? 'flex' : 'none';
@@ -65,6 +66,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         surrenderWinsLegend.style.display = hasSurrenderWins ? 'flex' : 'none';
         surrenderLossesLegend.style.display = hasSurrenderLosses ? 'flex' : 'none';
         currentGameLegend.style.display = hasCurrentGame ? 'flex' : 'none';
+        previousGameLegend.style.display = hasPreviousGame ? 'flex' : 'none';
     
         // Show/hide the entire legend based on whether any items are visible
         const legendSection = document.querySelector('.chart-legend');
@@ -616,16 +618,16 @@ async function startLiveDataRefresh() {
             }
 
             // Log incoming data state
-            console.log('Received new game data:', {
-                category: currentCategory,
-                stats: {
-                    kills: newLiveStats[currentCategory]?.kills?.length || 0,
-                    deaths: newLiveStats[currentCategory]?.deaths?.length || 0,
-                    assists: newLiveStats[currentCategory]?.assists?.length || 0,
-                    hasDeathTimers: Boolean(newLiveStats[currentCategory]?.deaths?.length && 
-                                         newLiveStats[currentCategory]?.timeSpentDead?.length)
-                }
-            });
+            // console.log('Received new game data:', {
+            //     category: currentCategory,
+            //     stats: {
+            //         kills: newLiveStats[currentCategory]?.kills?.length || 0,
+            //         deaths: newLiveStats[currentCategory]?.deaths?.length || 0,
+            //         assists: newLiveStats[currentCategory]?.assists?.length || 0,
+            //         hasDeathTimers: Boolean(newLiveStats[currentCategory]?.deaths?.length && 
+            //                              newLiveStats[currentCategory]?.timeSpentDead?.length)
+            //     }
+            // });
 
             const isEmpty = ['kills', 'deaths', 'assists'].every(stat => 
                 (newLiveStats[currentCategory]?.[stat]?.length || 0) === 0

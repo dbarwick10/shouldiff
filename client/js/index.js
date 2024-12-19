@@ -6,39 +6,85 @@ document.addEventListener('DOMContentLoaded', function() {
     const analyzeButton = document.getElementById('fetchStatsButton');
     const loading = document.getElementById('loading');
     const inputSection = document.querySelector('.input-section');
+    const chartContainer = document.querySelector('.chart-container');
+    const chartLegend = document.querySelector('.chart-legend');
+    const loadingStates = [
+        'Fetching player information...',
+        'Gathering match statistics...',
+        'Collecting match event data...',
+        'Analyzing player performance...',
+        'Calculating event timings...',
+        'Checking live game data...',
+        'Well, this is embarassing - how long should this take...',
+        'Seriously? Is this still going?',
+        `Well, if you're still here, might as well stay a bit longer...`
+    ];
+    
+    let currentLoadingState = 0;
+    let loadingInterval;
+    let currentCleanup = null;
+    let lastSuccessfulSearch = null;
     
     if (analyzeButton) {
         analyzeButton.addEventListener('click', async function() {
             try {
-                // Collect form data
                 const formData = {
-                    summonerName: document.getElementById('summonerName').value,
-                    tagLine: document.getElementById('tagLine').value,
+                    summonerName: document.getElementById('summonerName').value.trim(),
+                    tagLine: document.getElementById('tagLine').value.trim(),
                     region: document.getElementById('region').value,
                     gameMode: document.getElementById('gameMode').value
                 };
 
-                // Validate inputs
                 if (!formData.summonerName || !formData.tagLine) {
                     alert('Please enter both summoner name and tagline');
                     return;
                 }
 
-                // Show loading state
-                this.disabled = true;
-                inputSection.style.display = 'none';
-                loading.innerHTML = `
-                    <strong>Fetching Game Data</strong>
-                    <div id="loading-circle"></div>
-                `;
-                loading.style.display = 'flex';
+                // Check if this is the same as the last successful search
+                if (lastSuccessfulSearch && 
+                    formData.summonerName.toLowerCase() === lastSuccessfulSearch.summonerName.toLowerCase() &&
+                    formData.tagLine.toLowerCase() === lastSuccessfulSearch.tagLine.toLowerCase() &&
+                    formData.region === lastSuccessfulSearch.region &&
+                    formData.gameMode === lastSuccessfulSearch.gameMode) {
+                    alert('Update your summoner name, tagline or game mode and try again');
+                    return;
+                }
 
-                // Fetch data from server
+                // Clean up existing charts
+                if (currentCleanup) {
+                    currentCleanup();
+                    currentCleanup = null;
+                }
 
-                const localURL = 'http://127.0.0.1:3000';
-                const prodURL = 'https://shouldiffserver-new.onrender.com';
+                // Hide existing content
+                if (chartContainer) chartContainer.style.display = 'none';
+                if (chartLegend) chartLegend.style.display = 'none';
 
-                const response = await fetch(`https://shouldiffserver-new.onrender.com/api/stats`, {
+                 // Initial loading state
+                 this.disabled = true;
+                 inputSection.style.display = 'none';
+                 loading.style.display = 'flex';
+ 
+                 // Start cycling through loading states
+                 currentLoadingState = 0;
+                 loading.innerHTML = `
+                     <strong>${loadingStates[currentLoadingState]}</strong>
+                     <div id="loading-circle"></div>
+                 `;
+ 
+                 // Update loading message 
+                 loadingInterval = setInterval(() => {
+                     currentLoadingState = (currentLoadingState + 1) % loadingStates.length;
+                     loading.innerHTML = `
+                         <strong>${loadingStates[currentLoadingState]}</strong>
+                         <div id="loading-circle"></div>
+                     `;
+                 }, 23000); //every x seconds
+
+                const localURL = 'http://127.0.0.1:3000/api/stats';
+                const prodURL = 'https://https://shouldiffserver-new.onrender.com/api/stats'
+
+                const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -51,44 +97,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const data = await response.json();
-                // console.log('Received data:', data); // Add this debug log
 
-                // Verify data structure before passing to display functions
                 if (!data.playerStats || !data.teamStats || !data.enemyTeamStats) {
                     console.error('Invalid data structure:', data);
                     throw new Error('Invalid data received from server');
                 }
 
-                // Display the stats
-                // await displayStats(data.playerStats, data.teamStats, data.enemyTeamStats);
-                
                 if (data.averageEventTimes) {
-                    await displayAverageEventTimes(data.averageEventTimes, data.liveStats);
+                    const result = await displayAverageEventTimes(data.averageEventTimes, data.liveStats);
+                    currentCleanup = result.cleanup;
                 }
+
+                // Store successful search parameters
+                lastSuccessfulSearch = { ...formData };
 
                 loading.style.display = 'none';
                 this.disabled = false;
                 inputSection.style.display = 'block';
-                // inputSection.innerHTML = "Refresh the page if you want to change the game mode."
 
-                // // Update UI after successful display
-                // document.getElementById('summonerName').style.display = 'none';
-                // document.getElementById('tagLine').style.display = 'none';
-                // document.getElementById('region').style.display = 'none';
-                // document.getElementById('gameMode').style.display = 'none';
-
-                // // Add refresh button
-                // const refreshButton = document.createElement('button');
-                // refreshButton.textContent = 'Refresh Page To Get New Stats';
-                // refreshButton.addEventListener('click', () => window.location.reload());
-                // this.replaceWith(refreshButton);
+                // Clear input fields
+                // document.getElementById('summonerName').value = '';
+                // document.getElementById('tagLine').value = '';
+                
+                this.textContent = 'Fetch New Stats';
 
             } catch (error) {
                 console.error('Error:', error);
                 loading.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
                 inputSection.style.display = 'block';
                 this.disabled = false;
+
+                // Show chart container and legend again if there was an error
+                if (chartContainer) chartContainer.style.display = 'grid';
+                if (chartLegend) chartLegend.style.display = 'flex';
             }
         });
     }
+
+    window.addEventListener('unload', () => {
+        if (currentCleanup) {
+            currentCleanup();
+        }
+    });
 });
