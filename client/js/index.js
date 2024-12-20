@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
                  }, 23000); //every x seconds
 
                 const localURL = 'http://127.0.0.1:3000/api/stats';
-                const prodURL = 'https://https://shouldiffserver-new.onrender.com/api/stats'
+                const prodURL = 'https://shouldiffserver-new.onrender.com/api/stats'
 
                 const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
                     method: 'POST',
