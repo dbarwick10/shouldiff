@@ -87,13 +87,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.disabled = true;
                 inputSection.style.display = 'none';
                 loading.style.display = 'flex';
+                currentLoadingState = 0;
+                updateLoadingState();
 
-                // Fetch data from server
+                // Start loading state cycle
+                loadingInterval = setInterval(() => {
+                    currentLoadingState = (currentLoadingState + 1) % loadingStates.length;
+                    updateLoadingState();
+                }, 23000);
 
-                const localURL = 'http://127.0.0.1:3000';
-                const prodURL = 'https://shouldiffserver.onrender.com';
-
-                const response = await fetch(`${LOCAL_TESTING ? localURL : prodURL}/api/stats`, {
+                // Make API request
+                const localURL = 'http://127.0.0.1:3000/api/stats';
+                const prodURL = 'https://shouldiffserver.onrender.com/api/stats';
+                
+                const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
