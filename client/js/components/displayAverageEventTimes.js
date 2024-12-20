@@ -570,9 +570,12 @@ async function startLiveDataRefresh() {
 
     async function updateLiveData() {
         try {
-            const response = LOCAL_TESTING 
-                ? await fetch('http://127.0.0.1:3000/api/live-stats')
-                : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
+
+            const response = `http://127.0.0.1:3000/api/live-stats`
+
+            // const response = LOCAL_TESTING 
+            //     ? await fetch('http://127.0.0.1:3000/api/live-stats')
+            //     : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
             
             if (!response.ok) {
                 if (response.status === 404) {
