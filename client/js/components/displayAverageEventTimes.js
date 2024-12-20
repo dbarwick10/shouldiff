@@ -405,41 +405,18 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
             if (datasets.length === 0) return;
     
             const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
-
-            function calculateAverageGameDuration(individualGameStats) {
-                const totalDuration = individualGameStats.reduce((sum, match) => sum + match.playerStats.gameLength, 0);
-                return totalDuration / individualGameStats.length;
-            }
-            
-            function convertPercentToGameTime(percent, avgGameDuration) {
-                // Convert percentage back to seconds
-                const seconds = (percent / 100) * avgGameDuration;
-                
-                // Convert to minutes:seconds format
-                const minutes = Math.floor(seconds / 60);
-                const remainingSeconds = Math.floor(seconds % 60);
-                
-                return {
-                    seconds: seconds,
-                    formatted: `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-                };
-            }
-            
-            // In your chart rendering code:
-            const avgGameDuration = calculateAverageGameDuration(individualGameStats);
             
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.dataset.label || '';
-                                const value = context.parsed.y;
-                                const timeData = convertPercentToGameTime(context.parsed.x, avgGameDuration);
-                                return `${label}: ${value} at ${timeData.formatted}`;
-                            }
+                    title: { 
+                        display: true, 
+                        text: stat === 'deathTimers' ? 'Time Spent Dead vs Time of Death' : 
+                              (stat === 'kda' ? 'KDA' : capitalizeFirstLetter(stat)) + ' Over Time',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
                         }
                     },
                     tooltip: {
@@ -471,16 +448,17 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                         type: 'linear',
                         position: 'bottom',
                         min: 0,
-                        max: avgGameDuration / 60, // Convert to minutes for display
+                        max: maxTimeInMinutes,
                         title: { 
                             display: true, 
-                            text: 'Game Time (minutes)',
+                            text: stat === 'deathTimers' ? 'Time of Death (Minutes)' : 'Time (Minutes)',
                             font: {
                                 weight: 'bold'
                             }
                         },
                         ticks: {
-                            callback: value => `${Math.floor(value)}:${Math.floor((value % 1) * 60).toString().padStart(2, '0')}`
+                            callback: value => value.toFixed(0),
+                            stepSize: Math.max(1, Math.ceil(maxTimeInMinutes / 10))
                         }
                     },
                     y: { 
@@ -503,10 +481,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     
             newCharts[stat] = new Chart(ctx, {
                 type: 'line',
-                data: { data: dataset.data.map(point => ({
-                    ...point,
-                    x: (point.x / 100) * (avgGameDuration / 60) // Convert percentage to minutes
-                })) },
+                data: { datasets },
                 options: chartOptions
             });
         });
