@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Make API request
                 const localURL = 'http://127.0.0.1:3000/api/stats';
-                const prodURL = 'https://shouldiffserver-new.onrender.com/api/stats';
+                const prodURL = 'https://shouldiffserver.onrender.com/api/stats';
                 
                 const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
                     method: 'POST',
