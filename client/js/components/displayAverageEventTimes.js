@@ -1,6 +1,8 @@
+//displayAverageEventTimes.js shouldiff
+
 // import { calculateLiveStats } from "../features/liveMatchStats.js";
 // import { cloneDeep } from 'https://cdn.skypack.dev/lodash';
-import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS, LOCAL_TESTING } from "./config/constraints.js"; 
+import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS } from "./config/constraints.js"; 
 
 export async function displayAverageEventTimes(averageEventTimes, calculateStats) {
     console.log('Initializing displayAverageEventTimes');
@@ -32,6 +34,46 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return datasets.some(dataset => dataset.data && dataset.data.length > 0);
     }
 
+    function hasDataForOutcome(category, outcomeType) {
+        if (!averageEventTimes?.[category]?.[outcomeType]) return false;
+        
+        return ['kills', 'deaths', 'assists', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors'].some(stat => 
+            Array.isArray(averageEventTimes[category][outcomeType][stat]) && 
+            averageEventTimes[category][outcomeType][stat].length > 0
+        );
+    }
+    
+    function updateLegendVisibility() {
+        // Check for data in each category
+        const hasWins = hasDataForOutcome(currentCategory, 'wins');
+        const hasLosses = hasDataForOutcome(currentCategory, 'losses');
+        const hasSurrenderWins = hasDataForOutcome(currentCategory, 'surrenderWins');
+        const hasSurrenderLosses = hasDataForOutcome(currentCategory, 'surrenderLosses');
+        const hasCurrentGame = currentLiveStats && Object.keys(currentLiveStats).length > 0;
+        const hasPreviousGame = previousGameStats && Object.keys(previousGameStats).length > 0;
+    
+        // Get legend items
+        const winsLegend = document.querySelector('.legend-item.wins');
+        const lossesLegend = document.querySelector('.legend-item.losses');
+        const surrenderWinsLegend = document.querySelector('.legend-item.surrender-wins');
+        const surrenderLossesLegend = document.querySelector('.legend-item.surrender-losses');
+        const currentGameLegend = document.querySelector('.legend-item.current-game');
+        const previousGameLegend = document.querySelector('.legend-item.previous-game')
+    
+        // Update visibility
+        winsLegend.style.display = hasWins ? 'flex' : 'none';
+        lossesLegend.style.display = hasLosses ? 'flex' : 'none';
+        surrenderWinsLegend.style.display = hasSurrenderWins ? 'flex' : 'none';
+        surrenderLossesLegend.style.display = hasSurrenderLosses ? 'flex' : 'none';
+        currentGameLegend.style.display = hasCurrentGame ? 'flex' : 'none';
+        previousGameLegend.style.display = hasPreviousGame ? 'flex' : 'none';
+    
+        // Show/hide the entire legend based on whether any items are visible
+        const legendSection = document.querySelector('.chart-legend');
+        const hasAnyData = hasWins || hasLosses || hasSurrenderWins || hasSurrenderLosses || hasCurrentGame;
+        legendSection.style.display = hasAnyData ? 'flex' : 'none';
+    }
+
     // Helper function to hide/show chart container
     function toggleChartVisibility(stat, visible) {
         const container = document.getElementById(`${stat}Chart`).parentElement;
@@ -43,12 +85,12 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         document.querySelector('.chart-container').style.display = 'grid';
     }
 
-    // Update chart visibility for current category
     function updateChartVisibility() {
         chartsToRender.forEach(stat => {
             const hasDataForStat = hasCategoryData(currentCategory, stat);
             toggleChartVisibility(stat, hasDataForStat);
         });
+        updateLegendVisibility(); 
     }
 
     function toggleStats(category) {
@@ -61,6 +103,7 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         
         currentCategory = category;
         updateChartVisibility();
+        updateLegendVisibility();
         charts = renderAllCharts();
     }
 
@@ -147,6 +190,74 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     }
 
     function renderAllCharts() {
+        // First, find the maximum time across all charts and categories
+        let maxGameTime = 0;
+    
+        chartsToRender.forEach(stat => {
+            if (!hasCategoryData(currentCategory, stat)) return;
+    
+            // Check historical data
+            statKeys.forEach(key => {
+                const categoryData = averageEventTimes[currentCategory][key];
+                if (!categoryData) return;
+    
+                if (stat === 'deathTimers' && categoryData.deaths?.length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...categoryData.deaths);
+                } else if (stat === 'kda') {
+                    const allTimes = [
+                        ...(categoryData.kills || []),
+                        ...(categoryData.deaths || []),
+                        ...(categoryData.assists || [])
+                    ];
+                    if (allTimes.length > 0) {
+                        maxGameTime = Math.max(maxGameTime, ...allTimes);
+                    }
+                } else if (Array.isArray(categoryData[stat]) && categoryData[stat].length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...categoryData[stat]);
+                }
+            });
+    
+            // Check current game data
+            if (currentLiveStats?.[currentCategory]) {
+                if (stat === 'deathTimers' && currentLiveStats[currentCategory].deaths?.length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...currentLiveStats[currentCategory].deaths);
+                } else if (stat === 'kda') {
+                    const allTimes = [
+                        ...(currentLiveStats[currentCategory].kills || []),
+                        ...(currentLiveStats[currentCategory].deaths || []),
+                        ...(currentLiveStats[currentCategory].assists || [])
+                    ];
+                    if (allTimes.length > 0) {
+                        maxGameTime = Math.max(maxGameTime, ...allTimes);
+                    }
+                } else if (Array.isArray(currentLiveStats[currentCategory][stat])) {
+                    maxGameTime = Math.max(maxGameTime, ...currentLiveStats[currentCategory][stat]);
+                }
+            }
+    
+            // Check previous game data
+            if (previousGameStats?.[currentCategory]) {
+                if (stat === 'deathTimers' && previousGameStats[currentCategory].deaths?.length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...previousGameStats[currentCategory].deaths);
+                } else if (stat === 'kda') {
+                    const allTimes = [
+                        ...(previousGameStats[currentCategory].kills || []),
+                        ...(previousGameStats[currentCategory].deaths || []),
+                        ...(previousGameStats[currentCategory].assists || [])
+                    ];
+                    if (allTimes.length > 0) {
+                        maxGameTime = Math.max(maxGameTime, ...allTimes);
+                    }
+                } else if (Array.isArray(previousGameStats[currentCategory][stat])) {
+                    maxGameTime = Math.max(maxGameTime, ...previousGameStats[currentCategory][stat]);
+                }
+            }
+        });
+    
+        // Convert to minutes and round up to nearest minute
+        const maxTimeInMinutes = Math.ceil(maxGameTime / 60);
+    
+        // Clear existing charts
         chartsToRender.forEach(stat => {
             const canvas = document.getElementById(`${stat}Chart`);
             if (canvas) {
@@ -210,61 +321,27 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
             });
     
             // Add previous game data
-            if (previousGameStats) {
+            if (previousGameStats?.[currentCategory]) {
                 let dataToAdd = [];
-    
+            
                 if (stat === 'deathTimers') {
-                    // console.log('Processing Death Timer Data:', {
-                    //     currentCategory,
-                    //     stats: currentLiveStats?.[currentCategory]
-                    // });
-                
-                    if (currentLiveStats?.[currentCategory]?.deaths?.length > 0 && 
-                        currentLiveStats?.[currentCategory]?.timeSpentDead?.length > 0) {
-                        
-                        // Ensure arrays are properly initialized
-                        const deaths = currentLiveStats[currentCategory].deaths || [];
-                        const timers = currentLiveStats[currentCategory].timeSpentDead || [];
-                        
-                        // console.log('Death Timer Arrays:', {
-                        //     deaths,
-                        //     timers,
-                        //     deathsLength: deaths.length,
-                        //     timersLength: timers.length
-                        // });
-                
-                        dataToAdd = deaths
-                            .map((deathTime, index) => {
-                                if (timers[index] === undefined) {
-                                    console.warn(`Missing timer for death at index ${index}`);
-                                    return null;
-                                }
-                                
-                                const point = {
-                                    x: deathTime / 60,  // Convert to minutes
-                                    y: timers[index]    // Use individual death timer
-                                };
-                                
-                                // console.log(`Mapped point ${index}:`, point);
-                                return point;
-                            })
-                            .filter(point => point !== null);
-                        
-                        // console.log('Final Death Timer Dataset:', dataToAdd);
-                    } else {
-                        console.log('Insufficient death timer data:', {
-                            hasDeaths: Boolean(currentLiveStats?.[currentCategory]?.deaths?.length),
-                            hasTimers: Boolean(currentLiveStats?.[currentCategory]?.timeSpentDead?.length)
-                        });
+                    if (previousGameStats[currentCategory].deaths?.length > 0 && 
+                        previousGameStats[currentCategory].timeSpentDead?.length > 0) {
+                        dataToAdd = previousGameStats[currentCategory].deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,
+                                y: previousGameStats[currentCategory].timeSpentDead[index]
+                            }))
+                            .filter(point => point.x != null && point.y != null);
                     }
                 } else if (stat === 'kda') {
                     dataToAdd = generateKDAData(
-                        previousGameStats.kills || [],
-                        previousGameStats.deaths || [],
-                        previousGameStats.assists || []
+                        previousGameStats[currentCategory].kills || [],
+                        previousGameStats[currentCategory].deaths || [],
+                        previousGameStats[currentCategory].assists || []
                     );
-                } else if (Array.isArray(previousGameStats[stat])) {
-                    dataToAdd = previousGameStats[stat].map((time, index) => ({
+                } else if (Array.isArray(previousGameStats[currentCategory][stat])) {
+                    dataToAdd = previousGameStats[currentCategory][stat].map((time, index) => ({
                         x: time / 60,
                         y: index + 1
                     }));
@@ -289,24 +366,15 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                 let dataToAdd = [];
             
                 if (stat === 'deathTimers') {
-                    // console.log('Processing Death Timers for Live Data:', {
-                    //     category: currentCategory,
-                    //     test: currentLiveStats?.[currentCategory],
-                    //     deaths: currentLiveStats?.[currentCategory]?.deaths,
-                    //     timeSpentDead: currentLiveStats?.[currentCategory]?.timeSpentDead,
-                    //     totalTimeSpentDead: currentLiveStats?.[currentCategory]?.totalTimeSpentDead
-                    // });
-
                     if (currentLiveStats[currentCategory].deaths?.length > 0 && 
                         currentLiveStats[currentCategory].totalTimeSpentDead?.length > 0) {
                         dataToAdd = currentLiveStats[currentCategory].deaths
                             .map((deathTime, index) => ({
-                                x: deathTime / 60,  // Convert to minutes for x-axis
-                                y: currentLiveStats[currentCategory].totalTimeSpentDead[index] // Use individual death timer
+                                x: deathTime / 60,
+                                y: currentLiveStats[currentCategory].totalTimeSpentDead[index]
                             }))
                             .filter(point => point.x != null && point.y != null);
                     }
-                    // console.log('Final Death Timer Data Points:', dataToAdd);
                 } else if (stat === 'kda') {
                     dataToAdd = generateKDAData(
                         currentLiveStats[currentCategory].kills || [],
@@ -375,89 +443,39 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
                         position: 'top'
                     }
                 },
-                scales: stat === 'deathTimers' 
-                    ? {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom',
-                            title: { 
-                                display: true, 
-                                text: 'Time of Death (Minutes)',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            ticks: {
-                                callback: value => value.toFixed(0)
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 0,
+                        max: maxTimeInMinutes,
+                        title: { 
+                            display: true, 
+                            text: stat === 'deathTimers' ? 'Time of Death (Minutes)' : 'Time (Minutes)',
+                            font: {
+                                weight: 'bold'
                             }
                         },
-                        y: { 
-                            title: { 
-                                display: true, 
-                                text: 'Time Spent Dead (Seconds)',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            beginAtZero: true
+                        ticks: {
+                            callback: value => value.toFixed(0),
+                            stepSize: Math.max(1, Math.ceil(maxTimeInMinutes / 10))
                         }
+                    },
+                    y: { 
+                        title: { 
+                            display: true, 
+                            text: stat === 'deathTimers' ? 'Time Spent Dead (Seconds)' : 
+                                  stat === 'kda' ? 'KDA Ratio' : `Total ${capitalizeFirstLetter(stat)}`,
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        beginAtZero: true,
+                        ...(stat !== 'deathTimers' && stat !== 'kda' ? {
+                            ticks: { stepSize: 1 }
+                        } : {})
                     }
-                    : (stat === 'kda' 
-                        ? {
-                            x: {
-                                type: 'linear',
-                                position: 'bottom',
-                                title: { 
-                                    display: true, 
-                                    text: 'Time (Minutes)',
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                },
-                                ticks: {
-                                    callback: value => value.toFixed(0)
-                                }
-                            },
-                            y: { 
-                                title: { 
-                                    display: true, 
-                                    text: 'KDA Ratio',
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                },
-                                beginAtZero: true
-                            }
-                        }
-                        : {
-                            x: {
-                                type: 'linear',
-                                position: 'bottom',
-                                title: { 
-                                    display: true, 
-                                    text: 'Time (Minutes)',
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                },
-                                ticks: {
-                                    callback: value => value.toFixed(0)
-                                }
-                            },
-                            y: { 
-                                title: { 
-                                    display: true, 
-                                    text: `Total ${capitalizeFirstLetter(stat)}`,
-                                    font: {
-                                        weight: 'bold'
-                                    }
-                                },
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
-                        }),
+                },
                 animation: { duration: 0 }
             };
     
@@ -471,24 +489,42 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         return newCharts;
     }
 
+    let lastValidGameData = null; // Add this to store the last valid game state
+
     // Update the isNewGame function
     function isNewGame(newStats, currentStats) {
         if (!newStats || !currentStats) return true;
         
-        const statsToCheck = [
-            'kills', 'deaths', 'assists', 'kda', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'deathTimers'
-        ];
+        const category = currentCategory;
         
-        const category = currentCategory; // Use the current selected category
+        // First, check if we're getting empty data when we previously had data
+        const isEmpty = ['kills', 'deaths', 'assists'].every(stat => 
+            (newStats[category]?.[stat]?.length || 0) === 0
+        );
         
-        for (const stat of statsToCheck) {
+        const hadData = ['kills', 'deaths', 'assists'].some(stat => 
+            (currentStats[category]?.[stat]?.length || 0) > 0
+        );
+        
+        if (isEmpty && hadData) {
+            console.log('Detected potential game end - preserving current data');
+            return false; // Don't treat this as a new game, just preserve current data
+        }
+
+        // Check if this is actually a new game starting
+        const isReset = ['kills', 'deaths', 'assists'].some(stat => {
             const newStatArray = newStats[category]?.[stat] || [];
             const currentStatArray = currentStats[category]?.[stat] || [];
             
-            if (newStatArray.length < currentStatArray.length) return true;
-        }
-        
-        return false;
+            if (currentStatArray.length > 0 && newStatArray.length === 1) {
+                console.log(`New game detected - first ${stat} recorded`);
+                return true;
+            }
+            
+            return false;
+        });
+
+        return isReset;
     }
     
     function haveLiveStatsChanged(newStats, currentStats) {
@@ -529,102 +565,136 @@ async function startLiveDataRefresh() {
         clearTimeout(retryTimeout);
     }
     
+    let gameActive = false;
+    let lastValidGameData = null;
+
     async function updateLiveData() {
         try {
-            const response = LOCAL_TESTING ? await fetch('http://127.0.0.1:3000/api/live-stats')
-            : await fetch('https://shouldiffserver-new.onrender.com/api/live-stats');
+            const response = 'http://127.0.0.1:3000/api/live-stats' 
             
             if (!response.ok) {
-                // If server is running but no game is active
                 if (response.status === 404) {
-                    console.log('No active game found');
-                    return null;
+                    console.log('No active game found - preserving last game data');
+                    if (gameActive) {
+                        gameActive = false;
+                        if (currentLiveStats) {
+                            console.log('Game ended - saving current game data');
+                            lastValidGameData = JSON.parse(JSON.stringify(currentLiveStats));
+                        }
+                    }
+                    // Keep showing the last known state
+                    if (lastValidGameData) {
+                        currentLiveStats = JSON.parse(JSON.stringify(lastValidGameData));
+                    }
+                    updateChartVisibility();
+                    charts = renderAllCharts();
+                    return;
                 }
                 
-                // If server is running but live stats temporarily unavailable
-                if (response.status === 503) {
-                    console.log('Live stats temporarily unavailable, will retry...');
-                    return null;
-                }
-
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const newLiveStats = await response.json();
-
-            // Handle insufficient game data or null response
-        if (!newLiveStats || newLiveStats === null) {
-            console.log('Received null game data - delaying next check');
-            if (isPolling) {
-                isPolling = false;
-                restartPolling(RETRY_INTERVAL_MS);
+            
+            if (!newLiveStats || newLiveStats === null) {
+                if (gameActive && currentLiveStats) {
+                    console.log('Game ended (null data) - saving game data');
+                    lastValidGameData = JSON.parse(JSON.stringify(currentLiveStats));
+                    gameActive = false;
+                }
+                if (lastValidGameData) {
+                    currentLiveStats = JSON.parse(JSON.stringify(lastValidGameData));
+                }
+                updateChartVisibility();
+                charts = renderAllCharts();
+                return;
             }
-            return null;
-        }
 
-        // Check if game data is insufficient
-        // const hasInsufficientData = !newLiveStats[currentCategory] || 
-        //     Object.values(newLiveStats[currentCategory]).every(arr => !arr || arr.length === 0);
-            
-        // if (hasInsufficientData) {
-        //     console.log('Insufficient game data - delaying next check');
-        //     if (isPolling) {
-        //         isPolling = false;
-        //         restartPolling(RETRY_INTERVAL_MS);
-        //     }
-        //     return null;
-        // }
-            
-            // Successfully connected - switch to regular polling interval
             if (!isPolling) {
                 isPolling = true;
                 restartPolling(FETCH_INTERVAL_MS);
             }
-            
-            if (newLiveStats) {
-                if (isNewGame(newLiveStats, currentLiveStats)) {
-                    // Only do deep clone when necessary - new game
-                    if (currentLiveStats) {
-                        previousGameStats = JSON.parse(JSON.stringify(newLiveStats));
-                    }
-                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
-                }
-                else if (haveLiveStatsChanged(newLiveStats, currentLiveStats)) {
-                    currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
-                }
-                
+
+            // Log incoming data state
+            // console.log('Received new game data:', {
+            //     category: currentCategory,
+            //     stats: {
+            //         kills: newLiveStats[currentCategory]?.kills?.length || 0,
+            //         deaths: newLiveStats[currentCategory]?.deaths?.length || 0,
+            //         assists: newLiveStats[currentCategory]?.assists?.length || 0,
+            //         hasDeathTimers: Boolean(newLiveStats[currentCategory]?.deaths?.length && 
+            //                              newLiveStats[currentCategory]?.timeSpentDead?.length)
+            //     }
+            // });
+
+            const isEmpty = ['kills', 'deaths', 'assists'].every(stat => 
+                (newLiveStats[currentCategory]?.[stat]?.length || 0) === 0
+            );
+
+            if (isEmpty && lastValidGameData) {
+                console.log('Received empty data - maintaining last valid state');
+                currentLiveStats = JSON.parse(JSON.stringify(lastValidGameData));
                 updateChartVisibility();
                 charts = renderAllCharts();
+                return;
             }
-        } catch (error) {
-            // Handle connection errors (server not running)
-            if (error.message.includes('Failed to fetch') || error.message.includes('HTTP error')) {
-                console.log('Live stats server not available, will retry later...');
-                
-                // Switch to retry mode with longer interval
-                if (isPolling) {
-                    isPolling = false;
-                    restartPolling(RETRY_INTERVAL_MS);
+
+            // New game detection
+            if (!gameActive && hasValidStats(newLiveStats)) {
+                console.log('New game starting - moving previous game data');
+                if (lastValidGameData) {
+                    console.log('Moving last game to previousGameStats');
+                    previousGameStats = JSON.parse(JSON.stringify(lastValidGameData));
+                    lastValidGameData = null;
                 }
-            } else {
-                console.error('Error refreshing live stats:', error);
+                gameActive = true;
+                currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
+            } else if (gameActive && hasValidStats(newLiveStats)) {
+                // Update current game
+                currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
+                lastValidGameData = JSON.parse(JSON.stringify(newLiveStats));
+            }
+
+            updateChartVisibility();
+            charts = renderAllCharts();
+        } catch (error) {
+            console.log('Error type:', error.message);
+            if (error.message.includes('ECONNREFUSED')) {
+                console.log('Game ended (ECONNREFUSED)');
+                if (gameActive && currentLiveStats) {
+                    gameActive = false;
+                    lastValidGameData = JSON.parse(JSON.stringify(currentLiveStats));
+                }
+                if (lastValidGameData) {
+                    currentLiveStats = JSON.parse(JSON.stringify(lastValidGameData));
+                }
+            }
+
+            updateChartVisibility();
+            charts = renderAllCharts();
+            
+            if (isPolling) {
+                isPolling = false;
+                restartPolling(RETRY_INTERVAL_MS);
             }
         }
     }
 
+    function hasValidStats(stats) {
+        const category = currentCategory;
+        return ['kills', 'deaths', 'assists'].some(stat => 
+            (stats[category]?.[stat]?.length || 0) > 0
+        );
+    }
+
     function restartPolling(interval) {
-        // Clear existing intervals/timeouts
         if (refreshInterval) clearInterval(refreshInterval);
         if (retryTimeout) clearTimeout(retryTimeout);
-        
-        // Start new polling interval
         refreshInterval = setInterval(updateLiveData, interval);
     }
 
-    // Initial attempt
     await updateLiveData();
     
-    // Start with retry interval - will switch to regular interval when connection succeeds
     if (!isPolling) {
         restartPolling(RETRY_INTERVAL_MS);
     }

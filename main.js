@@ -19,7 +19,7 @@ function createWindow() {
     });
 
     win.loadFile(path.join(app.getAppPath(), 'index.html'));
-	// win.setMenu(null)
+	win.setMenu(null)
 }
 
 function killServer() {
@@ -47,12 +47,23 @@ app.whenReady().then(() => {
 
     // For Windows
     if (process.platform === 'win32') {
-        serverProcess = spawn('cmd.exe', ['/c', 'node', serverPath], {
-            stdio: 'inherit',
-            shell: true,
-            detached: true,
-            windowsHide: false
+
+        // // Use this to shown the CMD window
+        // serverProcess = spawn('cmd.exe', ['/c', 'node', serverPath], {
+        //     stdio: 'inherit',
+        //     shell: true,
+        //     detached: true,
+        //     windowsHide: false
+        // });
+
+        // Use this to hide the CMD window
+        serverProcess = spawn('node', [serverPath], {
+            stdio: 'pipe',      
+            shell: false,       
+            detached: false,    
+            windowsHide: true   
         });
+
     } else {
         // For Mac/Linux
         serverProcess = spawn('node', [serverPath], {
@@ -61,15 +72,6 @@ app.whenReady().then(() => {
             detached: true
         });
     }
-
-    // Don't need these anymore since we're using stdio: 'inherit'
-    // serverProcess.stdout.on('data', (data) => {
-    //     console.log(`Server: ${data.toString().trim()}`);
-    // });
-
-    // serverProcess.stderr.on('data', (data) => {
-    //     console.error(`Server Error: ${data.toString().trim()}`);
-    // });
 
     serverProcess.on('exit', (code, signal) => {
         console.log(`Server process exited with code ${code} and signal ${signal}`);
