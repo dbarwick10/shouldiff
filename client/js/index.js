@@ -1,4 +1,3 @@
-// import { displayStats } from './components/displayStats.js';
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
 import { LOCAL_TESTING } from "./components/config/constraints.js"; 
 
@@ -8,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputSection = document.querySelector('.input-section');
     const chartContainer = document.querySelector('.chart-container');
     const chartLegend = document.querySelector('.chart-legend');
+    
+    // Loading state messages
     const loadingStates = [
         'Fetching player information...',
         'Gathering match statistics...',
@@ -20,14 +21,35 @@ document.addEventListener('DOMContentLoaded', function() {
         `Well, if you're still here, might as well stay a bit longer...`
     ];
     
+    // State variables
     let currentLoadingState = 0;
     let loadingInterval;
     let currentCleanup = null;
     let lastSuccessfulSearch = null;
     
+    // Helper function to display error messages
+    function displayError(message, details = '') {
+        clearInterval(loadingInterval);
+        loading.innerHTML = `
+            <div class="error-message">
+                <strong>Error</strong>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
+    // Helper function to update loading state
+    function updateLoadingState() {
+        loading.innerHTML = `
+            <strong>${loadingStates[currentLoadingState]}</strong>
+            <div id="loading-circle"></div>
+        `;
+    }
+
     if (analyzeButton) {
         analyzeButton.addEventListener('click', async function() {
             try {
+                // Get form data
                 const formData = {
                     summonerName: document.getElementById('summonerName').value.trim(),
                     tagLine: document.getElementById('tagLine').value.trim(),
@@ -35,12 +57,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     gameMode: document.getElementById('gameMode').value
                 };
 
+                // Validate input
                 if (!formData.summonerName || !formData.tagLine) {
                     alert('Please enter both summoner name and tagline');
                     return;
                 }
 
-                // Check if this is the same as the last successful search
+                // Check for duplicate search
                 if (lastSuccessfulSearch && 
                     formData.summonerName.toLowerCase() === lastSuccessfulSearch.summonerName.toLowerCase() &&
                     formData.tagLine.toLowerCase() === lastSuccessfulSearch.tagLine.toLowerCase() &&
@@ -60,30 +83,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (chartContainer) chartContainer.style.display = 'none';
                 if (chartLegend) chartLegend.style.display = 'none';
 
-                 // Initial loading state
-                 this.disabled = true;
-                 inputSection.style.display = 'none';
-                 loading.style.display = 'flex';
- 
-                 // Start cycling through loading states
-                 currentLoadingState = 0;
-                 loading.innerHTML = `
-                     <strong>${loadingStates[currentLoadingState]}</strong>
-                     <div id="loading-circle"></div>
-                 `;
- 
-                 // Update loading message 
-                 loadingInterval = setInterval(() => {
-                     currentLoadingState = (currentLoadingState + 1) % loadingStates.length;
-                     loading.innerHTML = `
-                         <strong>${loadingStates[currentLoadingState]}</strong>
-                         <div id="loading-circle"></div>
-                     `;
-                 }, 23000); //every x seconds
+                // Initialize loading state
+                this.disabled = true;
+                inputSection.style.display = 'none';
+                loading.style.display = 'flex';
+                currentLoadingState = 0;
+                updateLoadingState();
 
+                // Start loading state cycle
+                loadingInterval = setInterval(() => {
+                    currentLoadingState = (currentLoadingState + 1) % loadingStates.length;
+                    updateLoadingState();
+                }, 23000);
+
+                // Make API request
                 const localURL = 'http://127.0.0.1:3000/api/stats';
-                const prodURL = 'https://shouldiffserver-new.onrender.com/api/stats'
-
+                const prodURL = 'https://shouldiffserver-new.onrender.com/api/stats';
+                
                 const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
                     method: 'POST',
                     headers: {
@@ -92,38 +108,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(formData)
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch data');
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    throw new Error('Failed to parse server response');
                 }
 
-                const data = await response.json();
+                if (!response.ok) {
+                    const errorMessage = data.error || 'An unexpected error occurred';
+                    const errorDetails = data.details || '';
+                    displayError(errorMessage, errorDetails);
+                    inputSection.style.display = 'block';
+                    this.disabled = false;
+                    return;
+                }
 
+                // Validate response data
                 if (!data.playerStats || !data.teamStats || !data.enemyTeamStats) {
-                    console.error('Invalid data structure:', data);
                     throw new Error('Invalid data received from server');
                 }
 
+                // Display event times if available
                 if (data.averageEventTimes) {
                     const result = await displayAverageEventTimes(data.averageEventTimes, data.liveStats);
                     currentCleanup = result.cleanup;
                 }
 
-                // Store successful search parameters
+                // Clean up and update UI
+                clearInterval(loadingInterval);
                 lastSuccessfulSearch = { ...formData };
-
                 loading.style.display = 'none';
                 this.disabled = false;
                 inputSection.style.display = 'block';
-
-                // Clear input fields
-                // document.getElementById('summonerName').value = '';
-                // document.getElementById('tagLine').value = '';
-                
                 this.textContent = 'Fetch New Stats';
 
             } catch (error) {
-                console.error('Error:', error);
-                loading.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+                let displayMessage = 'An unexpected error occurred. Please try again.';
+                let details = '';
+
+                if (error.message === 'Failed to fetch') {
+                    displayMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+                } else if (error.message.includes('Failed to fetch PUUID')) {
+                    try {
+                        const riotError = JSON.parse(error.message.split('Failed to fetch PUUID:')[1]);
+                        displayMessage = riotError.status.message;
+                    } catch (e) {
+                        details = error.message;
+                    }
+                }
+
+                displayError(displayMessage, details);
                 inputSection.style.display = 'block';
                 this.disabled = false;
 
@@ -134,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Cleanup on page unload
     window.addEventListener('unload', () => {
         if (currentCleanup) {
             currentCleanup();
