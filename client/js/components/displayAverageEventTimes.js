@@ -503,7 +503,10 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     
             newCharts[stat] = new Chart(ctx, {
                 type: 'line',
-                data: { datasets },
+                data: { data: dataset.data.map(point => ({
+                    ...point,
+                    x: (point.x / 100) * (avgGameDuration / 60) // Convert percentage to minutes
+                })) },
                 options: chartOptions
             });
         });
