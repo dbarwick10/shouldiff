@@ -89,9 +89,28 @@
                 </div>
             </div>
             <div class="toggle-container">
-                <button id="playerStatsBtn" class="toggle-btn active">Player Stats</button>
-                <button id="teamStatsBtn" class="toggle-btn">Team Stats</button>
-                <button id="enemyStatsBtn" class="toggle-btn">Enemy Stats</button>
+                <div class="slide-toggle-group">
+                    <div class="slide-toggle">
+                        <input type="radio" id="playerStats" name="statType" value="playerStats">
+                        <input type="radio" id="teamStats" name="statType" value="teamStats" checked>
+                        <input type="radio" id="enemyStats" name="statType" value="enemyStats">
+                        <div class="slider"></div>
+                        <label for="playerStats">Player</label>
+                        <label for="teamStats">Team</label>
+                        <label for="enemyStats">Enemy</label>
+                    </div>
+                </div>
+                <div class="slide-toggle-group">
+                    <div class="slide-toggle">
+                        <input type="radio" id="data" name="displayMode" value="data">
+                        <input type="radio" id="both" name="displayMode" value="both" checked>
+                        <input type="radio" id="trendline" name="displayMode" value="trendline">
+                        <div class="slider"></div>
+                        <label for="data">Data</label>
+                        <label for="both">Both</label>
+                        <label for="trendline">Trend</label>
+                    </div>
+                </div>
             </div>
         </div>
             <div class="chart-container">
@@ -125,13 +144,16 @@
                 <div class="chart-wrapper">
                     <canvas id="eldersChart"></canvas>
                 </div>
+                <div class="chart-wrapper">
+                    <canvas id="goldChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
     <footer>
-        <p>
+        <p><small>
             Shouldiff isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
-        </p>
+        </small></p>
     </footer>
     <script type="module" src="./client/js/index.js"></script>
 </body>

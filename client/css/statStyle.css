@@ -5,12 +5,11 @@ html, body {
     scrollbar-gutter: stable;
 }
 
-/* General Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Beaufort for LoL', Arial, sans-serif; /* Use LoL-inspired fonts */
+    font-family: 'Beaufort for LoL', Arial, sans-serif; 
 }
 
 /* Body Background */
@@ -45,26 +44,25 @@ body {
     padding-bottom: 10px;
 }
 
-/* Player Stats Summary (above the table) */
 .player-summary {
     display: none;
     background-color: rgba(28, 36, 52, 0.85);
     color: #a0aec0;
     border-radius: 8px;
-    justify-content: space-evenly; /* Space items more evenly */
-    padding: 20px 15px; /* Added more padding for better spacing */
-    margin: 20px 0; /* Adjusted margin to give some room between sections */
+    justify-content: space-evenly;
+    padding: 20px 15px; 
+    margin: 20px 0; 
     text-align: center;
-    font-size: 1.1em; /* Slightly bigger font for clarity */
-    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6); /* Slightly stronger glow effect */
-    width: 100%; /* Adjusted to fit container */
-    gap: 20px; /* Space between the stats */
+    font-size: 1.1em; 
+    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6); 
+    width: 100%; 
+    gap: 20px; 
 }
 
 .player-summary div {
     display: flex;
-    flex-direction: column; /* Stack stats vertically */
-    align-items: center; /* Center align each stat */
+    flex-direction: column; 
+    align-items: center;
 }
 
 .player-summary p {
@@ -90,8 +88,6 @@ body {
     color: #979797;
 }
 
-
-/* Table Header and Cell Styling */
 th, td {
     padding: 8px;
     text-align: left;
@@ -110,7 +106,7 @@ table {
 }
 
 .table-container {
-    margin-top: 20px; /* Space between player summary and the table */
+    margin-top: 20px; 
     padding: 10px;
     background-color: rgba(28, 36, 52, 0.85);
     border-radius: 8px;
@@ -134,24 +130,20 @@ td {
     border-right: 1px solid black;
 }
 
-/* Alternate Row Colors */
 tr:nth-child(odd) td {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Highlight Row on Hover */
 tr:hover td {
     background-color: rgba(114, 137, 218, 0.2);
 }
 
-/* Ensure Tables Have Equal Size */
 table {
     width: 100%;
     margin: 5px;
     border-collapse: collapse;
 }
 
-/* Player Stats Table - Adjusting Table for Consistency */
 #player-summary th, #player-summary td {
     width: auto;
     padding: 8px 15px;
@@ -216,6 +208,96 @@ button:hover {
     color: #ffffff;
 }
 
+.toggle-container {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    justify-content: center;
+    padding: 15px;
+    border-top: 1px solid rgba(114, 137, 218, 0.2);
+}
+
+.slide-toggle-group {
+    display: flex;
+    justify-content: center;
+    margin: 5px 0;
+}
+
+.slide-toggle {
+    position: relative;
+    display: inline-flex;
+    background: rgba(13, 13, 18, 0.6);
+    padding: 4px;
+    border-radius: 30px;
+    border: 2px solid #7289da;
+    min-width: 300px;
+    box-shadow: 0 0 10px rgba(114, 137, 218, 0.2);
+}
+
+.slide-toggle input[type="radio"] {
+    display: none;
+}
+
+.slide-toggle label {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    cursor: pointer;
+    color: #d4af37;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+/* Slider */
+.slide-toggle .slider {
+    position: absolute;
+    z-index: 1;
+    width: calc((100% - 8px) / 3);
+    height: calc(100% - 8px);
+    border-radius: 25px;
+    background: #414a6b;
+    top: 4px;
+    left: 4px;
+    transition: transform 0.3s ease;
+}
+
+.slide-toggle input[type="radio"]:nth-of-type(1):checked ~ .slider {
+    transform: translateX(0);
+}
+
+.slide-toggle input[type="radio"]:nth-of-type(2):checked ~ .slider {
+    transform: translateX(calc(100% + 0px)); 
+}
+
+.slide-toggle input[type="radio"]:nth-of-type(3):checked ~ .slider {
+    transform: translateX(calc(200% + 0px)); 
+}
+
+.slide-toggle input[type="radio"]:checked + label {
+    color: #ffffff;
+}
+
+.slide-toggle label:hover {
+    color: #ffffff;
+}
+
+.slide-toggle:hover {
+    box-shadow: 0 0 12px rgba(114, 137, 218, 0.4);
+}
+
+@media (max-width: 768px) {
+    .slide-toggle {
+        min-width: 250px;
+    }
+    
+    .slide-toggle label {
+        padding: 6px 0;
+        font-size: 0.9em;
+    }
+}
+
 /* Chart Legend Container */
 .chart-legend {
     display: none;
@@ -261,40 +343,6 @@ button:hover {
     color: #d6d6e5;
     font-size: 0.9em;
     white-space: nowrap;
-}
-
-/* Toggle Container Styling */
-.toggle-container {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(114, 137, 218, 0.2);
-}
-
-/* Toggle Button Styling */
-.toggle-btn {
-    background: #414a6b;
-    border: 2px solid #7289da;
-    color: #d4af37;
-    padding: 8px 16px;
-    border-radius: 5px;
-    font-size: 0.95em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-}
-
-.toggle-btn:hover {
-    background-color: #3b3e58;
-    box-shadow: 0 0 12px rgba(114, 137, 218, 0.8);
-    color: #ffffff;
-}
-
-.toggle-btn.active {
-    background-color: #7289da;
-    color: #ffffff;
-    box-shadow: 0 0 8px rgba(114, 137, 218, 0.6);
 }
 
 /* Color definitions */
