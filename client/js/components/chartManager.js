@@ -2,15 +2,8 @@
 import { CHART_TYPES, STAT_KEYS } from '../config/constants.js';
 import { colorConfig } from '../config/colorConfig.js';
 import { getChartOptions } from '../config/chartOptions.js';
-import { 
-    calculateTrendline, 
-    createDatasetWithMode 
-} from '../utils/chartHelpers.js';
-import { 
-    generateKDAData,
-    hasDataForOutcome,
-    hasValidStats
-} from '../utils/dataHelpers.js';
+import { calculateTrendline, createDatasetWithMode } from '../utils/chartHelpers.js';
+import { generateKDAData } from '../utils/dataHelpers.js';
 import {
     toggleChartVisibility,
     updateLegendVisibility
@@ -142,9 +135,41 @@ export class ChartManager {
                     maxGameTime = Math.max(maxGameTime, ...categoryData[stat]);
                 }
             });
-    
-            // Check current and previous game data similarly...
-            // [Similar checks for currentLiveStats and previousGameStats]
+            // Check current game data
+            if (this.currentLiveStats?.[this.currentCategory]) {
+                if (stat === 'deathTimers' && this.currentLiveStats[this.currentCategory].deaths?.length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...this.currentLiveStats[this.currentCategory].deaths);
+                } else if (stat === 'kda') {
+                    const allTimes = [
+                        ...(this.currentLiveStats[this.currentCategory].kills || []),
+                        ...(this.currentLiveStats[this.currentCategory].deaths || []),
+                        ...(this.currentLiveStats[this.currentCategory].assists || [])
+                    ];
+                    if (allTimes.length > 0) {
+                        maxGameTime = Math.max(maxGameTime, ...allTimes);
+                    }
+                } else if (Array.isArray(this.currentLiveStats[this.currentCategory][stat])) {
+                    maxGameTime = Math.max(maxGameTime, ...this.currentLiveStats[this.currentCategory][stat]);
+                }
+            }
+            
+            // Check previous game data
+            if (this.previousGameStats?.[this.currentCategory]) {
+                if (stat === 'deathTimers' && this.previousGameStats[this.currentCategory].deaths?.length > 0) {
+                    maxGameTime = Math.max(maxGameTime, ...this.previousGameStats[this.currentCategory].deaths);
+                } else if (stat === 'kda') {
+                    const allTimes = [
+                        ...(this.previousGameStats[this.currentCategory].kills || []),
+                        ...(this.previousGameStats[this.currentCategory].deaths || []),
+                        ...(this.previousGameStats[this.currentCategory].assists || [])
+                    ];
+                    if (allTimes.length > 0) {
+                        maxGameTime = Math.max(maxGameTime, ...allTimes);
+                    }
+                } else if (Array.isArray(this.previousGameStats[this.currentCategory][stat])) {
+                    maxGameTime = Math.max(maxGameTime, ...this.previousGameStats[this.currentCategory][stat]);
+                }
+            }
         });
     
         return Math.ceil(maxGameTime / 60); // Convert to minutes and round up

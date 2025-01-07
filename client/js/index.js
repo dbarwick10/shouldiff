@@ -69,6 +69,10 @@ function initializeDOMElements() {
         throw new Error('Required DOM elements not found');
     }
 
+    if (elements.inputSection) {
+        elements.inputSection.classList.remove('compact');
+    }
+
     return elements;
 }
 
@@ -284,6 +288,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         elements.loading.style.display = 'none';
         elements.analyzeButton.disabled = false;
         elements.inputSection.style.display = 'block';
+        elements.inputSection.classList.add('compact');
         elements.analyzeButton.textContent = 'Fetch New Stats';
 
     } catch (error) {
@@ -303,6 +308,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         displayError(elements, state, displayMessage, details);
         elements.inputSection.style.display = 'block';
+        elements.inputSection.classList.remove('compact');
         elements.analyzeButton.disabled = false;
 
         if (elements.chartContainer) elements.chartContainer.style.display = 'grid';

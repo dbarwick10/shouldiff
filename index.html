@@ -62,6 +62,32 @@
             </table>
         </div>
         <div id="chartLegend" class="chart-legend">
+            
+            <div class="toggle-container">
+                <div class="slide-toggle-group">
+                    <div class="slide-toggle">
+                        <input type="radio" id="playerStats" name="statType" value="playerStats">
+                        <input type="radio" id="teamStats" name="statType" value="teamStats" checked>
+                        <input type="radio" id="enemyStats" name="statType" value="enemyStats">
+                        <div class="slider"></div>
+                        <label for="playerStats">Player</label>
+                        <label for="teamStats">Team</label>
+                        <label for="enemyStats">Enemy</label>
+                    </div>
+                </div>
+                <div class="slide-toggle-group">
+                    <div class="slide-toggle">
+                        <input type="radio" id="data" name="displayMode" value="data">
+                        <input type="radio" id="both" name="displayMode" value="both" checked>
+                        <input type="radio" id="trendline" name="displayMode" value="trendline">
+                        <div class="slider"></div>
+                        <label for="data">Data</label>
+                        <label for="both">Both</label>
+                        <label for="trendline">Trend</label>
+                    </div>
+                </div>
+            </div>
+            <!-- <hr class="divider-line"> -->
             <div class="legend-section">
                 <div class="legend-item wins">
                     <div class="legend-item-color wins-color"></div>
@@ -86,30 +112,6 @@
                 <div class="legend-item current-game">
                     <div class="legend-item-color current-game-color"></div>
                     <span>Current Game</span>
-                </div>
-            </div>
-            <div class="toggle-container">
-                <div class="slide-toggle-group">
-                    <div class="slide-toggle">
-                        <input type="radio" id="playerStats" name="statType" value="playerStats">
-                        <input type="radio" id="teamStats" name="statType" value="teamStats" checked>
-                        <input type="radio" id="enemyStats" name="statType" value="enemyStats">
-                        <div class="slider"></div>
-                        <label for="playerStats">Player</label>
-                        <label for="teamStats">Team</label>
-                        <label for="enemyStats">Enemy</label>
-                    </div>
-                </div>
-                <div class="slide-toggle-group">
-                    <div class="slide-toggle">
-                        <input type="radio" id="data" name="displayMode" value="data">
-                        <input type="radio" id="both" name="displayMode" value="both" checked>
-                        <input type="radio" id="trendline" name="displayMode" value="trendline">
-                        <div class="slider"></div>
-                        <label for="data">Data</label>
-                        <label for="both">Both</label>
-                        <label for="trendline">Trend</label>
-                    </div>
                 </div>
             </div>
         </div>
