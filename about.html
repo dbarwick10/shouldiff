@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shouldiff About</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-JVVLV3M1D6');
+    </script>
+    <link rel="stylesheet" href="./client/css/statStyle.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/x-icon" href="./images/leeg.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="./images/leeg.ico">
+    <link rel="apple-touch-icon" href="./images/leeg.ico">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header">
+                <a href="index.html">
+                    <img class="logo" src="./images/leeg.ico" alt="Shouldiff logo">
+                </a>
+                <h2>Shouldiff: A Performance Gap Analyzer</h2>
+                <button class="mobile-menu-button">
+                    <!-- Add your menu icon here -->
+                    <span>Menu</span>
+                </button>
+                <div class="header-links-container">
+                    <!-- Your navigation links -->
+                    <a href="index.html" class="header-links">Home</a>
+                    <a href="about.html" class="header-links active">About</a>
+                    <a href="#" class="header-links">Contact</a>
+                </div>
+            </div>
+        </header>
+        <section class="about-hero">
+            <h2>About Shouldiff</h2>
+            <p>"Should I FF?" is your League of Legends analysis tool that reveals the hidden story behind each victory and defeat. 
+            By comparing each of your stats for every game you won or lost, Shouldiff provides insights that help you understand and improve your gameplay.</p>
+        </section>
+
+        <section class="about-section">
+            <h3>Analysis Perspectives</h3>
+            <div class="perspectives-grid">
+                <div class="perspective-box">
+                    <strong>Your Stats</strong>
+                    <p>Track your individual performance metrics and combat effectiveness</p>
+                </div>
+                <div class="perspective-box">
+                    <strong>Team Stats</strong>
+                    <p>Monitor your team's collective performance and objective control</p>
+                </div>
+                <div class="perspective-box">
+                    <strong>Enemy Stats</strong>
+                    <p>Analyze the opposing team's achievements and patterns</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <h3>Core Stats Tracking</h3>
+            <div class="stats-display">
+                <div class="stats-info">
+                    <h3>Core Stats Tracking</h3>
+                    <div class="stats-lists">
+                        <div class="stat-column">
+                            <h4>Combat Stats</h4>
+                            <ul>
+                                <li>Kills</li>
+                                <li>Deaths</li>
+                                <li>Assists</li>
+                                <li>KDA Ratio</li>
+                                <li>Death Timings</li>
+                            </ul>
+                        </div>
+                        <div class="stat-column">
+                            <h4>Objectives</h4>
+                            <ul>
+                                <li>Turrets</li>
+                                <li>Inhibitors</li>
+                                <li>Dragons</li>
+                                <li>Barons</li>
+                                <li>Elder Dragons</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-screenshot">
+                    <div class="toggle-container">
+                        <div class="slide-toggle-group">
+                            <div class="slide-toggle">
+                                <input type="radio" id="playerStats" name="statType" value="p">
+                                <input type="radio" id="teamStats" name="statType" value="t" checked>
+                                <input type="radio" id="enemyStats" name="statType" value="e">
+                                <div class="slider"></div>
+                                <label for="playerStats">Player</label>
+                                <label for="teamStats">Team</label>
+                                <label for="enemyStats">Enemy</label>
+                            </div>
+                        </div>
+                        <div class="slide-toggle-group">
+                            <div class="slide-toggle">
+                                <input type="radio" id="data" name="displayMode" value="d">
+                                <input type="radio" id="both" name="displayMode" value="b" checked>
+                                <input type="radio" id="trendline" name="displayMode" value="t">
+                                <div class="slider"></div>
+                                <label for="data">Data</label>
+                                <label for="both">Both</label>
+                                <label for="trendline">Trend</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="screenshot-container">
+                        <img id="statsScreenshot" src="./images/t_b.png" alt="Stats Interface Screenshot" />
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-section">
+            <h3>Features</h3>
+            <div class="features-list">
+                <div class="feature-item">
+                    <strong>Three-Way Comparison</strong>
+                    <p>Compare your performance against both teams simultaneously to identify areas of impact</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Time-Based Analysis</strong>
+                    <p>See how stats evolve throughout the match, including death timer impact and objective control patterns</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Coming Soon: Real-Time Analysis</strong>
+                    <p>Track your performance as the game unfolds, with immediate feedback on key decisions and missed opportunities</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="getting-started">
+            <h3>Getting Started</h3>
+            <ol>
+                <li>Choose a match to analyze</li>
+                <li>Review your performance metrics and identified opportunities</li>
+                <li>Explore detailed breakdowns of key moments</li>
+                <li>Use the insights to adjust your gameplay in future matches</li>
+            </ol>
+        </section>
+        <footer>
+            <p><small>
+                Shouldiff isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+            </small></p>
+        </footer>
+    </div>
+    <script type="module" src="./client/js/about.js"></script>
+</body>
+</html>

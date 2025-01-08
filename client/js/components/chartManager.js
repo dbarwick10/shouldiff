@@ -176,20 +176,20 @@ export class ChartManager {
     }
 
     renderAllCharts() {
-        // Clear existing charts
-        CHART_TYPES.forEach(stat => {
-            const canvas = document.getElementById(`${stat}Chart`);
-            if (canvas) {
-                const existingChart = Chart.getChart(canvas);
-                if (existingChart) {
-                    existingChart.destroy();
-                }
-            }
-        });
-
         const maxTimeInMinutes = this.findMaxGameTime();
         
         CHART_TYPES.forEach(stat => {
+            const canvas = document.getElementById(`${stat}Chart`);
+            if (!canvas) return;
+    
+            // Always destroy existing chart first
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                existingChart.destroy();
+                delete this.charts[stat];
+            }
+    
+            // Skip if no data
             if (!this.hasCategoryData(this.currentCategory, stat)) {
                 return;
             }
@@ -197,9 +197,22 @@ export class ChartManager {
             const datasets = this.createDatasets(stat);
             if (datasets.length === 0) return;
     
-            const ctx = document.getElementById(`${stat}Chart`).getContext('2d');
-            const chartOptions = getChartOptions(stat, maxTimeInMinutes);
-            
+            const ctx = canvas.getContext('2d');
+            const chartOptions = {
+                ...getChartOptions(stat, maxTimeInMinutes),
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                transitions: {
+                    active: {
+                        animation: {
+                            duration: 0
+                        }
+                    }
+                }
+            };
+                
+            // Create new chart
             this.charts[stat] = new Chart(ctx, {
                 type: 'line',
                 data: { datasets },
@@ -227,7 +240,8 @@ export class ChartManager {
                     fill: false,
                     tension: 0.3,
                     pointRadius: 1,
-                    pointHoverRadius: 1
+                    pointHoverRadius: 1,
+                    order: 3
                 };
             
                 const trendlineData = calculateTrendline(data);
@@ -240,7 +254,8 @@ export class ChartManager {
                     fill: false,
                     tension: 0,
                     pointRadius: 0,
-                    pointHoverRadius: 0
+                    pointHoverRadius: 0,
+                    order: 2
                 } : null;
             
                 datasets.push(...createDatasetWithMode(baseDataset, trendlineDataset, this.displayMode));
@@ -260,24 +275,15 @@ export class ChartManager {
                         data: data,
                         borderColor: config.borderColor,
                         backgroundColor: config.backgroundColor,
-                        fill: label === 'Current Game',
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 1,
-                        pointHoverRadius: 1
+                        pointHoverRadius: 1,
+                        order: 0
                     };
 
                     const trendlineData = calculateTrendline(data);
-                    const trendlineDataset = trendlineData ? {
-                        label: `${label} Trend`,
-                        data: trendlineData,
-                        borderColor: config.borderColor,
-                        borderDash: [5, 5],
-                        backgroundColor: 'transparent',
-                        fill: false,
-                        tension: 0,
-                        pointRadius: 0,
-                        pointHoverRadius: 0
-                    } : null;
+                    const trendlineDataset = trendlineData ? baseDataset : null;
 
                     datasets.push(...createDatasetWithMode(baseDataset, trendlineDataset, this.displayMode));
                 }

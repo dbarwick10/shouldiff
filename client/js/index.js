@@ -18,6 +18,14 @@ function cleanTagline(tagline) {
     return tagline.replace(/^[#%23]/, '');
 }
 
+function showLoading() {
+    document.getElementById('loading').classList.add('visible');
+}
+
+function hideLoading() {
+    document.getElementById('loading').classList.remove('visible');
+}
+
 function updateUrl(params) {
     try {
         const url = new URL(window.location.href);
@@ -236,7 +244,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         // Initialize loading state
         elements.analyzeButton.disabled = true;
         elements.inputSection.style.display = 'none';
-        elements.loading.style.display = 'flex';
+        showLoading();
         if (elements.howToUseThis) elements.howToUseThis.style.display = 'none';
         state.currentLoadingState = 0;
         updateLoadingState(elements, state, loadingStates);
@@ -285,7 +293,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         // Cleanup and UI updates
         clearInterval(state.loadingInterval);
         state.lastSuccessfulSearch = { ...formData };
-        elements.loading.style.display = 'none';
+        hideLoading();
         elements.analyzeButton.disabled = false;
         elements.inputSection.style.display = 'block';
         elements.inputSection.classList.add('compact');

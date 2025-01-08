@@ -1,5 +1,6 @@
 export const getChartOptions = (stat, maxTimeInMinutes) => ({
     responsive: true,
+    animation: false,
     maintainAspectRatio: true,
     plugins: {
         title: { 
