@@ -792,6 +792,75 @@ footer {
     border-bottom: none;
 }
 
+.contact-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px); /* Adjust based on your header height */
+}
+
+.logo-container {
+    width: 128px;
+    height: 128px;
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(13, 13, 18, 0.6);
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6);
+    border: 2px solid rgba(114, 137, 218, 0.2);
+}
+
+.contact-logo {
+    width: 128px;
+    height: 128px;
+    object-fit: contain;
+}
+
+.contact-content {
+    background-color: rgba(28, 36, 52, 0.85);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(13, 13, 18, 0.6);
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+}
+
+.contact-content h1 {
+    color: #d4af37;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    visibility: visible;
+    height: auto;
+}
+
+.contact-content p {
+    color: #a0aec0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.email-link {
+    display: inline-block;
+    color: #7289da;
+    font-size: 1.2rem;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 2px solid #7289da;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.email-link:hover {
+    background-color: rgba(114, 137, 218, 0.2);
+    box-shadow: 0 0 12px rgba(114, 137, 218, 0.4);
+    color: #d4af37;
+    border-color: #d4af37;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
@@ -892,5 +961,21 @@ footer {
     .stats-lists {
         flex-direction: column;
         gap: 20px;
+    }
+
+    .contact-content {
+        padding: 1.5rem;
+    }
+
+    .contact-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .contact-content p {
+        font-size: 1rem;
+    }
+
+    .email-link {
+        font-size: 1.1rem;
     }
 }
