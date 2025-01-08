@@ -5,13 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shouldiff Home</title>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
+         // Initialize dataLayer
+         window.dataLayer = window.dataLayer || [];
+        
+        // Define gtag function
         function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
 
-        gtag('config', 'G-JVVLV3M1D6');
+        // Only load GA if consent is given
+        function loadGoogleAnalytics() {
+            if (localStorage.getItem('cookieConsent') === 'accepted') {
+                // Load GA script
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6';
+                document.head.appendChild(script);
+
+                // Initialize GA
+                gtag('js', new Date());
+                gtag('config', 'G-JVVLV3M1D6');
+            }
+        }
+
+        // Check for existing consent on page load
+        if (localStorage.getItem('cookieConsent') === 'accepted') {
+            loadGoogleAnalytics();
+        }
     </script>
     <link rel="stylesheet" href="./client/css/statStyle.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,6 +39,11 @@
     <link rel="apple-touch-icon" href="./images/leeg.ico">
 </head>
 <body>
+    <div id="cookie-consent" class="cookie-banner">
+        <p>We use cookies to improve your experience. Choose your preferences below.</p>
+        <button id="accept-cookies">Accept All</button>
+        <button id="reject-cookies">Reject All</button>
+    </div>
     <header>
         <div class="header">
             <a href="index.html">
@@ -173,6 +197,23 @@
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById('accept-cookies').addEventListener('click', function() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookie-consent').style.display = 'none';
+            loadGoogleAnalytics();
+        });
+
+        document.getElementById('reject-cookies').addEventListener('click', function() {
+            localStorage.setItem('cookieConsent', 'rejected');
+            document.getElementById('cookie-consent').style.display = 'none';
+        });
+
+        // Show banner if no consent choice has been made
+        if (!localStorage.getItem('cookieConsent')) {
+            document.getElementById('cookie-consent').style.display = 'block';
+        }
+    </script>
     <script type="module" src="./client/js/index.js"></script>
 </body>
 </html>

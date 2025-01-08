@@ -5,13 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - Shouldiff</title>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-JVVLV3M1D6');
-    </script>
+    <head>
+        <script>
+            // Initialize dataLayer
+            window.dataLayer = window.dataLayer || [];
+            
+            // Define gtag function
+            function gtag(){dataLayer.push(arguments);}
+    
+            // Only load GA if consent is given
+            function loadGoogleAnalytics() {
+                if (localStorage.getItem('cookieConsent') === 'accepted') {
+                    const script = document.createElement('script');
+                    script.async = true;
+                    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6';
+                    document.head.appendChild(script);
+    
+                    // Initialize GA
+                    gtag('js', new Date());
+                    gtag('config', 'G-JVVLV3M1D6');
+                }
+            }
+    
+            // Check for existing consent on page load
+            if (localStorage.getItem('cookieConsent') === 'accepted') {
+                loadGoogleAnalytics();
+            }
+        </script>
+    </head>
     <link rel="stylesheet" href="./client/css/statStyle.css">
     <link rel="stylesheet" href="./client/css/contact.css">
     <link rel="preload" href="/images/leeg.ico" as="image" type="image/x-icon">
@@ -20,6 +41,11 @@
     <link rel="apple-touch-icon" href="/images/leeg.ico">
 </head>
 <body>
+    <div id="cookie-consent" class="cookie-banner">
+        <p>We use cookies to improve your experience. Choose your preferences below.</p>
+        <button id="accept-cookies">Accept All</button>
+        <button id="reject-cookies">Reject All</button>
+    </div>
     <header>
         <div class="header">
             <a href="index.html">
@@ -47,5 +73,22 @@
             <a href="mailto:contact@shouldiff.com" class="email-link">contact@shouldiff.com</a>
         </div>
     </main>
+    <script>
+        document.getElementById('accept-cookies').addEventListener('click', function() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookie-consent').style.display = 'none';
+            loadGoogleAnalytics();
+        });
+
+        document.getElementById('reject-cookies').addEventListener('click', function() {
+            localStorage.setItem('cookieConsent', 'rejected');
+            document.getElementById('cookie-consent').style.display = 'none';
+        });
+
+        // Show banner if no consent choice has been made
+        if (!localStorage.getItem('cookieConsent')) {
+            document.getElementById('cookie-consent').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
