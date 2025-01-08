@@ -40,7 +40,7 @@
         <section class="about-hero">
             <h2>About Shouldiff</h2>
             <p>"Should I FF?" is your League of Legends analysis tool that reveals the hidden story behind each victory and defeat. 
-            By comparing each of your stats for every game you won or lost, Shouldiff provides insights that help you understand and improve your gameplay.</p>
+            By comparing each of your stats for games you won or lost, including games that you won via surrender or lost via surrender, Shouldiff provides insights that help you understand and improve your gameplay.</p>
         </section>
 
         <section class="about-section">
@@ -128,8 +128,8 @@
             <h3>Features</h3>
             <div class="features-list">
                 <div class="feature-item">
-                    <strong>Three-Way Comparison</strong>
-                    <p>Compare your performance against both teams simultaneously to identify areas of impact</p>
+                    <strong>Analysis Your Way</strong>
+                    <p>Whether it's exact minute-by-minute data, trendlines or both. Take control and view the data in your own way.</p>
                 </div>
                 <div class="feature-item">
                     <strong>Time-Based Analysis</strong>
@@ -150,6 +150,24 @@
                 <!-- <li>Explore detailed breakdowns of key moments</li> -->
                 <li>Use the insights to adjust your gameplay in future matches</li>
             </ol>
+            <div class="input-section">
+                <input type="text" id="summonerName" placeholder="Enter Summoner Name">
+                <input type="text" id="tagLine" placeholder="Enter Tagline">
+                <select id="region">
+                    <option value="americas" selected>Americas</option>
+                    <option value="asia">Asia</option>
+                    <option value="europe">Europe</option>
+                    <option value="sea">SEA</option>
+                </select>
+                <select id="gameMode">
+                    <option value="ranked">Ranked</option>
+                    <option value="normal">Normal</option>
+                    <option value="aram" selected>ARAM</option>
+                    <option value="ultbook">ULTBOOK</option>
+                    <option value="all" >All selected</option>
+                </select>
+                <button id="fetchStatsButton">Fetch Stats</button>
+            </div>
         </section>
         <footer>
             <p><small>
