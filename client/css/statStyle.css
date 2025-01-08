@@ -631,7 +631,13 @@ footer {
 
 .stats-info h3 {
     color: #d4af37;
-    text-align: center;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.stats-info p {
+    color: #a0aec0;
+    text-align: left;
     margin-bottom: 20px;
 }
 
