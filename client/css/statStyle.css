@@ -291,6 +291,46 @@ tr:hover td {
     box-shadow: 0 0 10px rgba(13, 13, 18, 0.6);
 }
 
+.getting-started a {
+    color: #7289da;
+    text-decoration: none;
+    position: relative;
+    font-weight: 600;
+    padding: 0.2rem 0;
+    transition: all 0.3s ease;
+}
+
+.getting-started a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background-color: #d4af37;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.getting-started a:hover {
+    color: #d4af37;
+}
+
+.getting-started a:hover::after {
+    width: 100%;
+}
+
+.more-questions {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.more-questions h4 {
+    color: #d4af37;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
 /* Player Summary Styles */
 .player-summary {
     display: none;

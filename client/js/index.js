@@ -67,6 +67,7 @@ function initializeDOMElements() {
         analyzeButton: document.getElementById('fetchStatsButton'),
         loading: document.getElementById('loading'),
         inputSection: document.querySelector('.input-section'),
+        gettingStarted: document.querySelector('.getting-started.index'),
         chartContainer: document.querySelector('.chart-container'),
         chartLegend: document.querySelector('.chart-legend'),
         howToUseThis: document.querySelector('.how-to-use-this')
@@ -243,7 +244,9 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         // Initialize loading state
         elements.analyzeButton.disabled = true;
+        elements.gettingStarted.style.display = 'none';
         elements.inputSection.style.display = 'none';
+        
         showLoading();
         if (elements.howToUseThis) elements.howToUseThis.style.display = 'none';
         state.currentLoadingState = 0;
