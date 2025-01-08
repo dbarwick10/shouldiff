@@ -591,6 +591,12 @@ footer {
     transition: all 0.3s ease;
 }
 
+h2 {
+    color: #d4af37;
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
 /* About Page Specific Styles */
 .about-hero {
     padding: 40px 20px;
@@ -598,12 +604,6 @@ footer {
     background: rgba(28, 36, 52, 0.85);
     border-radius: 8px;
     box-shadow: 0 0 12px rgba(13, 13, 18, 0.6);
-}
-
-.about-hero h2 {
-    color: #d4af37;
-    font-size: 2em;
-    margin-bottom: 20px;
 }
 
 .about-hero p {
