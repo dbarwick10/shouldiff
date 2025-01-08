@@ -3,8 +3,8 @@ html {
     height: 100%;
     margin: 0;
     padding: 0;
-    scrollbar-gutter: stable;
-    overflow-y: scroll; /* Ensure scrollbar is always present */
+    /* scrollbar-gutter: stable;
+    overflow-y: scroll; */
 }
 
 * {
