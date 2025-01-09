@@ -10,7 +10,7 @@ function getUrlParams() {
     return {
         summonerName: params.get('summoner') || '',
         tagLine: params.get('tag') || '',
-        region: params.get('region') || 'americas',
+        // region: params.get('region') || 'americas',
         gameMode: params.get('mode') || 'all'  // Add default value
     };
 }
@@ -160,7 +160,7 @@ function setupEventHandlers(elements, state, loadingStates) {
         const formData = {
             summonerName: document.getElementById('summonerName').value.trim(),
             tagLine: document.getElementById('tagLine').value.trim(),
-            region: document.getElementById('region').value,
+            // region: document.getElementById('region').value,
             gameMode: document.getElementById('gameMode').value
         };
 
@@ -180,7 +180,7 @@ function setupEventHandlers(elements, state, loadingStates) {
                 const currentParams = {
                     summonerName: document.getElementById('summonerName')?.value || '',
                     tagLine: document.getElementById('tagLine')?.value || '',
-                    region: document.getElementById('region')?.value || 'americas',
+                    // region: document.getElementById('region')?.value || 'americas',
                     gameMode: document.getElementById('gameMode')?.value || 'all'
                 };
                 updateUrl(currentParams);
@@ -231,7 +231,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         if (state.lastSuccessfulSearch && 
             formData.summonerName.toLowerCase() === state.lastSuccessfulSearch.summonerName.toLowerCase() &&
             formData.tagLine.toLowerCase() === state.lastSuccessfulSearch.tagLine.toLowerCase() &&
-            formData.region === state.lastSuccessfulSearch.region &&
+            // formData.region === state.lastSuccessfulSearch.region &&
             formData.gameMode === state.lastSuccessfulSearch.gameMode) {
             alert('Update your summoner name, tagline or game mode and try again');
             return;
