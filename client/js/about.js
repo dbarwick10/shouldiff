@@ -1,4 +1,10 @@
+import { initializeMobileMenu } from './shared.js';
+
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    initializeMobileMenu();
+    
     // Stats screenshot toggle functionality
     const statsImg = document.getElementById('statsScreenshot');
     const statTypeInputs = document.querySelectorAll('input[name="statType"]');

@@ -1,6 +1,8 @@
 // Import required functionality
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
 import { LOCAL_TESTING } from "./config/constants.js"; 
+import { initializeMobileMenu } from './shared.js';
+
 
 // Helper function to parse URL parameters
 function getUrlParams() {
@@ -100,6 +102,8 @@ async function setupApplication() {
     try {
         console.log('Setting up application...');
         
+        initializeMobileMenu();
+
         // Initialize DOM elements
         const elements = initializeDOMElements();
         
