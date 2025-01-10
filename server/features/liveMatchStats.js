@@ -7,7 +7,6 @@ export async function calculateLiveStats() {
         const gameData = await getLiveData();
         console.log('Received game data');
 
-        // Comprehensive null/undefined checks
         if (!gameData || !gameData.events || !gameData.events.Events || !gameData.allPlayers) {
             console.log('Insufficient game data');
             return {
@@ -21,11 +20,9 @@ export async function calculateLiveStats() {
         const activePlayerName = gameData?.activePlayer?.riotIdGameName;
         const allPlayers = gameData.allPlayers;
 
-        // Determine teams explicitly
         const activePlayer = allPlayers.find(p => p.riotIdGameName === activePlayerName);
         const activePlayerTeam = activePlayer?.team;
         
-        // Create player lists for each team
         const playerTeamMembers = allPlayers
             .filter(p => p.team === activePlayerTeam)
             .map(p => p.riotIdGameName);
@@ -33,14 +30,12 @@ export async function calculateLiveStats() {
             .filter(p => p.team !== activePlayerTeam)
             .map(p => p.riotIdGameName);
 
-        // Initialize team stats
         const teamStats = {
             playerStats: createEmptyTeamStats(),
             teamStats: createEmptyTeamStats(),
             enemyStats: createEmptyTeamStats()
         };
 
-        // Set game start times
         const gameStartEvent = events.find(event => event.EventName === 'GameStart');
         const gameStartRealTime = gameStartEvent ? Date.now() : null;
         const gameStartGameTime = gameStartEvent ? gameStartEvent.EventTime : null;
@@ -48,12 +43,10 @@ export async function calculateLiveStats() {
         teamStats.teamStats.gameStartRealTime = gameStartRealTime;
         teamStats.teamStats.gameStartGameTime = gameStartGameTime;
 
-        // Initialize death timers
         let playerTimeSpentDead = 0;
         let playerTeamTimeSpentDead = 0;
         let enemyTeamTimeSpentDead = 0;
 
-        // Track events
         events.forEach(event => {
             if (event.EventName === "ChampionKill") {
                 const { KillerName, VictimName, Assisters = [], EventTime } = event;
@@ -61,7 +54,6 @@ export async function calculateLiveStats() {
                 const victimPlayer = allPlayers.find(p => p.riotIdGameName === VictimName || p.summonerName === VictimName);
                 const isTurretKill = KillerName.includes('Turret_');
                 
-                // Active Player Stats
                 if (activePlayerName) {
                     // Kills
                     if (KillerName === activePlayerName) {
@@ -88,7 +80,7 @@ export async function calculateLiveStats() {
                         teamStats.playerStats.assists.push(EventTime);
                     }
         
-                    // Update KDA
+                    // KDA
                     if (KillerName === activePlayerName || VictimName === activePlayerName || Assisters.includes(activePlayerName)) {
                         const currentKills = teamStats.playerStats.kills.length;
                         const currentAssists = teamStats.playerStats.assists.length;
@@ -106,7 +98,7 @@ export async function calculateLiveStats() {
                 const teamAssists = Assisters.filter(assister => playerTeamMembers.includes(assister));
                 const enemyAssists = Assisters.filter(assister => enemyTeamMembers.includes(assister));
         
-                // Player Team Stats
+                // Team Stats
                 if (playerTeamMembers.includes(KillerName) || 
                     (isTurretKill && teamAssists.length > 0)) {
                     teamStats.teamStats.kills.push(EventTime);
@@ -284,7 +276,6 @@ export async function calculateLiveStats() {
                 }     
         });
 
-        // Calculate team-wide item values
         calculateItemValues(teamStats);
 
         return teamStats;
@@ -299,7 +290,6 @@ export async function calculateLiveStats() {
     }
 }
 
-// Helper function to create an empty team stats object
 function createEmptyTeamStats() {
     return { 
         kills: [], 
@@ -317,13 +307,11 @@ function createEmptyTeamStats() {
     };
 }
 
-// Find the team of a player
 function findPlayerTeam(allPlayers, activePlayerName) {
     const activePlayer = allPlayers.find(p => p.riotIdGameName === activePlayerName);
     return activePlayer ? activePlayer.team : null;
 }
 
-// Calculate item values for teams
 function calculateItemValues(teamStats) {
     ['playerStats', 'teamStats', 'enemyStats'].forEach(teamKey => {
         const items = teamStats[teamKey].items;
@@ -344,12 +332,10 @@ function getTimeIncreaseFactor(currentMinutes) {
     } else if (currentMinutes < 55) {
         return Math.min(0.2175 + Math.ceil(2 * (currentMinutes - 45)) * 0.0145, 0.50);
     }
-    return 0.50; // Cap at 50%
+    return 0.50;
 }
 
 function calculateDeathTimer(currentMinutes, level) {
-    // const gameData = await getLiveData();
-    // const level = gameData?.activePlayer?.level; // Retrieve the actual level
     const baseRespawnWait = BRW[level - 1];
     const timeIncreaseFactor = getTimeIncreaseFactor(currentMinutes);
     const deathTimer = baseRespawnWait + (baseRespawnWait * timeIncreaseFactor);

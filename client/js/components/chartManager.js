@@ -1,4 +1,3 @@
-// src/components/ChartManager.js
 import { CHART_TYPES, STAT_KEYS } from '../config/constants.js';
 import { colorConfig } from '../config/colorConfig.js';
 import { getChartOptions } from '../config/chartOptions.js';
@@ -55,7 +54,6 @@ export class ChartManager {
     }
 
     hasCategoryData(category, stat) {
-        // Special check for deathTimers
         if (stat === 'deathTimers') {
             const hasHistoricalData = STAT_KEYS.some(key => {
                 const categoryData = this.averageEventTimes[category][key];
@@ -71,13 +69,11 @@ export class ChartManager {
             return hasHistoricalData || hasLiveData || hasPreviousData;
         }
     
-        // Check historical data
         const hasHistoricalData = STAT_KEYS.some(key => {
             const categoryData = this.averageEventTimes[category][key];
             return categoryData && Array.isArray(categoryData[stat]) && categoryData[stat].length > 0;
         });
     
-        // Check live game data
         const hasLiveData = this.currentLiveStats?.[category] && (
             (stat === 'kda' && (
                 this.currentLiveStats[category].kills?.length > 0 ||
@@ -87,7 +83,6 @@ export class ChartManager {
             (this.currentLiveStats[category][stat]?.length > 0)
         );
     
-        // Check previous game data
         const hasPreviousData = this.previousGameStats?.[category] && (
             (stat === 'kda' && (
                 this.previousGameStats[category].kills?.length > 0 ||
@@ -106,7 +101,6 @@ export class ChartManager {
         CHART_TYPES.forEach(stat => {
             if (!this.hasCategoryData(this.currentCategory, stat)) return;
     
-            // Check historical data
             STAT_KEYS.forEach(key => {
                 const categoryData = this.averageEventTimes[this.currentCategory][key];
                 if (!categoryData) return;
@@ -135,7 +129,7 @@ export class ChartManager {
                     maxGameTime = Math.max(maxGameTime, ...categoryData[stat]);
                 }
             });
-            // Check current game data
+
             if (this.currentLiveStats?.[this.currentCategory]) {
                 if (stat === 'deathTimers' && this.currentLiveStats[this.currentCategory].deaths?.length > 0) {
                     maxGameTime = Math.max(maxGameTime, ...this.currentLiveStats[this.currentCategory].deaths);
@@ -153,7 +147,6 @@ export class ChartManager {
                 }
             }
             
-            // Check previous game data
             if (this.previousGameStats?.[this.currentCategory]) {
                 if (stat === 'deathTimers' && this.previousGameStats[this.currentCategory].deaths?.length > 0) {
                     maxGameTime = Math.max(maxGameTime, ...this.previousGameStats[this.currentCategory].deaths);
@@ -172,7 +165,7 @@ export class ChartManager {
             }
         });
     
-        return Math.ceil(maxGameTime / 60); // Convert to minutes and round up
+        return Math.ceil(maxGameTime / 60);
     }
 
     renderAllCharts() {
@@ -182,14 +175,12 @@ export class ChartManager {
             const canvas = document.getElementById(`${stat}Chart`);
             if (!canvas) return;
     
-            // Always destroy existing chart first
             const existingChart = Chart.getChart(canvas);
             if (existingChart) {
                 existingChart.destroy();
                 delete this.charts[stat];
             }
     
-            // Skip if no data
             if (!this.hasCategoryData(this.currentCategory, stat)) {
                 return;
             }
@@ -212,7 +203,6 @@ export class ChartManager {
                 }
             };
                 
-            // Create new chart
             this.charts[stat] = new Chart(ctx, {
                 type: 'line',
                 data: { datasets },
@@ -224,7 +214,6 @@ export class ChartManager {
     createDatasets(stat) {
         const datasets = [];
         
-        // Add historical data
         STAT_KEYS.forEach((key) => {
             const categoryData = this.averageEventTimes[this.currentCategory][key];
             if (!categoryData) return;
@@ -262,7 +251,6 @@ export class ChartManager {
             }
         });
 
-        // Add live game and previous game data
         [
             { stats: this.currentLiveStats, config: colorConfig.live, label: 'Current Game' },
             { stats: this.previousGameStats, config: colorConfig.previousGame, label: 'Previous Game' }

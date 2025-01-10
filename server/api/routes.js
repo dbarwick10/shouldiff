@@ -3,7 +3,6 @@ import { calculateLiveStats } from '../features/liveMatchStats.js';
 
 const router = express.Router();
 
-// Helper function to clear object properties
 function clearObject(obj) {
     if (!obj) return;
     for (const key in obj) {
@@ -16,7 +15,6 @@ function clearObject(obj) {
     }
 }
 
-// Helper function to safely run garbage collection
 function runGC() {
     if (global.gc) {
         try {
@@ -30,7 +28,7 @@ function runGC() {
 router.get('/live-stats', async (req, res) => {
     try {
         const liveStats = await calculateLiveStats();
-        console.log('Live stats data'); // Add this
+        console.log('Live stats data');
 
         if (!liveStats) {
             return res.status(404).json({ error: 'No live game found' });

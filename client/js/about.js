@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Stats screenshot toggle functionality
     const statsImg = document.getElementById('statsScreenshot');
     const statTypeInputs = document.querySelectorAll('input[name="statType"]');
     const displayModeInputs = document.querySelectorAll('input[name="displayMode"]');
@@ -26,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateScreenshot();
 
-    // Search functionality
     const fetchStatsButton = document.getElementById('fetchStatsButton');
     const summonerNameInput = document.getElementById('summonerName');
     const tagLineInput = document.getElementById('tagLine');
@@ -44,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Construct the URL with search parameters
         const searchParams = new URLSearchParams({
             summoner: summonerName,
             tag: tagLine,
@@ -52,11 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
             mode: gameMode
         });
 
-        // Redirect to index.html with search parameters
         window.location.href = `index.html?${searchParams.toString()}`;
     });
 
-    // Optional: Enable enter key to trigger search
     const inputs = [summonerNameInput, tagLineInput];
     inputs.forEach(input => {
         input.addEventListener('keypress', function(e) {

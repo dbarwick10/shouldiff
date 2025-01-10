@@ -252,7 +252,6 @@ async function handleStats(formData, elements, state, loadingStates) {
         state.currentLoadingState = 0;
         updateLoadingState(elements, state, loadingStates);
 
-        // Start loading message cycle
         state.loadingInterval = setInterval(() => {
             state.currentLoadingState = (state.currentLoadingState + 1) % loadingStates.length;
             updateLoadingState(elements, state, loadingStates);
@@ -260,7 +259,6 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         updateUrl(formData);
 
-        // API request
         const prodURL = 'https://shouldiffserver.onrender.com/api/stats';
         const localURL = 'http://127.0.0.1:3000/api/stats';
         
@@ -293,7 +291,6 @@ async function handleStats(formData, elements, state, loadingStates) {
             state.currentCleanup = result.cleanup;
         }
 
-        // Cleanup and UI updates
         clearInterval(state.loadingInterval);
         state.lastSuccessfulSearch = { ...formData };
         hideLoading();
@@ -327,5 +324,4 @@ async function handleStats(formData, elements, state, loadingStates) {
     }
 }
 
-// Start the application
 initializeApplication();

@@ -93,7 +93,7 @@ function generateTooltipLabel(context, stat) {
     if (label.includes('Trend')) {
         const stats = calculateTrendlineStats(context.dataset.data);
         if (stats) {
-            const rateOfChange = (stats.slope * 60).toFixed(2); // per minute
+            const rateOfChange = (stats.slope * 60).toFixed(2);
             return [
                 `${label}: ${value.toFixed(2)} at ${time} min`,
                 `Rate of change: ${rateOfChange} per minute`,

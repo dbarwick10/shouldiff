@@ -48,7 +48,6 @@ export class LiveStatsService {
                             this.lastValidGameData = JSON.parse(JSON.stringify(this.currentLiveStats));
                         }
                     }
-                    // Keep showing the last known state
                     if (this.lastValidGameData) {
                         this.currentLiveStats = JSON.parse(JSON.stringify(this.lastValidGameData));
                     }
@@ -90,7 +89,6 @@ export class LiveStatsService {
                 return;
             }
 
-            // New game detection
             if (!this.gameActive && hasValidStats(newLiveStats, this.currentCategory)) {
                 console.log('New game starting - moving previous game data');
                 if (this.lastValidGameData) {
@@ -101,7 +99,6 @@ export class LiveStatsService {
                 this.gameActive = true;
                 this.currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
             } else if (this.gameActive && hasValidStats(newLiveStats, this.currentCategory)) {
-                // Update current game
                 this.currentLiveStats = JSON.parse(JSON.stringify(newLiveStats));
                 this.lastValidGameData = JSON.parse(JSON.stringify(newLiveStats));
             }

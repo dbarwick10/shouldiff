@@ -12,7 +12,6 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
@@ -32,47 +31,40 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
 app.use('/api', apiRoutes);
 
-// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(err.status || 500).json({ error: err.message });
 });
 
-// Function to format memory usage
 function formatMemoryUsage(bytes) {
     return `${Math.round(bytes / 1024 / 1024 * 100) / 100} MB`;
 }
 
-// Function to get memory stats
 function getMemoryStats() {
     const memoryData = process.memoryUsage();
     return {
-        rss: formatMemoryUsage(memoryData.rss), // RSS: total memory allocated
-        heapTotal: formatMemoryUsage(memoryData.heapTotal), // Total size of allocated heap
-        heapUsed: formatMemoryUsage(memoryData.heapUsed), // Actual memory used
-        external: formatMemoryUsage(memoryData.external) // Memory used by external C++ objects
+        rss: formatMemoryUsage(memoryData.rss), 
+        heapTotal: formatMemoryUsage(memoryData.heapTotal),
+        heapUsed: formatMemoryUsage(memoryData.heapUsed),
+        external: formatMemoryUsage(memoryData.external)
     };
 }
 
-const MEMORY_LOG_INTERVAL = 600000; // Log every minute
+const MEMORY_LOG_INTERVAL = 600000;
 setInterval(() => {
     console.log('Periodic memory check:', getMemoryStats());
 }, MEMORY_LOG_INTERVAL);
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log('Available endpoints:');
     console.log('  - GET /api/live-stats');
 });
 
-// Handle graceful shutdown
 process.on('SIGINT', () => {
     console.log('Shutting down server...');
     server.close(() => {

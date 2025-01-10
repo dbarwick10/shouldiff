@@ -1,4 +1,3 @@
-// src/index.js
 import { ChartManager } from './chartManager.js';
 import { LiveStatsService } from '../services/liveStatsService.js';
 
@@ -9,12 +8,10 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let liveStatsService = null;
 
     try {
-        // Initialize the UI components
         chartManager.initializeToggleButtons();
         chartManager.updateChartVisibility();
         chartManager.renderAllCharts();
 
-        // Set up live stats if enabled
         if (calculateStats) {
             console.log('Starting live data refresh...');
             liveStatsService = new LiveStatsService({
@@ -29,7 +26,6 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
         
         console.log('Chart initialization complete');
         
-        // Return cleanup function
         return {
             cleanup: () => {
                 if (liveStatsService) {
