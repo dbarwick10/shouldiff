@@ -57,15 +57,15 @@ export class ChartManager {
         if (stat === 'deathTimers') {
             const hasHistoricalData = STAT_KEYS.some(key => {
                 const categoryData = this.averageEventTimes[category][key];
-                return categoryData?.deaths?.length > 0 && categoryData?.totalTimeSpentDead?.length > 0;
+                return categoryData?.deaths?.length > 0 && categoryData?.timeSpentDead?.length > 0;
             });
-    
+        
             const hasLiveData = this.currentLiveStats?.[category]?.deaths?.length > 0 && 
-                              this.currentLiveStats?.[category]?.totalTimeSpentDead?.length > 0;
-    
+                              this.currentLiveStats?.[category]?.timeSpentDead?.length > 0;
+        
             const hasPreviousData = this.previousGameStats?.[category]?.deaths?.length > 0 && 
-                                  this.previousGameStats?.[category]?.totalTimeSpentDead?.length > 0;
-    
+                                  this.previousGameStats?.[category]?.timeSpentDead?.length > 0;
+        
             return hasHistoricalData || hasLiveData || hasPreviousData;
         }
     
@@ -286,15 +286,27 @@ export class ChartManager {
 
         switch (stat) {
             case 'deathTimers':
-                if (categoryData.deaths?.length > 0 && categoryData.totalTimeSpentDead?.length > 0) {
-                    return categoryData.deaths
-                        .map((deathTime, index) => ({
-                            x: deathTime / 60,
-                            y: categoryData.totalTimeSpentDead[index]
-                        }))
-                        .filter(point => point.x != null && point.y != null);
-                }
-                break;
+    if (categoryData.deaths?.length > 0) {
+        const isLiveOrPreviousData = this.currentLiveStats?.[this.currentCategory] === categoryData || 
+                                   this.previousGameStats?.[this.currentCategory] === categoryData;
+
+        if (isLiveOrPreviousData && categoryData.totalTimeSpentDead?.length > 0) {
+            return categoryData.deaths
+                .map((deathTime, index) => ({
+                    x: deathTime / 60,
+                    y: categoryData.totalTimeSpentDead[index] / 60
+                }))
+                .filter(point => point.x != null && point.y != null);
+        } else if (categoryData.timeSpentDead?.length > 0) {
+            return categoryData.deaths
+                .map((deathTime, index) => ({
+                    x: deathTime / 60,
+                    y: categoryData.timeSpentDead[index] / 60
+                }))
+                .filter(point => point.x != null && point.y != null);
+        }
+    }
+    break;
 
             case 'kda':
                 return generateKDAData(

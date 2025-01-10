@@ -49,141 +49,154 @@ export async function calculateLiveStats() {
 
         events.forEach(event => {
             if (event.EventName === "ChampionKill") {
-                const { KillerName, VictimName, Assisters = [], EventTime } = event;
-                const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName || p.summonerName === KillerName);
-                const victimPlayer = allPlayers.find(p => p.riotIdGameName === VictimName || p.summonerName === VictimName);
-                const isTurretKill = KillerName.includes('Turret_');
-                
-                if (activePlayerName) {
-                    // Kills
-                    if (KillerName === activePlayerName) {
-                        teamStats.playerStats.kills.push(EventTime);
-                    }
-                    
-                    // Deaths
-                    if (VictimName === activePlayerName) {
-                        teamStats.playerStats.deaths.push(EventTime);
-                        
-                        const currentMinutes = Math.floor(EventTime / 60);
-                        const deathTimer = calculateDeathTimer(currentMinutes, victimPlayer?.level);
-                        
-                        if (!teamStats.playerStats.timeSpentDead) teamStats.playerStats.timeSpentDead = [];
-                        if (!teamStats.playerStats.totalTimeSpentDead) teamStats.playerStats.totalTimeSpentDead = [];
-                        
-                        teamStats.playerStats.timeSpentDead.push(deathTimer);
-                        playerTimeSpentDead += deathTimer;
-                        teamStats.playerStats.totalTimeSpentDead.push(playerTimeSpentDead);
-                    }
-                    
-                    // Assists
-                    if (Assisters.includes(activePlayerName)) {
-                        teamStats.playerStats.assists.push(EventTime);
-                    }
-        
-                    // KDA
-                    if (KillerName === activePlayerName || VictimName === activePlayerName || Assisters.includes(activePlayerName)) {
-                        const currentKills = teamStats.playerStats.kills.length;
-                        const currentAssists = teamStats.playerStats.assists.length;
-                        const currentDeaths = Math.max(1, teamStats.playerStats.deaths.length);
-                        
-                        const kdaValue = (currentKills + currentAssists) / currentDeaths;
-                        teamStats.playerStats.kda.push({
-                            timestamp: EventTime,
-                            kdaValue: parseFloat(kdaValue.toFixed(2))
-                        });
-                    }
-                }
-        
-                // Team assists check
-                const teamAssists = Assisters.filter(assister => playerTeamMembers.includes(assister));
-                const enemyAssists = Assisters.filter(assister => enemyTeamMembers.includes(assister));
-        
-                // Team Stats
-                if (playerTeamMembers.includes(KillerName) || 
-                    (isTurretKill && teamAssists.length > 0)) {
-                    teamStats.teamStats.kills.push(EventTime);
-                    
-                    if (teamAssists.length > 0) {
-                        teamStats.teamStats.assists.push(EventTime);
-                    }
-                }
-                
-                if (playerTeamMembers.includes(VictimName)) {
-                    teamStats.teamStats.deaths.push(EventTime);
-                    
-                    const currentMinutes = Math.floor(EventTime / 60);
-                    const deathTimer = calculateDeathTimer(currentMinutes, victimPlayer?.level);
-                    
-                    if (!teamStats.teamStats.timeSpentDead) teamStats.teamStats.timeSpentDead = [];
-                    if (!teamStats.teamStats.totalTimeSpentDead) teamStats.teamStats.totalTimeSpentDead = [];
-                    
-                    teamStats.teamStats.timeSpentDead.push(deathTimer);
-                    playerTeamTimeSpentDead += deathTimer;
-                    teamStats.teamStats.totalTimeSpentDead.push(playerTeamTimeSpentDead);
-                }
-        
-                // Enemy Team Stats
-                if (!playerTeamMembers.includes(KillerName) || 
-                    (isTurretKill && enemyAssists.length > 0)) {
-                    teamStats.enemyStats.kills.push(EventTime);
-                    
-                    if (enemyAssists.length > 0) {
-                        teamStats.enemyStats.assists.push(EventTime);
-                    }
-                }
-                
-                if (!playerTeamMembers.includes(VictimName)) {
-                    teamStats.enemyStats.deaths.push(EventTime);
-                    
-                    const currentMinutes = Math.floor(EventTime / 60);
-                    const deathTimer = calculateDeathTimer(currentMinutes, victimPlayer?.level);
-                    
-                    if (!teamStats.enemyStats.timeSpentDead) teamStats.enemyStats.timeSpentDead = [];
-                    if (!teamStats.enemyStats.totalTimeSpentDead) teamStats.enemyStats.totalTimeSpentDead = [];
-                    
-                    teamStats.enemyStats.timeSpentDead.push(deathTimer);
-                    enemyTeamTimeSpentDead += deathTimer;
-                    teamStats.enemyStats.totalTimeSpentDead.push(enemyTeamTimeSpentDead);
-                }
-        
-                // Update KDAs
-                // Team KDA
-                const shouldUpdateTeamKDA = playerTeamMembers.includes(KillerName) || 
-                                           playerTeamMembers.includes(VictimName) || 
-                                           (isTurretKill && teamAssists.length > 0) ||
-                                           teamAssists.length > 0;
-        
-                if (shouldUpdateTeamKDA) {
-                    const currentKills = teamStats.teamStats.kills.length;
-                    const currentAssists = teamStats.teamStats.assists.length;
-                    const currentDeaths = Math.max(1, teamStats.teamStats.deaths.length);
-                    
-                    const kdaValue = (currentKills + currentAssists) / currentDeaths;
-                    teamStats.teamStats.kda.push({
-                        timestamp: EventTime,
-                        kdaValue: parseFloat(kdaValue.toFixed(2))
-                    });
-                }
-        
-                // Enemy KDA
-                const shouldUpdateEnemyKDA = !playerTeamMembers.includes(KillerName) || 
-                                            !playerTeamMembers.includes(VictimName) || 
-                                            (isTurretKill && enemyAssists.length > 0) ||
-                                            enemyAssists.length > 0;
-        
-                if (shouldUpdateEnemyKDA) {
-                    const currentKills = teamStats.enemyStats.kills.length;
-                    const currentAssists = teamStats.enemyStats.assists.length;
-                    const currentDeaths = Math.max(1, teamStats.enemyStats.deaths.length);
-                    
-                    const kdaValue = (currentKills + currentAssists) / currentDeaths;
-                    teamStats.enemyStats.kda.push({
-                        timestamp: EventTime,
-                        kdaValue: parseFloat(kdaValue.toFixed(2))
-                    });
-                }
+    const { KillerName, VictimName, Assisters = [], EventTime } = event;
+    const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName || p.summonerName === KillerName);
+    const victimPlayer = allPlayers.find(p => p.riotIdGameName === VictimName || p.summonerName === VictimName);
+    
+    // Determine enemy team
+    const enemyTeam = activePlayerTeam === 'ORDER' ? 'CHAOS' : 'ORDER';
+    
+    // Track deaths and time spent dead
+    if (victimPlayer) {
+        const currentMinutes = Math.floor(EventTime / 60);
+        const deathTimer = calculateDeathTimer(currentMinutes, victimPlayer?.level);
 
-                } else if (event.EventName === "TurretKilled") {
+        // Player death
+        if (VictimName === activePlayerName) {
+            teamStats.playerStats.deaths.push(EventTime);
+            
+            if (!teamStats.playerStats.timeSpentDead) teamStats.playerStats.timeSpentDead = [];
+            if (!teamStats.playerStats.totalTimeSpentDead) teamStats.playerStats.totalTimeSpentDead = [];
+            
+            teamStats.playerStats.timeSpentDead.push(deathTimer);
+            playerTimeSpentDead += deathTimer;
+            teamStats.playerStats.totalTimeSpentDead.push(playerTimeSpentDead);
+
+            const currentKills = teamStats.playerStats.kills.length;
+            const currentAssists = teamStats.playerStats.assists.length;
+            const currentDeaths = teamStats.playerStats.deaths.length;
+            
+            const kdaValue = (currentKills + currentAssists) / Math.max(1, currentDeaths);
+            teamStats.playerStats.kda.push({
+                timestamp: EventTime,
+                kdaValue: parseFloat(kdaValue.toFixed(2))
+            });
+        }
+
+        // Team death
+        if (victimPlayer.team === activePlayerTeam) {
+            teamStats.teamStats.deaths.push(EventTime);
+            
+            if (!teamStats.teamStats.timeSpentDead) teamStats.teamStats.timeSpentDead = [];
+            if (!teamStats.teamStats.totalTimeSpentDead) teamStats.teamStats.totalTimeSpentDead = [];
+            
+            teamStats.teamStats.timeSpentDead.push(deathTimer);
+            playerTeamTimeSpentDead += deathTimer;
+            teamStats.teamStats.totalTimeSpentDead.push(playerTeamTimeSpentDead);
+
+            const currentKills = teamStats.teamStats.kills.length;
+            const currentAssists = teamStats.teamStats.assists.length;
+            const currentDeaths = teamStats.teamStats.deaths.length;
+            
+            const kdaValue = (currentKills + currentAssists) / Math.max(1, currentDeaths);
+            teamStats.teamStats.kda.push({
+                timestamp: EventTime,
+                kdaValue: parseFloat(kdaValue.toFixed(2))
+            });
+        }
+
+        // Enemy team death
+        if (victimPlayer.team === enemyTeam) {
+            teamStats.enemyStats.deaths.push(EventTime);
+            
+            if (!teamStats.enemyStats.timeSpentDead) teamStats.enemyStats.timeSpentDead = [];
+            if (!teamStats.enemyStats.totalTimeSpentDead) teamStats.enemyStats.totalTimeSpentDead = [];
+            
+            teamStats.enemyStats.timeSpentDead.push(deathTimer);
+            enemyTeamTimeSpentDead += deathTimer;
+            teamStats.enemyStats.totalTimeSpentDead.push(enemyTeamTimeSpentDead);
+
+            const currentKills = teamStats.enemyStats.kills.length;
+            const currentAssists = teamStats.enemyStats.assists.length;
+            const currentDeaths = teamStats.enemyStats.deaths.length;
+            
+            const kdaValue = (currentKills + currentAssists) / Math.max(1, currentDeaths);
+            teamStats.enemyStats.kda.push({
+                timestamp: EventTime,
+                kdaValue: parseFloat(kdaValue.toFixed(2))
+            });
+        }
+    }
+
+    // Only proceed with kill attribution if the killer is an actual player
+    if (!killerPlayer) {
+        return; // Early return for non-player kills (turrets, minions, etc.)
+    }
+
+    // Handle enemy team kills
+    if (killerPlayer.team === enemyTeam) {
+        teamStats.enemyStats.kills.push(EventTime);
+        
+        if (enemyAssists.length > 0) {
+            teamStats.enemyStats.assists.push(EventTime);
+        }
+
+        // Update Enemy KDA
+        const currentKills = teamStats.enemyStats.kills.length;
+        const currentAssists = teamStats.enemyStats.assists.length;
+        const currentDeaths = Math.max(1, teamStats.enemyStats.deaths.length);
+        
+        const kdaValue = (currentKills + currentAssists) / currentDeaths;
+        teamStats.enemyStats.kda.push({
+            timestamp: EventTime,
+            kdaValue: parseFloat(kdaValue.toFixed(2))
+        });
+    }
+    
+    // Handle player team kills
+    if (killerPlayer.team === activePlayerTeam) {
+        teamStats.teamStats.kills.push(EventTime);
+        
+        if (teamAssists.length > 0) {
+            teamStats.teamStats.assists.push(EventTime);
+        }
+
+        // Update Team KDA
+        const currentKills = teamStats.teamStats.kills.length;
+        const currentAssists = teamStats.teamStats.assists.length;
+        const currentDeaths = Math.max(1, teamStats.teamStats.deaths.length);
+        
+        const kdaValue = (currentKills + currentAssists) / currentDeaths;
+        teamStats.teamStats.kda.push({
+            timestamp: EventTime,
+            kdaValue: parseFloat(kdaValue.toFixed(2))
+        });
+    }
+
+    // Track player kills and assists
+    if (activePlayerName) {
+        if (KillerName === activePlayerName) {
+            teamStats.playerStats.kills.push(EventTime);
+        }
+        
+        if (Assisters.includes(activePlayerName)) {
+            teamStats.playerStats.assists.push(EventTime);
+        }
+
+        // Update player KDA on kill or assist
+        if (KillerName === activePlayerName || Assisters.includes(activePlayerName)) {
+            const currentKills = teamStats.playerStats.kills.length;
+            const currentAssists = teamStats.playerStats.assists.length;
+            const currentDeaths = Math.max(1, teamStats.playerStats.deaths.length);
+            
+            const kdaValue = (currentKills + currentAssists) / currentDeaths;
+            teamStats.playerStats.kda.push({
+                timestamp: EventTime,
+                kdaValue: parseFloat(kdaValue.toFixed(2))
+            });
+        }
+    }
+} else if (event.EventName === "TurretKilled") {
                     const { KillerName, EventTime } = event;
                     const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
                     const minionPlayerTeam = activePlayerTeam === 'ORDER' ? 'T100' : 'T200';

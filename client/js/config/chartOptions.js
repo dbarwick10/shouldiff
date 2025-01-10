@@ -34,7 +34,7 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
             max: maxTimeInMinutes,
             title: { 
                 display: true, 
-                text: stat === 'deathTimers' ? 'Time of Death (Minutes)' : 'Time (Minutes)',
+                text: stat === 'deathTimers' ? 'Time (Minutes)' : 'Time (Minutes)',
                 font: {
                     weight: 'bold'
                 }
@@ -65,7 +65,7 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
 
 function getChartTitle(stat) {
     switch(stat) {
-        case 'deathTimers': return 'Time Spent Dead vs Time of Death';
+        case 'deathTimers': return 'Total Time Spent Dead';
         case 'kda': return 'KDA';
         case 'gold': return 'Gold Over Time';
         default: return capitalizeFirstLetter(stat) + ' Over Time';
@@ -74,7 +74,7 @@ function getChartTitle(stat) {
 
 function getYAxisTitle(stat) {
     switch(stat) {
-        case 'deathTimers': return 'Time Spent Dead (Seconds)';
+        case 'deathTimers': return 'Time Spent Dead (Minutes)';
         case 'kda': return 'KDA Ratio';
         case 'gold': return 'Total Gold';
         default: return `Total ${capitalizeFirstLetter(stat)}`;
