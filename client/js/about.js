@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const fetchStatsButton = document.getElementById('fetchStatsButton');
     const summonerNameInput = document.getElementById('summonerName');
     const tagLineInput = document.getElementById('tagLine');
-    // const regionSelect = document.getElementById('region');
     const gameModeSelect = document.getElementById('gameMode');
 
     function cleanTagline(tagline) {
@@ -45,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchStatsButton.addEventListener('click', function() {
         const summonerName = encodeURIComponent(summonerNameInput.value.trim());
         const tagLine = encodeURIComponent(tagLineInput.value.trim());
-        // const region = regionSelect.value;
         const gameMode = gameModeSelect.value;
 
         if (!summonerName || !tagLine) {
@@ -58,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchParams = new URLSearchParams({
             summoner: summonerName,
             tag: cleanedTag,
-            // region: region,
             mode: gameMode
         });
 

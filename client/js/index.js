@@ -1,22 +1,19 @@
-// Import required functionality
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
 import { LOCAL_TESTING } from "./config/constants.js"; 
 import { initializeMobileMenu } from './shared.js';
 
 
-// Helper function to parse URL parameters
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     return {
         summonerName: params.get('summoner') || '',
         tagLine: params.get('tag') || '',
-        // region: params.get('region') || 'americas',
-        gameMode: params.get('mode') || 'all'  // Add default value
+        gameMode: params.get('mode') || 'all'
     };
 }
 
 function cleanTagline(tagline) {
-    if (!tagline) return '';  // Handle null/undefined
+    if (!tagline) return '';
     return tagline.replace(/^[#%23]/, '');
 }
 
@@ -53,7 +50,6 @@ function updateFormInputs(params) {
             gameMode: document.getElementById('gameMode')
         };
 
-        // Only update if elements exist
         if (elements.summonerName) elements.summonerName.value = params.summonerName || '';
         if (elements.tagLine) elements.tagLine.value = cleanTagline(params.tagLine || '');
         if (elements.region) elements.region.value = params.region || 'americas';
@@ -63,7 +59,6 @@ function updateFormInputs(params) {
     }
 }
 
-// Initialize DOM elements after they're available
 function initializeDOMElements() {
     const elements = {
         analyzeButton: document.getElementById('fetchStatsButton'),
@@ -75,7 +70,6 @@ function initializeDOMElements() {
         howToUseThis: document.querySelector('.how-to-use-this')
     };
 
-    // Check for required elements
     if (!elements.analyzeButton || !elements.loading || !elements.inputSection) {
         throw new Error('Required DOM elements not found');
     }
@@ -87,9 +81,7 @@ function initializeDOMElements() {
     return elements;
 }
 
-// Main application initialization
 function initializeApplication() {
-    // Ensure DOM is loaded before proceeding
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => setupApplication());
     } else {
@@ -97,17 +89,14 @@ function initializeApplication() {
     }
 }
 
-// Main setup function
 async function setupApplication() {
     try {
         console.log('Setting up application...');
         
         initializeMobileMenu();
 
-        // Initialize DOM elements
         const elements = initializeDOMElements();
         
-        // Initialize state
         const state = {
             currentLoadingState: 0,
             loadingInterval: null,
@@ -127,10 +116,8 @@ async function setupApplication() {
             `Well, if you're still here, might as well stay a bit longer...`
         ];
 
-        // Setup handlers
         setupEventHandlers(elements, state, loadingStates);
         
-        // Handle initial URL parameters
         const initialParams = getUrlParams();
         updateFormInputs(initialParams);
         
@@ -141,7 +128,6 @@ async function setupApplication() {
         console.log('Application setup complete');
     } catch (error) {
         console.error('Failed to setup application:', error);
-        // Display user-friendly error if possible
         const loading = document.getElementById('loading');
         if (loading) {
             loading.innerHTML = `
@@ -155,12 +141,10 @@ async function setupApplication() {
 }
 
 function setupEventHandlers(elements, state, loadingStates) {
-    // Button click handler
     elements.analyzeButton.addEventListener('click', async () => {
         const formData = {
             summonerName: document.getElementById('summonerName').value.trim(),
             tagLine: document.getElementById('tagLine').value.trim(),
-            // region: document.getElementById('region').value,
             gameMode: document.getElementById('gameMode').value
         };
 
@@ -172,7 +156,6 @@ function setupEventHandlers(elements, state, loadingStates) {
         await handleStats(formData, elements, state, loadingStates);
     });
 
-    // Form change handlers
     ['summonerName', 'tagLine', 'region', 'gameMode'].forEach(inputId => {
         const element = document.getElementById(inputId);
         if (element) {
@@ -180,7 +163,6 @@ function setupEventHandlers(elements, state, loadingStates) {
                 const currentParams = {
                     summonerName: document.getElementById('summonerName')?.value || '',
                     tagLine: document.getElementById('tagLine')?.value || '',
-                    // region: document.getElementById('region')?.value || 'americas',
                     gameMode: document.getElementById('gameMode')?.value || 'all'
                 };
                 updateUrl(currentParams);
@@ -188,7 +170,6 @@ function setupEventHandlers(elements, state, loadingStates) {
         }
     });
 
-    // Browser navigation handler
     window.addEventListener('popstate', () => {
         const params = getUrlParams();
         updateFormInputs(params);
@@ -197,7 +178,6 @@ function setupEventHandlers(elements, state, loadingStates) {
         }
     });
 
-    // Cleanup handler
     window.addEventListener('unload', () => {
         if (state.currentCleanup) {
             state.currentCleanup();
@@ -205,7 +185,6 @@ function setupEventHandlers(elements, state, loadingStates) {
     });
 }
 
-// Helper functions for loading and error states
 function displayError(elements, state, message, details = '') {
     clearInterval(state.loadingInterval);
     elements.loading.innerHTML = `
@@ -224,20 +203,16 @@ function updateLoadingState(elements, state, loadingStates) {
     `;
 }
 
-// Main stats handling function
 async function handleStats(formData, elements, state, loadingStates) {
     try {
-        // Prevent duplicate searches
         if (state.lastSuccessfulSearch && 
             formData.summonerName.toLowerCase() === state.lastSuccessfulSearch.summonerName.toLowerCase() &&
             formData.tagLine.toLowerCase() === state.lastSuccessfulSearch.tagLine.toLowerCase() &&
-            // formData.region === state.lastSuccessfulSearch.region &&
             formData.gameMode === state.lastSuccessfulSearch.gameMode) {
             alert('Update your summoner name, tagline or game mode and try again');
             return;
         }
 
-        // Cleanup and UI preparation
         if (state.currentCleanup) {
             state.currentCleanup();
             state.currentCleanup = null;
@@ -246,7 +221,6 @@ async function handleStats(formData, elements, state, loadingStates) {
         if (elements.chartContainer) elements.chartContainer.style.display = 'none';
         if (elements.chartLegend) elements.chartLegend.style.display = 'none';
 
-        // Initialize loading state
         elements.analyzeButton.disabled = true;
         elements.gettingStarted.style.display = 'none';
         elements.inputSection.style.display = 'none';

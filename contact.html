@@ -7,13 +7,10 @@
     <!-- Google tag (gtag.js) -->
     <head>
         <script>
-            // Initialize dataLayer
             window.dataLayer = window.dataLayer || [];
             
-            // Define gtag function
             function gtag(){dataLayer.push(arguments);}
     
-            // Only load GA if consent is given
             function loadGoogleAnalytics() {
                 if (localStorage.getItem('cookieConsent') === 'accepted') {
                     const script = document.createElement('script');
@@ -21,13 +18,11 @@
                     script.src = 'https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6';
                     document.head.appendChild(script);
     
-                    // Initialize GA
                     gtag('js', new Date());
                     gtag('config', 'G-JVVLV3M1D6');
                 }
             }
     
-            // Check for existing consent on page load
             if (localStorage.getItem('cookieConsent') === 'accepted') {
                 loadGoogleAnalytics();
             }
@@ -65,9 +60,6 @@
 
     <main class="contact-container">
         <div class="contact-content">
-            <!-- <div class="logo-container">
-                <img src="./images/leeg.png" alt="Shouldiff logo" class="contact-logo">
-            </div> -->
             <h1>Contact Us</h1>
             <p>For inquiries, reach out to:</p>
             <a href="mailto:contact@shouldiff.com" class="email-link">contact@shouldiff.com</a>
@@ -85,7 +77,6 @@
             document.getElementById('cookie-consent').style.display = 'none';
         });
 
-        // Show banner if no consent choice has been made
         if (!localStorage.getItem('cookieConsent')) {
             document.getElementById('cookie-consent').style.display = 'block';
         }
