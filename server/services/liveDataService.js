@@ -35,7 +35,11 @@ async function fetchLiveGameData() {
         return null;
     }
     try {
-        const response = await fetch('https://127.0.0.1:2999/liveclientdata/allgamedata', {
+        const USE_TEST_DATA = false;
+        const TEST_DATA_PATH = '/test/allgamedata.json';
+        const API_ENDPOINT = 'https://127.0.0.1:2999/liveclientdata/allgamedata';
+
+        const response = await fetch(USE_TEST_DATA ? TEST_DATA_PATH : API_ENDPOINT, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
