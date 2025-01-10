@@ -1,4 +1,10 @@
+import { initializeMobileMenu } from './shared.js';
+
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    initializeMobileMenu();
+    
     const statsImg = document.getElementById('statsScreenshot');
     const statTypeInputs = document.querySelectorAll('input[name="statType"]');
     const displayModeInputs = document.querySelectorAll('input[name="displayMode"]');
@@ -28,13 +34,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const fetchStatsButton = document.getElementById('fetchStatsButton');
     const summonerNameInput = document.getElementById('summonerName');
     const tagLineInput = document.getElementById('tagLine');
-    const regionSelect = document.getElementById('region');
+    // const regionSelect = document.getElementById('region');
     const gameModeSelect = document.getElementById('gameMode');
+
+    function cleanTagline(tagline) {
+        if (!tagline) return '';
+        return tagline.replace(/^[#%23]+/, '');
+    }
 
     fetchStatsButton.addEventListener('click', function() {
         const summonerName = encodeURIComponent(summonerNameInput.value.trim());
         const tagLine = encodeURIComponent(tagLineInput.value.trim());
-        const region = regionSelect.value;
+        // const region = regionSelect.value;
         const gameMode = gameModeSelect.value;
 
         if (!summonerName || !tagLine) {
@@ -42,10 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const cleanedTag = cleanTagline(tagLine);
+
         const searchParams = new URLSearchParams({
             summoner: summonerName,
-            tag: tagLine,
-            region: region,
+            tag: cleanedTag,
+            // region: region,
             mode: gameMode
         });
 
