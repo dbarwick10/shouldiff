@@ -206,11 +206,9 @@ export async function calculateLiveStats() {
                     if (activePlayerName && KillerName === activePlayerName) {
                         teamStats.playerStats.turrets.push(EventTime);
                     }
-
                     if ((killerPlayer?.team === activePlayerTeam) || KillerName.includes(minionPlayerTeam)) {
                         teamStats.teamStats.turrets.push(EventTime);
                     }
-
                     // Enemy Team stats tracking
                     if ((killerPlayer?.team !== activePlayerTeam) || KillerName.includes(minionEnemyTeam)) {
                         teamStats.enemyStats.turrets.push(EventTime);
@@ -225,16 +223,46 @@ export async function calculateLiveStats() {
                     if (activePlayerName && KillerName === activePlayerName) {
                         teamStats.playerStats.inhibitors.push(EventTime);
                     }
-                
                     if ((killerPlayer?.team === activePlayerTeam) || KillerName.includes(minionPlayerTeam)) {
                         teamStats.teamStats.inhibitors.push(EventTime);
                     }
-                
                     // Enemy Team stats tracking
                     if ((killerPlayer?.team !== activePlayerTeam) || KillerName.includes(minionEnemyTeam)) {
                         teamStats.enemyStats.inhibitors.push(EventTime);
                     }
 
+                } else if (event.EventName === "HordeKill") {
+                    const { KillerName, EventTime } = event;
+                    const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
+
+                    // Active Player stats
+                    if (activePlayerName && KillerName === activePlayerName) {
+                        teamStats.playerStats.hordeKill.push(EventTime);
+                    }
+                    if (killerPlayer?.team === activePlayerTeam) {
+                        teamStats.teamStats.hordeKill.push(EventTime);
+                    }
+                    // Enemy Team stats tracking
+                    if (killerPlayer?.team !== activePlayerTeam) {
+                        teamStats.enemyStats.hordeKill.push(EventTime);
+                    }
+
+                } else if (event.EventName === "HeraldKill") {
+                    const { KillerName, EventTime } = event;
+                    const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
+
+                    // Active Player stats
+                    if (activePlayerName && KillerName === activePlayerName) {
+                        teamStats.playerStats.heraldKills.push(EventTime);
+                    }
+                    if (killerPlayer?.team === activePlayerTeam) {
+                        teamStats.teamStats.heraldKills.push(EventTime);
+                    }
+                    // Enemy Team stats tracking
+                    if (killerPlayer?.team !== activePlayerTeam) {
+                        teamStats.enemyStats.heraldKills.push(EventTime);
+                    }
+                
                 } else if (event.EventName === "DragonKill") {
                     const { KillerName, EventTime } = event;
                     const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
@@ -243,11 +271,9 @@ export async function calculateLiveStats() {
                     if (activePlayerName && KillerName === activePlayerName) {
                         teamStats.playerStats.dragons.push(EventTime);
                     }
-
                     if (killerPlayer?.team === activePlayerTeam) {
                         teamStats.teamStats.dragons.push(EventTime);
                     }
-
                     // Enemy Team stats tracking
                     if (killerPlayer?.team !== activePlayerTeam) {
                         teamStats.enemyStats.dragons.push(EventTime);
@@ -260,11 +286,9 @@ export async function calculateLiveStats() {
                     if (activePlayerName && KillerName === activePlayerName) {
                         teamStats.playerStats.barons.push(EventTime);
                     }
-
                     if (killerPlayer?.team === activePlayerTeam) {
                         teamStats.teamStats.barons.push(EventTime);
                     }
-
                     // Enemy Team stats tracking
                     if (killerPlayer?.team !== activePlayerTeam) {
                         teamStats.enemyStats.barons.push(EventTime);
@@ -277,11 +301,9 @@ export async function calculateLiveStats() {
                     if (activePlayerName && KillerName === activePlayerName) {
                         teamStats.playerStats.elders.push(EventTime);
                     }
-
                     if (killerPlayer?.team === activePlayerTeam) {
                         teamStats.teamStats.elders.push(EventTime);
                     }
-
                     // Enemy Team stats tracking
                     if (killerPlayer?.team !== activePlayerTeam) {
                         teamStats.enemyStats.elders.push(EventTime);
@@ -312,7 +334,9 @@ function createEmptyTeamStats() {
         assists: [],
         kda: [],
         turrets: [],      
-        inhibitors: [],   
+        inhibitors: [],
+        hordeKills: [],
+        heraldKills: [],
         dragons: [],      
         barons: [],       
         elders: [],       

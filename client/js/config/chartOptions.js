@@ -67,7 +67,14 @@ function getChartTitle(stat) {
     switch(stat) {
         case 'deathTimers': return 'Total Time Spent Dead';
         case 'kda': return 'KDA';
+        case 'turrets': return 'Towers Destroyed Over Time';
+        case 'inhibitors': return 'Inhibitors Destroyed Over Time';
         case 'gold': return 'Gold Over Time';
+        case 'hordeKills': return 'Voidgrub Kills Over Time';
+        case 'riftHeralds': return 'Rift Herald Kills Over Time';
+        case 'barons': return 'Baron Kills Over Time';
+        case 'dragons': return 'Dragon Kills Over Time';
+        case 'elders': return 'Elder Dragon Kills Over Time';
         default: return capitalizeFirstLetter(stat) + ' Over Time';
     }
 }
@@ -76,7 +83,14 @@ function getYAxisTitle(stat) {
     switch(stat) {
         case 'deathTimers': return 'Time Spent Dead (Minutes)';
         case 'kda': return 'KDA Ratio';
+        case 'turrets': return 'Total Towers Destroyed';
+        case 'inhibitors': return 'Total Inhibitors Destroyed';
         case 'gold': return 'Total Gold';
+        case 'hordeKills': return 'Total Voidgrub Kills';
+        case 'riftHeralds': return 'Total Rift Herald Kills';
+        case 'barons': return 'Total Baron Kills';
+        case 'dragons': return 'Total Dragon Kills';
+        case 'elders': return 'Total Elder Dragon Kills';
         default: return `Total ${capitalizeFirstLetter(stat)}`;
     }
 }

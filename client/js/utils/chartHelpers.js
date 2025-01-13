@@ -19,11 +19,22 @@ export function calculateTrendline(data) {
 export function createDatasetWithMode(baseDataset, trendlineDataset, displayMode) {
     const datasets = [];
     
-    if (displayMode === 'both' || displayMode === 'data') {
+    // For single data point, show larger point radius
+    if (baseDataset.data.length === 1) {
+        datasets.push({
+            ...baseDataset,
+            pointRadius: 2,
+            pointHoverRadius: 2
+        });
+    }
+
+    // Always show data points if there's only one point
+    if (baseDataset.data.length === 1 || displayMode === 'both' || displayMode === 'data') {
         datasets.push(baseDataset);
     }
     
-    if ((displayMode === 'both' || displayMode === 'trendline') && trendlineDataset) {
+    // Only add trendline if we have multiple points and the mode allows it
+    if (baseDataset.data.length > 1 && (displayMode === 'both' || displayMode === 'trendline') && trendlineDataset) {
         datasets.push(trendlineDataset);
     }
     
