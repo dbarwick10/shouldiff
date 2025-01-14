@@ -53,9 +53,13 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
                 }
             },
             beginAtZero: true,
+            // max: Math.max(2, data.length),
             min: 0,
             suggestedMin: 0,
-            ...(stat !== 'deathTimers' && stat !== 'kda' && stat !== 'gold' ? {
+            ...(stat === 'riftHeralds' ? {
+                max: 2,
+                ticks: { display: false, stepSize: 1 }
+            } : stat !== 'deathTimers' && stat !== 'kda' && stat !== 'gold' ? {
                 ticks: { stepSize: 1 }
             } : {})
         }
@@ -66,7 +70,7 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
 function getChartTitle(stat) {
     switch(stat) {
         case 'deathTimers': return 'Total Time Spent Dead';
-        case 'kda': return 'KDA';
+        case 'kda': return 'KDA Over Time';
         case 'turrets': return 'Towers Destroyed Over Time';
         case 'inhibitors': return 'Inhibitors Destroyed Over Time';
         case 'gold': return 'Gold Over Time';

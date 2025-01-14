@@ -227,7 +227,7 @@ export class ChartManager {
                     borderColor: colorConfig[key].borderColor,
                     backgroundColor: colorConfig[key].backgroundColor,
                     fill: false,
-                    tension: 0.3,
+                    tension: 0.1,
                     pointRadius: 1,
                     pointHoverRadius: 1,
                     order: 3
@@ -264,7 +264,7 @@ export class ChartManager {
                         borderColor: config.borderColor,
                         backgroundColor: config.backgroundColor,
                         fill: false,
-                        tension: 0.3,
+                        tension: 0.1,
                         pointRadius: 1,
                         pointHoverRadius: 1,
                         order: 0

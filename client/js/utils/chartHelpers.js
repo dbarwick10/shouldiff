@@ -8,12 +8,39 @@ export function calculateTrendline(data) {
     const sumXX = data.reduce((acc, point) => acc + (point.x * point.x), 0);
     
     const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
+    const intercept = (sumY / n) - slope * (sumX / n);
     
     return [
         { x: data[0].x, y: slope * data[0].x + intercept },
         { x: data[data.length - 1].x, y: slope * data[data.length - 1].x + intercept }
     ];
+}
+
+export function calculateTrendlineStats(data) {
+    if (!data || data.length < 2) return null;
+    
+    const n = data.length;
+    const sumX = data.reduce((acc, point) => acc + point.x, 0);
+    const sumY = data.reduce((acc, point) => acc + point.y, 0);
+    const sumXY = data.reduce((acc, point) => acc + (point.x * point.y), 0);
+    const sumXX = data.reduce((acc, point) => acc + (point.x * point.x), 0);
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY / n) - slope * (sumX / n);
+    
+    const yMean = sumY / n;
+    
+    const predictedY = data.map(point => slope * point.x + intercept);
+    
+    const residualSS = data.reduce((acc, point, i) => 
+        acc + Math.pow(point.y - predictedY[i], 2), 0);
+    
+    const totalSS = data.reduce((acc, point) => 
+        acc + Math.pow(point.y - yMean, 2), 0);
+    
+    const rSquared = 1 - (residualSS / totalSS);
+    
+    return { slope, intercept, rSquared };
 }
 
 export function createDatasetWithMode(baseDataset, trendlineDataset, displayMode) {
@@ -23,8 +50,8 @@ export function createDatasetWithMode(baseDataset, trendlineDataset, displayMode
     if (baseDataset.data.length === 1) {
         datasets.push({
             ...baseDataset,
-            pointRadius: 2,
-            pointHoverRadius: 2
+            pointRadius: 2.5,
+            pointHoverRadius: 2.5
         });
     }
 
@@ -39,26 +66,4 @@ export function createDatasetWithMode(baseDataset, trendlineDataset, displayMode
     }
     
     return datasets;
-}
-
-export function calculateTrendlineStats(data) {
-    if (!data || data.length < 2) return null;
-    
-    const n = data.length;
-    const sumX = data.reduce((acc, point) => acc + point.x, 0);
-    const sumY = data.reduce((acc, point) => acc + point.y, 0);
-    const sumXY = data.reduce((acc, point) => acc + (point.x * point.y), 0);
-    const sumXX = data.reduce((acc, point) => acc + (point.x * point.x), 0);
-    const sumYY = data.reduce((acc, point) => acc + (point.y * point.y), 0);
-    
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-    
-    // Calculate R-squared
-    const yMean = sumY / n;
-    const totalSS = sumYY - n * yMean * yMean;
-    const regressionSS = slope * (sumXY - sumX * yMean);
-    const rSquared = regressionSS / totalSS;
-    
-    return { slope, intercept, rSquared };
 }
