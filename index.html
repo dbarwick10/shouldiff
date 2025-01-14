@@ -106,6 +106,7 @@
             
             <div class="toggle-container">
                 <div class="slide-toggle-group">
+                    <h4 className="toggle-title">Data Source</h4>
                     <div class="slide-toggle">
                         <input type="radio" id="playerStats" name="statType" value="playerStats">
                         <input type="radio" id="teamStats" name="statType" value="teamStats" checked>
@@ -117,6 +118,7 @@
                     </div>
                 </div>
                 <div class="slide-toggle-group">
+                    <h4 className="toggle-title">Display Mode</h4>
                     <div class="slide-toggle">
                         <input type="radio" id="data" name="displayMode" value="data">
                         <input type="radio" id="both" name="displayMode" value="both" checked>
@@ -125,6 +127,20 @@
                         <label for="data">Data</label>
                         <label for="both">Both</label>
                         <label for="trendline">Trend</label>
+                    </div>
+                </div>
+                <div class="slide-toggle-group">
+                    <h4 className="toggle-title">Game Phase</h4>
+                    <div class="slide-toggle">
+                        <input type="radio" id="fullGame" name="gamePhase" value="fullGame" checked>
+                        <input type="radio" id="earlyGame" name="gamePhase" value="earlyGame">
+                        <input type="radio" id="midGame" name="gamePhase" value="midGame">
+                        <input type="radio" id="lateGame" name="gamePhase" value="lateGame">
+                        <div class="slider"></div>
+                        <label for="fullGame">Full</label>
+                        <label for="earlyGame">Early</label>
+                        <label for="midGame">Mid</label>
+                        <label for="lateGame">Late</label>
                     </div>
                 </div>
             </div>
@@ -193,7 +209,7 @@
                     <canvas id="eldersChart"></canvas>
                 </div>
                 <div class="chart-wrapper">
-                    <canvas id="goldChart"></canvas>
+                    <canvas id="itemPurchasesChart"></canvas>
                 </div>
             </div>
         </div>

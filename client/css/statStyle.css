@@ -495,10 +495,50 @@ canvas {
 .toggle-container {
     display: flex;
     flex-direction: row;
-    gap: 15px;
     justify-content: center;
-    padding: 5px 15px 15px 15px;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    width: 100%;
 }
+
+/* Adjust the game phase toggle to be 4 segments instead of 3 */
+.slide-toggle input[id="fullGame"]:checked ~ .slider {
+    transform: translateX(0);
+    width: calc(25% - 4px);
+}
+
+.slide-toggle input[id="earlyGame"]:checked ~ .slider {
+    transform: translateX(100%);
+    width: calc(25% - 4px);
+}
+
+.slide-toggle input[id="midGame"]:checked ~ .slider {
+    transform: translateX(200%);
+    width: calc(25% - 4px);
+}
+
+.slide-toggle input[id="lateGame"]:checked ~ .slider {
+    transform: translateX(300%);
+    width: calc(25% - 4px);
+}
+
+/* Make labels slightly smaller to fit four options */
+.slide-toggle label {
+    padding: 8px 12px;
+    font-size: 0.9em;
+}
+
+.toggle-title {
+    color: #d4af37;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 
 .slide-toggle-group {
     display: flex;
@@ -573,18 +613,19 @@ canvas {
 /* Loading Animation */
 #loading {
     display: flex;
-    visibility: hidden;
+    /* visibility: hidden; */
     height: 60px;
     min-height: 60px;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    opacity: 0;
+    /* opacity: 0; */
     transition: opacity 0.3s ease;
 }
 
-#loading.visible {
-    visibility: visible;
+#loading.hidden {
+    /* visibility: visible; */
+    display: none;
     opacity: 1;
 }
 
@@ -962,6 +1003,8 @@ h2 {
     color: #d6d6e5;
 }
 
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
@@ -977,15 +1020,6 @@ h2 {
     .input-section select {
         width: 100%;
         min-width: unset;
-    }
-
-    .slide-toggle {
-        min-width: 250px;
-    }
-    
-    .slide-toggle label {
-        padding: 6px 0;
-        font-size: 0.9em;
     }
 
     .chart-container {
@@ -1048,6 +1082,29 @@ h2 {
 
     .about-hero h2 {
         font-size: 1.8em;
+    }
+
+    .slide-toggle {
+        min-width: 250px;
+    }
+
+    .slide-toggle label {
+        padding: 6px 8px;
+        font-size: 0.8em;
+    }
+   
+    .toggle-container {
+        flex-direction: column;
+        align-items: center;     /* Keeps items centered when stacked */
+    }
+    
+    .toggle-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .slide-toggle-group {
+        width: 100%;            /* Full width on mobile */
     }
 
     .feature-item,

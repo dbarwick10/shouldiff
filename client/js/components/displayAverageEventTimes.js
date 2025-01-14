@@ -8,10 +8,10 @@ export async function displayAverageEventTimes(averageEventTimes, calculateStats
     let liveStatsService = null;
 
     try {
+        // Initialize chart manager and reset to defaults
         chartManager.initializeToggleButtons();
-        chartManager.updateChartVisibility();
-        chartManager.renderAllCharts();
-
+        chartManager.resetToDefaults(); // This will handle both UI and internal state reset
+        
         if (calculateStats) {
             console.log('Starting live data refresh...');
             liveStatsService = new LiveStatsService({

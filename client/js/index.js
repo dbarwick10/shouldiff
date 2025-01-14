@@ -18,11 +18,11 @@ function cleanTagline(tagline) {
 }
 
 function showLoading() {
-    document.getElementById('loading').classList.add('visible');
+    document.getElementById('loading').classList.remove('hidden');
 }
 
 function hideLoading() {
-    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('loading').classList.add('hidden');
 }
 
 function updateUrl(params) {
@@ -205,6 +205,7 @@ function updateLoadingState(elements, state, loadingStates) {
 
 async function handleStats(formData, elements, state, loadingStates) {
     try {
+        // Check if this is a duplicate search
         if (state.lastSuccessfulSearch && 
             formData.summonerName.toLowerCase() === state.lastSuccessfulSearch.summonerName.toLowerCase() &&
             formData.tagLine.toLowerCase() === state.lastSuccessfulSearch.tagLine.toLowerCase() &&
@@ -213,11 +214,13 @@ async function handleStats(formData, elements, state, loadingStates) {
             return;
         }
 
+        // Clean up previous state
         if (state.currentCleanup) {
             state.currentCleanup();
             state.currentCleanup = null;
         }
 
+        // Reset UI elements
         if (elements.chartContainer) elements.chartContainer.style.display = 'none';
         if (elements.chartLegend) elements.chartLegend.style.display = 'none';
 
@@ -225,6 +228,10 @@ async function handleStats(formData, elements, state, loadingStates) {
         elements.gettingStarted.style.display = 'none';
         elements.inputSection.style.display = 'none';
         
+        // Reset toggle buttons to default state
+        resetToggleButtons();
+        
+        // Show loading state
         showLoading();
         if (elements.howToUseThis) elements.howToUseThis.style.display = 'none';
         state.currentLoadingState = 0;
@@ -235,8 +242,10 @@ async function handleStats(formData, elements, state, loadingStates) {
             updateLoadingState(elements, state, loadingStates);
         }, 23000);
 
+        // Update URL with current parameters
         updateUrl(formData);
 
+        // Make API request
         const prodURL = 'https://shouldiffserver.onrender.com/api/stats';
         const localURL = 'http://127.0.0.1:3000/api/stats';
         
@@ -269,6 +278,7 @@ async function handleStats(formData, elements, state, loadingStates) {
             state.currentCleanup = result.cleanup;
         }
 
+        // Clean up and update UI
         clearInterval(state.loadingInterval);
         state.lastSuccessfulSearch = { ...formData };
         hideLoading();
@@ -299,6 +309,27 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         if (elements.chartContainer) elements.chartContainer.style.display = 'grid';
         if (elements.chartLegend) elements.chartLegend.style.display = 'flex';
+    }
+}
+
+// Helper function to reset toggle buttons to their default state
+function resetToggleButtons() {
+    // Reset stat type to 'teamStats'
+    const defaultStatType = document.querySelector('input[name="statType"][value="teamStats"]');
+    if (defaultStatType) {
+        defaultStatType.checked = true;
+    }
+
+    // Reset display mode to 'both'
+    const defaultDisplayMode = document.querySelector('input[name="displayMode"][value="both"]');
+    if (defaultDisplayMode) {
+        defaultDisplayMode.checked = true;
+    }
+
+    // Reset game phase to 'fullGame'
+    const defaultGamePhase = document.querySelector('input[name="gamePhase"][value="fullGame"]');
+    if (defaultGamePhase) {
+        defaultGamePhase.checked = true;
     }
 }
 

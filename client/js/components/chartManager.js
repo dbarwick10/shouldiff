@@ -13,11 +13,30 @@ export class ChartManager {
         this.charts = {};
         this.currentCategory = 'teamStats';
         this.displayMode = 'both';
+        this.gamePhase = 'fullGame';
         this.averageEventTimes = config.averageEventTimes || {};
         this.currentLiveStats = config.currentLiveStats || null;
         this.previousGameStats = config.previousGameStats || null;
+        this.phaseRanges = {
+            fullGame: { min: 0, max: Infinity },
+            earlyGame: { min: 0, max: 15 },
+            midGame: { min: 15, max: 30 },
+            lateGame: { min: 30, max: Infinity }
+        };
     }
 
+    resetToDefaults() {
+        // Reset internal state
+        this.currentCategory = 'teamStats';
+        this.displayMode = 'both';
+        this.gamePhase = 'fullGame';
+        
+        // Trigger a full chart update
+        this.updateChartVisibility();
+        this.updateLegendVisibility();
+        this.renderAllCharts();
+    }
+    
     initializeToggleButtons() {
         document.querySelectorAll('input[name="statType"]').forEach(input => {
             input.addEventListener('change', (e) => {
@@ -31,6 +50,13 @@ export class ChartManager {
         document.querySelectorAll('input[name="displayMode"]').forEach(input => {
             input.addEventListener('change', (e) => {
                 this.displayMode = e.target.value;
+                this.renderAllCharts();
+            });
+        });
+
+        document.querySelectorAll('input[name="gamePhase"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                this.gamePhase = e.target.value;
                 this.renderAllCharts();
             });
         });
@@ -53,6 +79,16 @@ export class ChartManager {
         );
     }
 
+    filterDataByGamePhase(dataPoints) {
+        if (!dataPoints || dataPoints.length === 0) return dataPoints;
+        
+        const range = this.phaseRanges[this.gamePhase];
+        return dataPoints.filter(point => 
+            point.x >= range.min && 
+            point.x < range.max
+        );
+    }
+
     hasCategoryData(category, stat) {
         if (stat === 'deathTimers') {
             const hasHistoricalData = STAT_KEYS.some(key => {
@@ -65,6 +101,25 @@ export class ChartManager {
         
             const hasPreviousData = this.previousGameStats?.[category]?.deaths?.length > 0 && 
                                   this.previousGameStats?.[category]?.timeSpentDead?.length > 0;
+        
+            return hasHistoricalData || hasLiveData || hasPreviousData;
+        }
+        if (stat === 'itemPurchases') {
+            const hasHistoricalData = STAT_KEYS.some(key => {
+                const categoryData = this.averageEventTimes[category][key];
+                return (
+                    (Array.isArray(categoryData?.itemPurchases) && 
+                     categoryData.itemPurchases.length > 0) ||
+                    (categoryData?.economy?.itemGold?.history?.count?.length > 0 &&
+                     categoryData?.economy?.itemGold?.history?.timestamps?.length > 0)
+                );
+            });
+        
+            const hasLiveData = this.currentLiveStats?.[category]?.economy?.
+                itemGold?.history?.count?.length > 0;
+        
+            const hasPreviousData = this.previousGameStats?.[category]?.economy?.
+                itemGold?.history?.count?.length > 0;
         
             return hasHistoricalData || hasLiveData || hasPreviousData;
         }
@@ -116,11 +171,9 @@ export class ChartManager {
                     if (allTimes.length > 0) {
                         maxGameTime = Math.max(maxGameTime, ...allTimes);
                     }
-                } else if (stat === 'gold') {
-                    if (categoryData?.itemGold?.length > 0) {
-                        const timestamps = categoryData.itemGold
-                            .filter(point => point && point.timestamp != null)
-                            .map(point => point.timestamp);
+                } else if (stat === 'itemPurchases') {
+                    if (categoryData?.economy?.itemGold?.history?.timestamps?.length > 0) {
+                        const timestamps = categoryData.economy.itemGold.history.timestamps;
                         if (timestamps.length > 0) {
                             maxGameTime = Math.max(maxGameTime, ...timestamps);
                         }
@@ -189,8 +242,20 @@ export class ChartManager {
             if (datasets.length === 0) return;
     
             const ctx = canvas.getContext('2d');
+            const baseOptions = getChartOptions(stat, maxTimeInMinutes);
+            
+            // Modify the x-axis range based on game phase
+            const range = this.phaseRanges[this.gamePhase];
             const chartOptions = {
-                ...getChartOptions(stat, maxTimeInMinutes),
+                ...baseOptions,
+                scales: {
+                    ...baseOptions.scales,
+                    x: {
+                        ...baseOptions.scales.x,
+                        min: range.min,
+                        max: range.max !== Infinity ? range.max : undefined,
+                    }
+                },
                 animation: false,
                 responsive: true,
                 maintainAspectRatio: false,
@@ -283,30 +348,31 @@ export class ChartManager {
 
     generateDataPoints(stat, categoryData) {
         if (!categoryData) return [];
+        let dataPoints = [];
 
         switch (stat) {
             case 'deathTimers':
-    if (categoryData.deaths?.length > 0) {
-        const isLiveOrPreviousData = this.currentLiveStats?.[this.currentCategory] === categoryData || 
-                                   this.previousGameStats?.[this.currentCategory] === categoryData;
+                if (!!categoryData.deaths) {
+                    const isLiveOrPreviousData = this.currentLiveStats?.[this.currentCategory] === categoryData || 
+                                            this.previousGameStats?.[this.currentCategory] === categoryData;
 
-        if (isLiveOrPreviousData && categoryData.totalTimeSpentDead?.length > 0) {
-            return categoryData.deaths
-                .map((deathTime, index) => ({
-                    x: deathTime / 60,
-                    y: categoryData.totalTimeSpentDead[index] / 60
-                }))
-                .filter(point => point.x != null && point.y != null);
-        } else if (categoryData.timeSpentDead?.length > 0) {
-            return categoryData.deaths
-                .map((deathTime, index) => ({
-                    x: deathTime / 60,
-                    y: categoryData.timeSpentDead[index] / 60
-                }))
-                .filter(point => point.x != null && point.y != null);
-        }
-    }
-    break;
+                    if (isLiveOrPreviousData && categoryData.totalTimeSpentDead?.length > 0) {
+                        return categoryData.deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,
+                                y: categoryData.totalTimeSpentDead[index] / 60
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    } else if (categoryData.timeSpentDead?.length > 0) {
+                        return categoryData.deaths
+                            .map((deathTime, index) => ({
+                                x: deathTime / 60,
+                                y: categoryData.timeSpentDead[index] / 60
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    }
+                }
+                break;
 
             case 'kda':
                 return generateKDAData(
@@ -315,16 +381,28 @@ export class ChartManager {
                     categoryData.assists || []
                 );
 
-            case 'gold':
-                if (categoryData?.itemGold?.length > 0) {
-                    return categoryData.itemGold
-                        .filter(point => point && point.gold != null && point.timestamp != null)
-                        .map(point => ({
-                            x: point.timestamp / 60,
-                            y: point.gold
-                        }));
-                }
-                break;
+                case 'itemPurchases':
+                    if (Array.isArray(categoryData.itemPurchases)) {
+                        return categoryData.itemPurchases
+                            .map((point, index) => ({
+                                x: point.timestamp / 60,  
+                                y: point.goldValue
+                            }))
+                            .filter(point => point.x != null && point.y != null);
+                    }
+                    if (categoryData.economy?.itemGold?.history) {
+                        let runningTotal = 0;
+                        return categoryData.economy.itemGold.history.timestamps
+                            .map((timestamp, index) => {
+                                runningTotal += (categoryData.economy.itemGold.history.count[index] || 0);
+                                return {
+                                    x: timestamp / 60,
+                                    y: runningTotal
+                                };
+                            })
+                            .filter(point => point.x != null && point.y != null);
+                    }
+                    break;
 
             default:
                 if (Array.isArray(categoryData[stat])) {
@@ -335,7 +413,22 @@ export class ChartManager {
                 }
         }
 
-        return [];
+        // return [];
+        // Filter data points for the current game phase
+        const filteredPoints = this.filterDataByGamePhase(dataPoints);
+        
+        // For cumulative stats (like kills, assists, etc.), adjust y-values to be relative to the phase
+        if (stat !== 'deathTimers' && stat !== 'itemPurchases') {
+            const startIndex = filteredPoints.length > 0 ? 
+                dataPoints.findIndex(p => p.x >= this.phaseRanges[this.gamePhase].min) : 0;
+            
+            return filteredPoints.map((point, index) => ({
+                x: point.x,
+                y: index + 1 + startIndex
+            }));
+        }
+
+        return filteredPoints;
     }
 
     updateLiveStats(newStats) {
