@@ -415,16 +415,17 @@ export class ChartManager {
 
         // return [];
         // Filter data points for the current game phase
-        const filteredPoints = this.filterDataByGamePhase(dataPoints);
-        
-        // For cumulative stats (like kills, assists, etc.), adjust y-values to be relative to the phase
-        if (stat !== 'deathTimers' && stat !== 'itemPurchases') {
-            const startIndex = filteredPoints.length > 0 ? 
-                dataPoints.findIndex(p => p.x >= this.phaseRanges[this.gamePhase].min) : 0;
-            
-            return filteredPoints.map((point, index) => ({
+        const filteredPoints = dataPoints.filter(point => 
+            point.x >= this.phaseRanges[this.gamePhase].min && 
+            point.x < this.phaseRanges[this.gamePhase].max
+        );
+    
+        // For cumulative stats, preserve the y-values relative to the full dataset
+        if (stat !== 'deathTimers' && stat !== 'itemPurchases' && stat !== 'kda') {
+            const baseIndex = dataPoints.findIndex(p => p.x >= this.phaseRanges[this.gamePhase].min);
+            return filteredPoints.map(point => ({
                 x: point.x,
-                y: index + 1 + startIndex
+                y: dataPoints.findIndex(p => p.x === point.x) + 1
             }));
         }
 

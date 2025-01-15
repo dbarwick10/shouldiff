@@ -492,35 +492,25 @@ canvas {
 .current-game-color { background-color: rgba(155, 89, 182, 0.75); }
 
 /* Toggle Controls */
-.toggle-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    width: 100%;
-}
-
 /* Adjust the game phase toggle to be 4 segments instead of 3 */
 .slide-toggle input[id="fullGame"]:checked ~ .slider {
     transform: translateX(0);
-    width: calc(25% - 4px);
+    width: calc(25% - 0px);
 }
 
 .slide-toggle input[id="earlyGame"]:checked ~ .slider {
     transform: translateX(100%);
-    width: calc(25% - 4px);
+    width: calc(25% - 2px);
 }
 
 .slide-toggle input[id="midGame"]:checked ~ .slider {
     transform: translateX(200%);
-    width: calc(25% - 4px);
+    width: calc(25% - 2px);
 }
 
 .slide-toggle input[id="lateGame"]:checked ~ .slider {
     transform: translateX(300%);
-    width: calc(25% - 4px);
+    width: calc(25% - 2px);
 }
 
 /* Make labels slightly smaller to fit four options */
@@ -529,21 +519,31 @@ canvas {
     font-size: 0.9em;
 }
 
+.toggle-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;  /* Changed from center to flex-start */
+    gap: 1rem;
+    margin-bottom: -.75rem;
+    width: 100%;
+}
+
+.slide-toggle-group {
+    display: flex;
+    flex-direction: column;  /* Changed from default to column */
+    align-items: center;
+    margin: 5px 0;
+}
+
 .toggle-title {
     color: #d4af37;
     font-size: 0.95rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;  /* Increased margin bottom */
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-}
-
-
-.slide-toggle-group {
-    display: flex;
-    justify-content: center;
-    margin: 5px 0;
 }
 
 .slide-toggle {
@@ -1006,6 +1006,22 @@ h2 {
 
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+    .toggle-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 0rem;  
+    }
+    
+    .slide-toggle-group {
+        width: 100%;
+    }
+
+    .toggle-title {
+        margin-bottom: 0.5rem;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         width: 95%;
@@ -1095,7 +1111,8 @@ h2 {
    
     .toggle-container {
         flex-direction: column;
-        align-items: center;     /* Keeps items centered when stacked */
+        align-items: center;
+        gap: 0rem;   
     }
     
     .toggle-title {
@@ -1104,7 +1121,7 @@ h2 {
     }
 
     .slide-toggle-group {
-        width: 100%;            /* Full width on mobile */
+        width: 100%;            
     }
 
     .feature-item,
