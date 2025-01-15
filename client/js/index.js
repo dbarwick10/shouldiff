@@ -246,7 +246,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         updateUrl(formData);
 
         // Make API request
-        const prodURL = 'https://shouldiffserver-test.onrender.com/api/stats';
+        const prodURL = 'https://shouldiffserver.onrender.com/api/stats';
         const localURL = 'http://127.0.0.1:3000/api/stats';
         
         const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
