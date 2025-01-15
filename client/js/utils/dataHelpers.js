@@ -26,7 +26,7 @@ export function generateKDAData(kills, deaths, assists) {
 export function hasDataForOutcome(averageEventTimes, category, outcomeType) {
     if (!averageEventTimes?.[category]?.[outcomeType]) return false;
     
-    return ['kills', 'deaths', 'assists', 'deathTimers', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'gold', 'hordeKills', 'riftHeralds'].some(stat => 
+    return ['kills', 'deaths', 'assists', 'deathTimers', 'turrets', 'dragons', 'barons', 'elders', 'inhibitors', 'itemPurchases', 'hordeKills', 'riftHeralds'].some(stat => 
         Array.isArray(averageEventTimes[category][outcomeType][stat]) && 
         averageEventTimes[category][outcomeType][stat].length > 0
     ) || (

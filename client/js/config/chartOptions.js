@@ -59,7 +59,7 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
             ...(stat === 'riftHeralds' ? {
                 max: 2,
                 ticks: { display: false, stepSize: 1 }
-            } : stat !== 'deathTimers' && stat !== 'kda' && stat !== 'gold' ? {
+            } : stat !== 'deathTimers' && stat !== 'kda' && stat !== 'itemPurchases' ? {
                 ticks: { stepSize: 1 }
             } : {})
         }
@@ -73,7 +73,7 @@ function getChartTitle(stat) {
         case 'kda': return 'KDA Over Time';
         case 'turrets': return 'Towers Destroyed Over Time';
         case 'inhibitors': return 'Inhibitors Destroyed Over Time';
-        case 'gold': return 'Gold Over Time';
+        case 'itemPurchases': return 'Gold Over Time';
         case 'hordeKills': return 'Voidgrub Kills Over Time';
         case 'riftHeralds': return 'Rift Herald Kills Over Time';
         case 'barons': return 'Baron Kills Over Time';
@@ -89,7 +89,7 @@ function getYAxisTitle(stat) {
         case 'kda': return 'KDA Ratio';
         case 'turrets': return 'Total Towers Destroyed';
         case 'inhibitors': return 'Total Inhibitors Destroyed';
-        case 'gold': return 'Total Gold';
+        case 'itemPurchases': return 'Total Gold';
         case 'hordeKills': return 'Total Voidgrub Kills';
         case 'riftHeralds': return 'Total Rift Herald Kills';
         case 'barons': return 'Total Baron Kills';
@@ -125,7 +125,7 @@ function generateTooltipLabel(context, stat) {
             return `${label}: ${value.toFixed(1)}s at ${time} min`;
         case 'kda':
             return `${label}: ${value.toFixed(2)} at ${time} min`;
-        case 'gold':
+        case 'itemPurchases':
             return `${label}: ${value.toFixed(0)} gold at ${time} min`;
         default:
             return `${label}: ${value} at ${time} min`;
