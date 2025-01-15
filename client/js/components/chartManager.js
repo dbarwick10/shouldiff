@@ -382,25 +382,33 @@ export class ChartManager {
                 );
 
                 case 'itemPurchases':
-                    if (Array.isArray(categoryData.itemPurchases)) {
-                        return categoryData.itemPurchases
-                            .map((point, index) => ({
-                                x: point.timestamp / 60,  
-                                y: point.goldValue
-                            }))
-                            .filter(point => point.x != null && point.y != null);
-                    }
-                    if (categoryData.economy?.itemGold?.history) {
-                        let runningTotal = 0;
-                        return categoryData.economy.itemGold.history.timestamps
-                            .map((timestamp, index) => {
-                                runningTotal += (categoryData.economy.itemGold.history.count[index] || 0);
-                                return {
-                                    x: timestamp / 60,
-                                    y: runningTotal
-                                };
-                            })
-                            .filter(point => point.x != null && point.y != null);
+                    const isLiveOrPreviousData = this.currentLiveStats?.[this.currentCategory] === categoryData || 
+                                                this.previousGameStats?.[this.currentCategory] === categoryData;
+                
+                    if (isLiveOrPreviousData) {
+                        // Handle live/previous game data
+                        if (categoryData.itemGold && categoryData.itemGoldHistory?.length > 0) {
+                            // Get the first timestamp as reference point
+                            const startTime = categoryData.itemGoldHistory[0].timestamp;
+                            
+                            return categoryData.itemGoldHistory
+                                .map(entry => ({
+                                    // Convert to relative minutes since first item purchase
+                                    x: entry.timestamp / 60,
+                                    y: entry.gold
+                                }))
+                                .filter(point => point.x != null && point.y != null);
+                        }
+                    } else {
+                        // Handle historical data
+                        if (Array.isArray(categoryData.itemPurchases)) {
+                            return categoryData.itemPurchases
+                                .map(point => ({
+                                    x: point.timestamp / 60,
+                                    y: point.goldValue
+                                }))
+                                .filter(point => point.x != null && point.y != null);
+                        }
                     }
                     break;
 

@@ -1,4 +1,5 @@
 import { getLiveData } from '../services/liveDataService.js';
+import { getItemDetails } from './getItemsAndPrices.js';
 
 export async function calculateLiveStats() {
     console.log('Entering calculateTeamStats');
@@ -311,7 +312,16 @@ export async function calculateLiveStats() {
                 }     
         });
 
-        calculateItemValues(teamStats);
+        await calculateItemValues(
+            teamStats, 
+            gameData.allPlayers, 
+            gameData?.activePlayer?.riotIdGameName,
+            gameData.gameData
+        );
+
+        // Add gold differential calculations
+        teamStats.teamStats.goldDifferential = 
+            teamStats.teamStats.itemGold - teamStats.enemyStats.itemGold;
 
         return teamStats;
 
@@ -340,7 +350,9 @@ function createEmptyTeamStats() {
         dragons: [],      
         barons: [],       
         elders: [],       
-        items: []
+        items: [],
+        itemGold: 0,
+        itemGoldHistory: []
     };
 }
 
@@ -349,13 +361,83 @@ function findPlayerTeam(allPlayers, activePlayerName) {
     return activePlayer ? activePlayer.team : null;
 }
 
-function calculateItemValues(teamStats) {
-    ['playerStats', 'teamStats', 'enemyStats'].forEach(teamKey => {
-        const items = teamStats[teamKey].items;
-        teamStats[teamKey].totalRawPrice = items.reduce((total, item) => total + (item.rawPrice || 0), 0);
-        teamStats[teamKey].totalDetailedPrice = items.reduce((total, item) => 
-            total + (item.detailedPrice?.total || 0), 0);
-    });
+// Calculate gold value for a single item
+async function calculateItemGold(item) {
+    if (!item || !item.itemID) return 0;
+    
+    try {
+        const itemDetails = await getItemDetails(item.itemID);
+        if (itemDetails && itemDetails.gold) {
+            return itemDetails.gold.total * (item.count || 1);
+        }
+    } catch (error) {
+        console.error(`Error calculating gold for item ${item.itemID}:`, error);
+    }
+    return 0;
+}
+
+async function calculateItemValues(teamStats, allPlayers, activePlayerName, gameData) {
+    const activePlayer = allPlayers.find(p => p.riotIdGameName === activePlayerName);
+    const activePlayerTeam = activePlayer?.team;
+    const gameTime = gameData?.gameTime || 0;
+
+    // First define the team member arrays
+    const playerTeamMembers = allPlayers.filter(p => p.team === activePlayerTeam);
+    const enemyTeamMembers = allPlayers.filter(p => p.team !== activePlayerTeam);
+
+    // Initialize arrays if they don't exist
+    if (!teamStats.playerStats.itemGoldHistory) teamStats.playerStats.itemGoldHistory = [];
+    if (!teamStats.teamStats.itemGoldHistory) teamStats.teamStats.itemGoldHistory = [];
+    if (!teamStats.enemyStats.itemGoldHistory) teamStats.enemyStats.itemGoldHistory = [];
+
+    // Calculate gold for active player
+    if (activePlayer) {
+        const playerGold = await Promise.all(activePlayer.items.map(calculateItemGold));
+        const totalPlayerGold = playerGold.reduce((a, b) => a + b, 0);
+        
+        const lastEntry = teamStats.playerStats.itemGoldHistory[teamStats.playerStats.itemGoldHistory.length - 1];
+        if (!lastEntry || lastEntry.gold !== totalPlayerGold) {
+            teamStats.playerStats.itemGold = totalPlayerGold;
+            teamStats.playerStats.itemGoldHistory.push({
+                timestamp: gameTime,
+                gold: totalPlayerGold
+            });
+        }
+    }
+
+    // Calculate gold for player's team
+    const teamGold = await Promise.all(
+        playerTeamMembers.flatMap(player => 
+            (player.items || []).map(calculateItemGold)
+        )
+    );
+    const totalTeamGold = teamGold.reduce((a, b) => a + b, 0);
+    
+    const lastTeamEntry = teamStats.teamStats.itemGoldHistory[teamStats.teamStats.itemGoldHistory.length - 1];
+    if (!lastTeamEntry || lastTeamEntry.gold !== totalTeamGold) {
+        teamStats.teamStats.itemGold = totalTeamGold;
+        teamStats.teamStats.itemGoldHistory.push({
+            timestamp: gameTime,
+            gold: totalTeamGold
+        });
+    }
+
+    // Calculate gold for enemy team
+    const enemyGold = await Promise.all(
+        enemyTeamMembers.flatMap(player => 
+            (player.items || []).map(calculateItemGold)
+        )
+    );
+    const totalEnemyGold = enemyGold.reduce((a, b) => a + b, 0);
+    
+    const lastEnemyEntry = teamStats.enemyStats.itemGoldHistory[teamStats.enemyStats.itemGoldHistory.length - 1];
+    if (!lastEnemyEntry || lastEnemyEntry.gold !== totalEnemyGold) {
+        teamStats.enemyStats.itemGold = totalEnemyGold;
+        teamStats.enemyStats.itemGoldHistory.push({
+            timestamp: gameTime,
+            gold: totalEnemyGold
+        });
+    }
 }
 
 const BRW = [10, 10, 12, 12, 14, 16, 20, 25, 28, 32.5, 35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5];
