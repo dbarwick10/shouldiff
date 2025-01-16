@@ -34,7 +34,7 @@ export const getChartOptions = (stat, maxTimeInMinutes) => ({
             max: maxTimeInMinutes,
             title: { 
                 display: true, 
-                text: stat === 'deathTimers' ? 'Game Time (Minutes)' : 'Game Time (Minutes)',
+                text: stat === 'deathTimers' ? 'Time (Minutes)' : 'Time (Minutes)',
                 font: {
                     weight: 'bold'
                 }
@@ -86,7 +86,7 @@ function getChartTitle(stat) {
 function getYAxisTitle(stat) {
     switch(stat) {
         case 'deathTimers': return 'Time Spent Dead (Minutes)';
-        case 'kda': return 'KDA';
+        case 'kda': return 'KDA Ratio';
         case 'turrets': return 'Total Towers Destroyed';
         case 'inhibitors': return 'Total Inhibitors Destroyed';
         case 'itemPurchases': return 'Total Gold';
