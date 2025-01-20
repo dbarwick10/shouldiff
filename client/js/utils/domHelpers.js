@@ -19,8 +19,23 @@ export function updateLegendVisibility(currentCategory, averageEventTimes, curre
     const hasLosses = hasDataForOutcome(averageEventTimes, currentCategory, 'losses');
     const hasSurrenderWins = hasDataForOutcome(averageEventTimes, currentCategory, 'surrenderWins');
     const hasSurrenderLosses = hasDataForOutcome(averageEventTimes, currentCategory, 'surrenderLosses');
-    const hasCurrentGame = currentLiveStats && Object.keys(currentLiveStats).length > 0;
-    const hasPreviousGame = previousGameStats && Object.keys(previousGameStats).length > 0;
+    
+    // More specific checks for current and previous game data
+    const hasCurrentGame = currentLiveStats && 
+                         currentLiveStats[currentCategory] && 
+                         Object.entries(currentLiveStats[currentCategory]).some(([key, value]) => {
+                             if (Array.isArray(value) && value.length > 0) return true;
+                             if (key === 'economy' && value?.itemGold?.history?.count?.length > 0) return true;
+                             return false;
+                         });
+
+    const hasPreviousGame = previousGameStats && 
+                          previousGameStats[currentCategory] && 
+                          Object.entries(previousGameStats[currentCategory]).some(([key, value]) => {
+                              if (Array.isArray(value) && value.length > 0) return true;
+                              if (key === 'economy' && value?.itemGold?.history?.count?.length > 0) return true;
+                              return false;
+                          });
 
     const elements = {
         wins: document.querySelector('.legend-item.wins'),

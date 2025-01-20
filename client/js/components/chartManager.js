@@ -10,6 +10,7 @@ import {
 
 export class ChartManager {
     constructor(config = {}) {
+        this.sessionId = new Date().getTime();
         this.charts = {};
         this.currentCategory = 'teamStats';
         this.displayMode = 'both';
@@ -23,43 +24,126 @@ export class ChartManager {
             midGame: { min: 15, max: 30 },
             lateGame: { min: 30, max: Infinity }
         };
+
+        // Store the complete data state
+        if (config.averageEventTimes) {
+            this.saveDataToStorage({
+                averageEventTimes: config.averageEventTimes,
+                currentLiveStats: config.currentLiveStats,
+                previousGameStats: config.previousGameStats
+            });
+        } else {
+            this.loadDataFromStorage();
+        }
+    }
+
+    saveDataToStorage(data) {
+        try {
+            localStorage.setItem('chartData', JSON.stringify({
+                timestamp: new Date().getTime(),
+                data: {
+                    averageEventTimes: data.averageEventTimes,
+                    currentLiveStats: data.currentLiveStats,
+                    previousGameStats: data.previousGameStats,
+                    currentCategory: this.currentCategory,
+                    displayMode: this.displayMode,
+                    gamePhase: this.gamePhase,
+                    lastSearch: data.lastSearch || null // Add this line
+                }
+            }));
+            console.log('Chart data saved to storage');
+        } catch (error) {
+            console.error('Error saving chart data:', error);
+        }
+    }
+
+    loadDataFromStorage() {
+        try {
+            const stored = localStorage.getItem('chartData');
+            if (stored) {
+                const { data } = JSON.parse(stored);
+                this.averageEventTimes = data.averageEventTimes || {};
+                // Explicitly set these to null if they don't exist
+                this.currentLiveStats = data.currentLiveStats || null;
+                this.previousGameStats = data.previousGameStats || null;
+                this.currentCategory = data.currentCategory || 'teamStats';
+                this.displayMode = data.displayMode || 'both';
+                this.gamePhase = data.gamePhase || 'fullGame';
+                console.log('Chart data loaded from storage');
+                return true;
+            }
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+            // Reset to defaults on error
+            this.currentLiveStats = null;
+            this.previousGameStats = null;
+        }
+        return false;
     }
 
     resetToDefaults() {
-        // Reset internal state
         this.currentCategory = 'teamStats';
         this.displayMode = 'both';
         this.gamePhase = 'fullGame';
-        
-        // Trigger a full chart update
         this.updateChartVisibility();
         this.updateLegendVisibility();
         this.renderAllCharts();
     }
     
     initializeToggleButtons() {
+        // Set initial toggle states
         document.querySelectorAll('input[name="statType"]').forEach(input => {
+            if (input.value === this.currentCategory) {
+                input.checked = true;
+            }
             input.addEventListener('change', (e) => {
                 this.currentCategory = e.target.value;
                 this.updateChartVisibility();
-                this.updateLegendVisibility();
+                // We don't need updateLegendVisibility() here as it's called in updateChartVisibility
                 this.renderAllCharts();
+                this.saveDataToStorage({
+                    averageEventTimes: this.averageEventTimes,
+                    currentLiveStats: this.currentLiveStats,
+                    previousGameStats: this.previousGameStats
+                });
             });
         });
 
         document.querySelectorAll('input[name="displayMode"]').forEach(input => {
+            if (input.value === this.displayMode) {
+                input.checked = true;
+            }
             input.addEventListener('change', (e) => {
                 this.displayMode = e.target.value;
                 this.renderAllCharts();
+                this.saveDataToStorage({
+                    averageEventTimes: this.averageEventTimes,
+                    currentLiveStats: this.currentLiveStats,
+                    previousGameStats: this.previousGameStats
+                });
             });
         });
 
         document.querySelectorAll('input[name="gamePhase"]').forEach(input => {
+            if (input.value === this.gamePhase) {
+                input.checked = true;
+            }
             input.addEventListener('change', (e) => {
                 this.gamePhase = e.target.value;
                 this.renderAllCharts();
+                this.saveDataToStorage({
+                    averageEventTimes: this.averageEventTimes,
+                    currentLiveStats: this.currentLiveStats,
+                    previousGameStats: this.previousGameStats
+                });
             });
         });
+
+        // Initial render and visibility update
+        if (Object.keys(this.averageEventTimes).length > 0) {
+            this.updateChartVisibility(); // This will also handle legend visibility
+            this.renderAllCharts();
+        }
     }
 
     updateChartVisibility() {
@@ -90,6 +174,10 @@ export class ChartManager {
     }
 
     hasCategoryData(category, stat) {
+        if (!this.averageEventTimes || !this.averageEventTimes[category]) {
+            return false;
+        }
+    
         if (stat === 'deathTimers') {
             const hasHistoricalData = STAT_KEYS.some(key => {
                 const categoryData = this.averageEventTimes[category][key];
@@ -104,12 +192,12 @@ export class ChartManager {
         
             return hasHistoricalData || hasLiveData || hasPreviousData;
         }
+    
         if (stat === 'itemPurchases') {
             const hasHistoricalData = STAT_KEYS.some(key => {
                 const categoryData = this.averageEventTimes[category][key];
                 return (
-                    (Array.isArray(categoryData?.itemPurchases) && 
-                     categoryData.itemPurchases.length > 0) ||
+                    (Array.isArray(categoryData?.itemPurchases) && categoryData.itemPurchases.length > 0) ||
                     (categoryData?.economy?.itemGold?.history?.count?.length > 0 &&
                      categoryData?.economy?.itemGold?.history?.timestamps?.length > 0)
                 );
@@ -228,23 +316,35 @@ export class ChartManager {
             const canvas = document.getElementById(`${stat}Chart`);
             if (!canvas) return;
     
+            // Get the chart wrapper element
+            const wrapper = canvas.closest('.chart-wrapper');
+            if (!wrapper) return;
+    
             const existingChart = Chart.getChart(canvas);
             if (existingChart) {
                 existingChart.destroy();
                 delete this.charts[stat];
             }
     
+            // Check if we have data for this stat and category
             if (!this.hasCategoryData(this.currentCategory, stat)) {
+                // Hide the entire wrapper if no data
+                wrapper.style.display = 'none';
                 return;
             }
     
+            // Show the wrapper if we have data
+            wrapper.style.display = 'block';
+    
             const datasets = this.createDatasets(stat);
-            if (datasets.length === 0) return;
+            if (datasets.length === 0) {
+                wrapper.style.display = 'none';
+                return;
+            }
     
             const ctx = canvas.getContext('2d');
             const baseOptions = getChartOptions(stat, maxTimeInMinutes);
             
-            // Modify the x-axis range based on game phase
             const range = this.phaseRanges[this.gamePhase];
             const chartOptions = {
                 ...baseOptions,
@@ -258,14 +358,7 @@ export class ChartManager {
                 },
                 animation: false,
                 responsive: true,
-                maintainAspectRatio: false,
-                transitions: {
-                    active: {
-                        animation: {
-                            duration: 0
-                        }
-                    }
-                }
+                maintainAspectRatio: false
             };
                 
             this.charts[stat] = new Chart(ctx, {
@@ -275,6 +368,7 @@ export class ChartManager {
             });
         });
     }
+
 
     createDatasets(stat) {
         const datasets = [];
@@ -444,20 +538,29 @@ export class ChartManager {
         this.currentLiveStats = newStats;
         this.updateChartVisibility();
         this.renderAllCharts();
+        this.saveDataToStorage({
+            averageEventTimes: this.averageEventTimes,
+            currentLiveStats: this.currentLiveStats,
+            previousGameStats: this.previousGameStats
+        });
     }
 
     cleanup() {
+        console.log('Running cleanup');
         Object.values(this.charts).forEach(chart => {
             if (chart) {
                 chart.destroy();
             }
         });
+        this.charts = {};
+    }
 
-        document.querySelectorAll('input[name="statType"]').forEach(input => {
-            input.removeEventListener('change', () => {});
-        });
-        document.querySelectorAll('input[name="displayMode"]').forEach(input => {
-            input.removeEventListener('change', () => {});
-        });
+    clearAll() {
+        console.log('Running full cleanup');
+        localStorage.removeItem('chartData');
+        this.averageEventTimes = {};
+        this.currentLiveStats = null;
+        this.previousGameStats = null;
+        this.cleanup();
     }
 }

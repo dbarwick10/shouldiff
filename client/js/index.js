@@ -94,7 +94,6 @@ async function setupApplication() {
         console.log('Setting up application...');
         
         initializeMobileMenu();
-
         const elements = initializeDOMElements();
         
         const state = {
@@ -118,10 +117,55 @@ async function setupApplication() {
 
         setupEventHandlers(elements, state, loadingStates);
         
+        // Check for stored chart data
+        const storedData = localStorage.getItem('chartData');
+        if (storedData) {
+            console.log('Found stored chart data, restoring...');
+            
+            // Hide getting started and show chart containers
+            if (elements.gettingStarted) {
+                elements.gettingStarted.style.display = 'none';
+            }
+            if (elements.chartContainer) {
+                elements.chartContainer.style.display = 'grid';
+            }
+            if (elements.chartLegend) {
+                elements.chartLegend.style.display = 'flex';
+            }
+            if (elements.howToUseThis) {
+                elements.howToUseThis.style.display = 'none';
+            }
+            
+            // Initialize charts with stored data
+            const result = await displayAverageEventTimes(true);
+            state.currentCleanup = result.cleanup;
+            
+            // Get the stored parameters to update the form
+            try {
+                const { data } = JSON.parse(storedData);
+                if (data.lastSearch) {
+                    state.lastSuccessfulSearch = data.lastSearch;
+                    elements.analyzeButton.textContent = 'Fetch New Stats';
+                    elements.inputSection.classList.add('compact');
+                }
+            } catch (e) {
+                console.error('Error parsing stored search data:', e);
+            }
+        } else {
+            // Only show getting started if no stored data
+            if (elements.gettingStarted) {
+                elements.gettingStarted.style.display = 'block';
+            }
+            if (elements.howToUseThis) {
+                elements.howToUseThis.style.display = 'block';
+            }
+        }
+        
         const initialParams = getUrlParams();
         updateFormInputs(initialParams);
         
-        if (initialParams.summonerName && initialParams.tagLine) {
+        // Only fetch new stats if we don't have stored data and have URL parameters
+        if (!storedData && initialParams.summonerName && initialParams.tagLine) {
             await handleStats(initialParams, elements, state, loadingStates);
         }
 
@@ -178,11 +222,11 @@ function setupEventHandlers(elements, state, loadingStates) {
         }
     });
 
-    window.addEventListener('unload', () => {
-        if (state.currentCleanup) {
-            state.currentCleanup();
-        }
-    });
+    // window.addEventListener('unload', () => {
+    //     if (state.currentCleanup) {
+    //         state.currentCleanup();
+    //     }
+    // });
 }
 
 function displayError(elements, state, message, details = '') {
@@ -214,16 +258,7 @@ async function handleStats(formData, elements, state, loadingStates) {
             return;
         }
 
-        // Clean up previous state
-        if (state.currentCleanup) {
-            state.currentCleanup();
-            state.currentCleanup = null;
-        }
-
-        // Reset UI elements
-        if (elements.chartContainer) elements.chartContainer.style.display = 'none';
-        if (elements.chartLegend) elements.chartLegend.style.display = 'none';
-
+        // Reset UI elements before making new request
         elements.analyzeButton.disabled = true;
         elements.gettingStarted.style.display = 'none';
         elements.inputSection.style.display = 'none';
@@ -233,7 +268,10 @@ async function handleStats(formData, elements, state, loadingStates) {
         
         // Show loading state
         showLoading();
-        if (elements.howToUseThis) elements.howToUseThis.style.display = 'none';
+        if (elements.howToUseThis) {
+            elements.howToUseThis.style.display = 'none';
+        }
+
         state.currentLoadingState = 0;
         updateLoadingState(elements, state, loadingStates);
 
@@ -273,19 +311,54 @@ async function handleStats(formData, elements, state, loadingStates) {
             throw new Error('Invalid data received from server');
         }
 
+        // Clear previous chart data before creating new ones
+        if (state.currentCleanup) {
+            state.currentCleanup.clearAll();
+            state.currentCleanup = null;
+        }
+
+        // Hide chart containers while generating new charts
+        if (elements.chartContainer) {
+            elements.chartContainer.style.display = 'none';
+        }
+        if (elements.chartLegend) {
+            elements.chartLegend.style.display = 'none';
+        }
+
+        // Generate new charts
         if (data.averageEventTimes) {
             const result = await displayAverageEventTimes(data.averageEventTimes, data.liveStats);
             state.currentCleanup = result.cleanup;
+            
+            // Save the last successful search with the chart data
+            if (result.cleanup && result.cleanup.saveDataToStorage) {
+                result.cleanup.saveDataToStorage({
+                    averageEventTimes: data.averageEventTimes,
+                    currentLiveStats: data.liveStats,
+                    previousGameStats: null,
+                    lastSearch: formData
+                });
+            }
         }
 
-        // Clean up and update UI
+        // Clean up loading state
         clearInterval(state.loadingInterval);
         state.lastSuccessfulSearch = { ...formData };
         hideLoading();
+
+        // Update UI
         elements.analyzeButton.disabled = false;
         elements.inputSection.style.display = 'block';
         elements.inputSection.classList.add('compact');
         elements.analyzeButton.textContent = 'Fetch New Stats';
+
+        // Show chart containers after new charts are ready
+        if (elements.chartContainer) {
+            elements.chartContainer.style.display = 'grid';
+        }
+        if (elements.chartLegend) {
+            elements.chartLegend.style.display = 'flex';
+        }
 
     } catch (error) {
         let displayMessage = 'An unexpected error occurred. Please try again.';
@@ -302,13 +375,22 @@ async function handleStats(formData, elements, state, loadingStates) {
             }
         }
 
+        // Clean up and show error
         displayError(elements, state, displayMessage, details);
         elements.inputSection.style.display = 'block';
         elements.inputSection.classList.remove('compact');
         elements.analyzeButton.disabled = false;
 
-        if (elements.chartContainer) elements.chartContainer.style.display = 'grid';
-        if (elements.chartLegend) elements.chartLegend.style.display = 'flex';
+        // Keep showing charts if they exist
+        const activeSession = localStorage.getItem('activeChartSession');
+        if (activeSession) {
+            if (elements.chartContainer) {
+                elements.chartContainer.style.display = 'grid';
+            }
+            if (elements.chartLegend) {
+                elements.chartLegend.style.display = 'flex';
+            }
+        }
     }
 }
 

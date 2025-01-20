@@ -400,6 +400,30 @@ tr:hover td {
 }
 
 /* Chart Styles */
+.chart-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.chart-container {
+    position: relative;
+}
+
+canvas {
+    position: relative;
+    z-index: 1;
+}
+
+.chart-image.visible {
+    display: block;
+    z-index: 2;
+}
+
 .chart-container {
     /* Remove transitions that might cause shaking */
     display: none;  /* Start with display none */
