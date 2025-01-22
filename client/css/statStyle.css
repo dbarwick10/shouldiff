@@ -516,26 +516,6 @@ canvas {
 .current-game-color { background-color: rgba(155, 89, 182, 0.75); }
 
 /* Toggle Controls */
-/* Adjust the game phase toggle to be 4 segments instead of 3 */
-.slide-toggle input[id="fullGame"]:checked ~ .slider {
-    transform: translateX(0);
-    width: calc(25% - 0px);
-}
-
-.slide-toggle input[id="earlyGame"]:checked ~ .slider {
-    transform: translateX(100%);
-    width: calc(25% - 2px);
-}
-
-.slide-toggle input[id="midGame"]:checked ~ .slider {
-    transform: translateX(200%);
-    width: calc(25% - 2px);
-}
-
-.slide-toggle input[id="lateGame"]:checked ~ .slider {
-    transform: translateX(300%);
-    width: calc(25% - 2px);
-}
 
 /* Make labels slightly smaller to fit four options */
 .slide-toggle label {
@@ -620,6 +600,38 @@ canvas {
 
 .slide-toggle input[type="radio"]:nth-of-type(3):checked ~ .slider {
     transform: translateX(calc(200% + 0px));
+}
+
+/* Adjust the game phase toggle to be 4 segments */
+.slide-toggle input[id="fullGame"]:checked ~ .slider {
+    transform: translateX(0);
+    width: calc(25% - 0px);
+}
+
+.slide-toggle input[id="earlyGame"]:checked ~ .slider {
+    transform: translateX(100%);
+    width: calc(25% - 2px);
+}
+
+.slide-toggle input[id="midGame"]:checked ~ .slider {
+    transform: translateX(200%);
+    width: calc(25% - 2px);
+}
+
+.slide-toggle input[id="lateGame"]:checked ~ .slider {
+    transform: translateX(300%);
+    width: calc(25% - 2px);
+}
+
+/* Adjust the stats toggle to be 2 segments */
+.slide-toggle input[id="playerStats"]:checked ~ .slider {
+    transform: translateX(0);
+    width: calc(50% - 0px);
+}
+
+.slide-toggle input[id="teamStats"]:checked ~ .slider {
+    transform: translateX(100%);
+    width: calc(50% - 4px);
 }
 
 .slide-toggle input[type="radio"]:checked + label {
