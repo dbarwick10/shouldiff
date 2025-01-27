@@ -40,7 +40,7 @@ async function startServer() {
 
         app.use('/api', apiRoutes);
 
-        app.use(express.static(path.join(__dirname, 'public')));
+        app.use(express.static(path.join(__dirname, '..')));
 
         app.use((err, req, res, next) => {
             console.error('Server error:', err);
