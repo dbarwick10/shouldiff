@@ -294,7 +294,22 @@ export async function calculateLiveStats() {
                     if (killerPlayer?.team !== activePlayerTeam) {
                         teamStats.enemyStats.barons.push(EventTime);
                     }
-                } else if (event.DragonType === "Elder") {
+                } else if (event.EventName === "AtakhanKill") {
+                    const { KillerName, EventTime } = event;
+                    const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
+
+                    // Active Player stats
+                    if (activePlayerName && KillerName === activePlayerName) {
+                        teamStats.playerStats.atakhans.push(EventTime);
+                    }
+                    if (killerPlayer?.team === activePlayerTeam) {
+                        teamStats.teamStats.atakhans.push(EventTime);
+                    }
+                    // Enemy Team stats tracking
+                    if (killerPlayer?.team !== activePlayerTeam) {
+                        teamStats.enemyStats.atakhans.push(EventTime);
+                    }
+                }  else if (event.DragonType === "Elder") {
                     const { KillerName, EventTime } = event;
                     const killerPlayer = allPlayers.find(p => p.riotIdGameName === KillerName);
 
@@ -309,7 +324,7 @@ export async function calculateLiveStats() {
                     if (killerPlayer?.team !== activePlayerTeam) {
                         teamStats.enemyStats.elders.push(EventTime);
                     }
-                }     
+                } 
         });
 
         await calculateItemValues(
@@ -349,7 +364,8 @@ function createEmptyTeamStats() {
         heraldKills: [],
         dragons: [],      
         barons: [],       
-        elders: [],       
+        elders: [],   
+        atakhans: [],    
         items: [],
         itemGold: 0,
         itemGoldHistory: []

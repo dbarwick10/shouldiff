@@ -72,10 +72,13 @@
             <input type="text" id="summonerName" placeholder="Enter Summoner Name">
             <input type="text" id="tagLine" placeholder="Enter Tagline">
             <select id="gameMode">
-                <option value="ranked">Ranked</option>
-                <option value="normal">Normal</option>
+                <option value="rankedSolo">Ranked Solo</option>
+                <option value="rankedFlex">Ranked Flex</option>
+                <option value="normal">Normal Draft</option>
+                <option value="blind">Blind Pick</option>
                 <option value="aram" selected>ARAM</option>
                 <option value="ultbook">ULTBOOK</option>
+                <option value="arurf">ARURF</option>
                 <option value="all" >All Game Modes</option>
             </select>
             <button id="fetchStatsButton">Fetch Stats</button>
@@ -110,11 +113,11 @@
                     <div class="slide-toggle">
                         <input type="radio" id="playerStats" name="statType" value="playerStats">
                         <input type="radio" id="teamStats" name="statType" value="teamStats" checked>
-                        <input type="radio" id="enemyStats" name="statType" value="enemyStats">
+                        <!-- <input type="radio" id="enemyStats" name="statType" value="enemyStats"> -->
                         <div class="slider"></div>
                         <label for="playerStats">Player</label>
                         <label for="teamStats">Team</label>
-                        <label for="enemyStats">Enemy</label>
+                        <!-- <label for="enemyStats">Enemy</label> -->
                     </div>
                 </div>
                 <div class="slide-toggle-group">
@@ -207,6 +210,9 @@
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="eldersChart"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="atakhansChart"></canvas>
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="itemPurchasesChart"></canvas>
