@@ -855,7 +855,10 @@ export function getCacheStats() {
               await initializeCache();
               console.log('Item cache initialized successfully');
 
-              app.use(cors());
+              app.use(cors({
+                origin: true,  // Allow all origins during development
+                credentials: true
+              }));
               app.use(express.json());
               app.use((req, res, next) => {
 
