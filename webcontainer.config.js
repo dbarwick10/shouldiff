@@ -138,7 +138,7 @@ async function getVersions() {
 async function fetchItemData(version) {
     if (!cache.items.has(version)) {
         console.log('Fetching item data for');
-        const response = await fetch('https://ddragon.leagueoflegends.com/cdn/\${version}/data/en_US/item.json');
+        const response = await fetch('https://ddragon.leagueoflegends.com/cdn/' + version + '/data/en_US/item.json');
         const itemData = await response.json();
         cache.items.set(version, itemData.data);
     }
@@ -169,7 +169,7 @@ export async function getItemDetails(itemId) {
         for (const [version, items] of itemsCache) {
             if (items[itemId]) {
                 const item = items[itemId];
-                // console.log('Found item ${itemId} in version ${version}:'', {
+                // console.log('Found item \${itemId} in version \${version}:'', {
                 //     name: item.name,
                 //     goldInfo: item.gold
                 // });
