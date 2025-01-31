@@ -51,22 +51,24 @@ export const files = {
       }
       
       router.get('/live-stats', async (req, res) => {
-          try {
-              const liveStats = await calculateLiveStats();
-              console.log('Live stats data');
-      
-              if (!liveStats) {
-                  return res.status(404).json({ error: 'No live game found' });
-              }
-              res.json(liveStats);
-          } catch (error) {
-              console.error('Server error in /api/live-stats:', error);
-              res.status(500).json({ 
-                  error: 'Internal server error', 
-                  details: error.message 
-              });
-          }
-      });
+        console.log('Received request to /live-stats');
+        try {
+            const liveStats = await calculateLiveStats();
+            console.log('Live stats calculated successfully', liveStats);
+
+            if (!liveStats) {
+                console.log('No live game found');
+                return res.status(404).json({ error: 'No live game found' });
+            }
+            res.json(liveStats);
+        } catch (error) {
+            console.error('Server error in /api/live-stats:', error);
+            res.status(500).json({ 
+                error: 'Internal server error', 
+                details: error.message 
+            });
+        }
+    });
       
       export default router;`
     }
