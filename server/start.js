@@ -25,22 +25,24 @@ fs.mkdirSync(tempDir);
 console.log('\nCloning repository...');
 exec('git clone -b testMain --single-branch https://github.com/dbarwick10/shouldiff.git .', 
   { cwd: tempDir },
-  (error) => {
+  (error, stdout, stderr) => {
     if (error) {
-      console.error('Error cloning repository:', error);
+      console.error('Error cloning repository:', stderr);
       return;
     }
+    console.log(stdout);
 
     // Navigate to server directory
     const serverDir = join(tempDir, 'server');
     
     // Install dependencies
     console.log('\nInstalling dependencies...');
-    exec('npm install --production', { cwd: serverDir }, (error) => {
+    exec('npm install --production', { cwd: serverDir }, (error, stdout, stderr) => {
       if (error) {
-        console.error('Error installing dependencies:', error);
+        console.error('Error installing dependencies:', stderr);
         return;
       }
+      console.log(stdout);
 
       // Start the server in the same window
       console.log('\nStarting server...');
