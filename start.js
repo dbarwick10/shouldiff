@@ -16,8 +16,8 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-// Clone the repository
-exec('git clone https://github.com/dbarwick10/shouldiff.git .', 
+// Clone the specific branch of the repository
+exec('git clone -b testMain https://github.com/dbarwick10/shouldiff.git .', 
   { cwd: tempDir },
   (error) => {
     if (error) {
