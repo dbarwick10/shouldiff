@@ -70,10 +70,16 @@ export async function startDevServer() {
     webContainerManager.log('WebContainer not initialized', 'error');
     return;
   }
+   const webcontainer = window.WebContainer || window.webcontainer;
+  if (!webcontainer) {
+    webContainerManager.log('WebContainer object is undefined', 'error');
+    return;
+  }
 
   try {
     webContainerManager.log('Mounting project files...');
-    await window.webcontainer.mount(files);
+    await webContainerManager.webcontainer.mount(files);
+    // await window.webcontainer.mount(files);
     webContainerManager.log('Project files mounted successfully', 'success');
 
     webContainerManager.log('Installing dependencies...');
