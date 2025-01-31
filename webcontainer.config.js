@@ -3,21 +3,21 @@ import { webContainerManager } from './webcontainer-setup.js';
 export const files = {
   'package.json': {
     file: {
-      contents: `{
-        name: "shouldiff_app",
-        version: "1.0.0",
-        type: "module",
-        scripts: {
-          start: "node server.js",
-          dev: "node server.js"
+      contents: JSON.stringify({
+        "name": "shouldiff_app",
+        "version": "1.0.0",
+        "type": "module",
+        "scripts": {
+          "start": "node server.js",
+          "dev": "node server.js"
         },
-        dependencies: {
-          cors: "^2.8.5",
-          dotenv: "^16.4.7",
-          express: "^4.18.2",
+        "dependencies": {
+          "cors": "^2.8.5",
+          "dotenv": "^16.4.7",
+          "express": "^4.18.2",
           "node-fetch": "^3.3.2"
         }
-      }`,
+      }, null, 2)
     }
   },
   'server.js': {
