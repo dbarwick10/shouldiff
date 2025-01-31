@@ -284,7 +284,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         updateUrl(formData);
 
         // Make API request
-        const response = await fetch(ENDPOINTS.STATS, {
+        const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
