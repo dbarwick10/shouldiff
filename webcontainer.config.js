@@ -108,7 +108,7 @@ export async function startDevServer() {
       }
     }));
 
-    window.webcontainer.on('server-ready', (port, url) => {
+    webContainerManager.webcontainer.on('server-ready', (port, url) => {
       webContainerManager.log('Development server is ready at ' + url, 'success');
       window.API_BASE_URL = url;
     });
