@@ -78,7 +78,7 @@ export async function startDevServer() {
 
   try {
     webContainerManager.log('Mounting project files...');
-    await webContainerManager.webcontainer.mount(files);
+    await webContainerManager.mount(files);
     // await window.webcontainer.mount(files);
     webContainerManager.log('Project files mounted successfully', 'success');
 
