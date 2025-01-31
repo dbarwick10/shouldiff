@@ -869,9 +869,6 @@ export function getCacheStats() {
                 allowedHeaders: ['*'],
                 credentials: true
               }));
-            
-            // Preflight handler for all routes
-            app.options('*', cors(corsOptions));
 
               app.use(express.json());
               app.use((req, res, next) => {
