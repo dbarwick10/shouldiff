@@ -33,19 +33,31 @@ try {
         }
         console.log(stdout);
 
-        // Navigate to server directory
-        const serverDir = join(tempDir, 'server');
-        
-        // Install dependencies
+        // Check if package.json exists at the root
+        if (!fs.existsSync(join(tempDir, 'package.json'))) {
+          console.error('Error: package.json not found in the root directory.');
+          return;
+        }
+
+        // Install dependencies from the root directory
         console.log('\nInstalling dependencies...');
-        exec('npm install --production', { cwd: serverDir }, (error, stdout, stderr) => {
+        exec('npm install --production', { cwd: tempDir }, (error, stdout, stderr) => {
           if (error) {
             console.error('Error installing dependencies:', stderr);
             return;
           }
           console.log(stdout);
 
-          // Start the server in the same window
+          // Navigate to the server directory
+          const serverDir = join(tempDir, 'server');
+
+          // Check if server.js exists in the server directory
+          if (!fs.existsSync(join(serverDir, 'server.js'))) {
+            console.error('Error: server.js not found in the server directory.');
+            return;
+          }
+
+          // Start the server from the server directory
           console.log('\nStarting server...');
           const server = exec('node server.js', { cwd: serverDir });
 
