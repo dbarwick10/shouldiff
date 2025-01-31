@@ -8,8 +8,8 @@ export const files = {
         version: "1.0.0",
         type: "module",
         scripts: {
-          start: "node server/server.js",
-          dev: "node server/server.js"
+          start: "node server.js",
+          dev: "node server.js"
         },
         dependencies: {
           cors: "^2.8.5",
@@ -20,7 +20,7 @@ export const files = {
       }`,
     }
   },
-  'server/server.js': {
+  'server.js': {
     file: {
       contents: `import express from 'express';
 import cors from 'cors';
