@@ -875,16 +875,8 @@ export function getCacheStats() {
                   },
                   credentials: true,
                   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                  allowedHeaders: [
-                      'Content-Type', 
-                      'Authorization', 
-                      'Origin', 
+                  allowedHeaders: [ 
                       'Access-Control-Allow-Origin', 
-                      'Accept',
-                      'Client-ID',
-                      'client-id',
-                      'Cross-Origin-Opener-Policy',
-                      'Cross-Origin-Embedder-Policy'
                   ]
               }));
               app.use(express.json());
