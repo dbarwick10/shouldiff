@@ -859,8 +859,8 @@ export function getCacheStats() {
         cors({
           origin: '*', // Allow all origins (or specify your frontend URL, e.g., 'https://test.shouldiff.com')
           methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow these HTTP methods
-          allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
-          credentials: true, // Allow credentials (if needed)
+          allowedHeaders: ['Content-Type', 'Authorization'] // Allow these headers
+          // ,credentials: true, // Allow credentials (if needed)
         })
       );
 
