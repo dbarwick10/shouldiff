@@ -43,7 +43,10 @@ async function startServer() {
       next();
     });
 
-    app.use(cors());
+    app.use(cors({
+      origin: true,  // Allow all origins during development
+      credentials: true
+    }));
     app.use(express.json());
     
     app.use(express.static(path.join(__dirname, '..')));

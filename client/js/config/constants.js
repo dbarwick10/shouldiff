@@ -3,7 +3,7 @@
 // API Configuration
 
 export const ENDPOINTS = {
-    LIVE_STATS: `http://127.0.0.1:3000/api/live-stats`,
+    LIVE_STATS: `${window.API_BASE_URL || 'http://127.0.0.1:3000'}/api/live-stats`,
 };
 
 // Environment
