@@ -856,8 +856,33 @@ export function getCacheStats() {
               console.log('Item cache initialized successfully');
 
               app.use(cors({
-                origin: true,  // Allow all origins during development
-                credentials: true
+                  origin: function(origin, callback) {
+                      const allowedOrigins = [
+                          'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io'
+                      ];
+                      
+                      if (!origin) return callback(null, true);
+                      
+                      if (allowedOrigins.includes(origin)) {
+                          callback(null, true);
+                      } else {
+                          console.log('Origin not allowed:', origin);
+                          callback(new Error('Not allowed by CORS'));
+                      }
+                  },
+                  credentials: true,
+                  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                  allowedHeaders: [
+                      'Content-Type', 
+                      'Authorization', 
+                      'Origin', 
+                      'Access-Control-Allow-Origin', 
+                      'Accept',
+                      'Client-ID',
+                      'client-id',
+                      'Cross-Origin-Opener-Policy',
+                      'Cross-Origin-Embedder-Policy'
+                  ]
               }));
               app.use(express.json());
               app.use((req, res, next) => {
