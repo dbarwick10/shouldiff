@@ -52,22 +52,24 @@ export const files = {
       
       router.get('/live-stats', async (req, res) => {
         console.log('Received request to /api/live-stats');
+        console.log('Request Headers:', req.headers);
+        
         try {
-            const liveStats = await calculateLiveStats();
-            console.log('Live stats calculated successfully', liveStats);
+          const liveStats = await calculateLiveStats();
+          console.log('Live stats calculated successfully', liveStats);
 
-            if (!liveStats) {
-                console.log('No live game found');
-                return res.status(404).json({ error: 'No live game found' });
-            }
-            res.json(liveStats);
+          if (!liveStats) {
+            console.log('No live game found');
+            return res.status(404).json({ error: 'No live game found' });
+          }
+          res.json(liveStats);
         } catch (error) {
-            console.error('Server error in /api/live-stats:', error);
-            res.status(500).json({ 
-                error: 'Internal server error', 
-                details: error.message 
-            });
-         }
+          console.error('Complete error in /api/live-stats:', error);
+          res.status(500).json({ 
+            error: 'Internal server error', 
+            details: error.message 
+          });
+        }
       });
       
       export default router;`
@@ -857,35 +859,16 @@ export function getCacheStats() {
               await initializeCache();
               console.log('Item cache initialized successfully');
 
-              const corsOptions = {
-                origin: function(origin, callback) {
-                    const allowedOrigins = [
-                        'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io',
-                        'https://test.shouldiff.com',
-                        'http://localhost:3000'  // Add local development origin
-                    ];
-                    
-                    if (!origin || allowedOrigins.includes(origin)) {
-                        callback(null, true);
-                    } else {
-                        console.log('Origin not allowed:', origin);
-                        callback(new Error('Not allowed by CORS'));
-                    }
+              app.use(cors({
+                origin: function (origin, callback) {
+                  console.log('Request Origin:', origin);
+                  // Allow all origins
+                  callback(null, true);
                 },
                 methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                allowedHeaders: [
-                    'Origin', 
-                    'X-Requested-With', 
-                    'Content-Type', 
-                    'Accept', 
-                    'Authorization', 
-                    'Access-Control-Allow-Origin'
-                ],
-                credentials: true,
-                optionsSuccessStatus: 200
-            };
-
-            app.use(cors(corsOptions));
+                allowedHeaders: ['*'],
+                credentials: true
+              }));
             
             // Preflight handler for all routes
             app.options('*', cors(corsOptions));

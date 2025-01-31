@@ -37,7 +37,13 @@ export class LiveStatsService {
 
     async updateLiveData() {
         try {
-            const response = await fetch(ENDPOINTS.LIVE_STATS);
+            const response = await fetch(ENDPOINTS.LIVE_STATS, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'credentials': 'include'
+                }
+              });
             
             if (!response.ok) {
                 if (response.status === 404) {
