@@ -51,7 +51,7 @@ export const files = {
       }
       
       router.get('/live-stats', async (req, res) => {
-        console.log('Received request to /live-stats');
+        console.log('Received request to /api/live-stats');
         try {
             const liveStats = await calculateLiveStats();
             console.log('Live stats calculated successfully', liveStats);
@@ -67,8 +67,8 @@ export const files = {
                 error: 'Internal server error', 
                 details: error.message 
             });
-        }
-    });
+         }
+      });
       
       export default router;`
     }
@@ -857,28 +857,39 @@ export function getCacheStats() {
               await initializeCache();
               console.log('Item cache initialized successfully');
 
-              app.use(cors({
-                  origin: function(origin, callback) {
-                      const allowedOrigins = [
-                          'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io',
-                          'https://test.shouldiff.com'
-                      ];
-                      
-                      if (!origin) return callback(null, true);
-                      
-                      if (allowedOrigins.includes(origin)) {
-                          callback(null, true);
-                      } else {
-                          console.log('Origin not allowed:', origin);
-                          callback(new Error('Not allowed by CORS'));
-                      }
-                  },
-                  credentials: true,
-                  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                  allowedHeaders: [ 
-                      'Access-Control-Allow-Origin', 
-                  ]
-              }));
+              const corsOptions = {
+                origin: function(origin, callback) {
+                    const allowedOrigins = [
+                        'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io',
+                        'https://test.shouldiff.com',
+                        'http://localhost:3000'  // Add local development origin
+                    ];
+                    
+                    if (!origin || allowedOrigins.includes(origin)) {
+                        callback(null, true);
+                    } else {
+                        console.log('Origin not allowed:', origin);
+                        callback(new Error('Not allowed by CORS'));
+                    }
+                },
+                methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                allowedHeaders: [
+                    'Origin', 
+                    'X-Requested-With', 
+                    'Content-Type', 
+                    'Accept', 
+                    'Authorization', 
+                    'Access-Control-Allow-Origin'
+                ],
+                credentials: true,
+                optionsSuccessStatus: 200
+            });
+
+            app.use(cors(corsOptions));
+            
+            // Preflight handler for all routes
+            app.options('*', cors(corsOptions));
+
               app.use(express.json());
               app.use((req, res, next) => {
 
