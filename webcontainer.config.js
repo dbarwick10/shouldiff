@@ -703,7 +703,7 @@ export function getCacheStats() {
                   return itemDetails.gold.total * (item.count || 1);
               }
           } catch (error) {
-              console.error('Error calculating gold for item ${item.itemID}:'', error);
+              console.error('Error calculating gold for' + item item.itemID + ':''', error);
           }
           return 0;
       }
