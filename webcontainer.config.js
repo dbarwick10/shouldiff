@@ -859,15 +859,25 @@ export function getCacheStats() {
               await initializeCache();
               console.log('Item cache initialized successfully');
 
+              app.use((req, res, next) => {
+                  // Explicitly set CORS headers
+                  res.header('Access-Control-Allow-Origin', '*');
+                  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+                  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+                  
+                  // Handle preflight requests
+                  if (req.method === 'OPTIONS') {
+                      return res.sendStatus(200);
+                  }
+                  
+                  next();
+              });
+
+              // Additional CORS middleware
               app.use(cors({
-                origin: function (origin, callback) {
-                  console.log('Request Origin:', origin);
-                  // Allow all origins
-                  callback(null, true);
-                },
-                methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-                allowedHeaders: ['*'],
-                credentials: true
+                  origin: '*',
+                  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                  allowedHeaders: ['*']
               }));
 
               app.use(express.json());
