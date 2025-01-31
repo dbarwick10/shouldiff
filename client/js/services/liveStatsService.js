@@ -37,12 +37,15 @@ export class LiveStatsService {
 
     async updateLiveData() {
         try {
-            const response = await fetch(ENDPOINTS.LIVE_STATS, {
+            const corsProxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const targetUrl = ENDPOINTS.LIVE_STATS;
+            
+            const response = await fetch(corsProxyUrl + targetUrl, {
                 method: 'GET',
                 headers: {
-                  'Content-Type': 'application/json',
-                },
-                credentials: 'include'
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest' // Often required by cors-anywhere
+                }
             });
             
             if (!response.ok) {
