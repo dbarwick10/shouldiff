@@ -84,7 +84,7 @@ export async function startDevServer() {
     webContainerManager.log('Project files mounted successfully', 'success');
 
     webContainerManager.log('Installing dependencies...');
-    const installProcess = await window.webcontainer.spawn('npm', ['install']);
+    const installProcess = await webContainerManager.webcontainer.spawn('npm', ['install']);
     
     installProcess.output.pipeTo(new WritableStream({
       write(data) {
@@ -100,7 +100,7 @@ export async function startDevServer() {
     webContainerManager.log('Dependencies installed successfully', 'success');
 
     webContainerManager.log('Starting development server...');
-    const serverProcess = await window.webcontainer.spawn('npm', ['run', 'dev']);
+    const serverProcess = await webContainerManager.webcontainer.spawn('npm', ['run', 'dev']);
     
     serverProcess.output.pipeTo(new WritableStream({
       write(data) {
