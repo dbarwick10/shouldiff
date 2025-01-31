@@ -52,11 +52,18 @@ exec('git clone -b testMain --single-branch https://github.com/dbarwick10/should
       server.stdout.pipe(process.stdout);
       server.stderr.pipe(process.stderr);
 
+      // Clear instructions for the user
+      console.log('\n----------------------------------------');
+      console.log('Server is now running!');
+      console.log('To stop the server and clean up, press Ctrl+C.');
+      console.log('----------------------------------------\n');
+
       // Handle cleanup when the process is terminated
       const cleanup = () => {
-        console.log('\nCleaning up...');
+        console.log('\nStopping server and cleaning up...');
         server.kill();
         fs.rmSync(tempDir, { recursive: true, force: true });
+        console.log('Cleanup complete. Goodbye!');
         process.exit();
       };
 
