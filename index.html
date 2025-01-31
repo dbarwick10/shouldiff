@@ -1,37 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shouldiff Home</title>
-    <!-- Google tag (gtag.js) -->
-    <script>
-         window.dataLayer = window.dataLayer || [];
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+        <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+        <title>Shouldiff Home</title>
         
-        function gtag(){dataLayer.push(arguments);}
+        <!-- Styles and Resources -->
+        <link rel="stylesheet" href="./client/css/statStyle.css">
+        <link rel="icon" type="image/x-icon" href="./images/leeg.ico">
+        <link rel="shortcut icon" type="image/x-icon" href="./images/leeg.ico">
+        <link rel="apple-touch-icon" href="./images/leeg.ico">
+        
+        <!-- Third Party Libraries - Non-module scripts first -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script type="module">
+            import { WebContainer } from 'https://cdn.jsdelivr.net/npm/@webcontainer/api@1.1.8/dist/index.js';
+            window.WebContainer = WebContainer;
+          </script>
 
-        function loadGoogleAnalytics() {
-            if (localStorage.getItem('cookieConsent') === 'accepted') {
-                const script = document.createElement('script');
-                script.async = true;
-                script.src = 'https://www.googletagmanager.com/gtag/js?id=G-JVVLV3M1D6';
-                document.head.appendChild(script);
+        <!-- Webcontainer files at root -->
+        <script type="module" src="./webcontainer-setup.js"></script>
+        <script type="module" src="./webcontainer.config.js"></script>
+        <script type="module" src="./webcontainer-init.js"></script>
 
-                gtag('js', new Date());
-                gtag('config', 'G-JVVLV3M1D6');
-            }
-        }
+        <!-- App Configuration -->
+        <script type="module" src="./client/js/config/constants.js"></script>
 
-        if (localStorage.getItem('cookieConsent') === 'accepted') {
-            loadGoogleAnalytics();
-        }
-    </script>
-    <link rel="stylesheet" href="./client/css/statStyle.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/x-icon" href="./images/leeg.ico">
-    <link rel="shortcut icon" type="image/x-icon" href="./images/leeg.ico">
-    <link rel="apple-touch-icon" href="./images/leeg.ico">
-</head>
+        <!-- App Scripts -->
+        <script type="module" src="./client/js/cookieConsent.js"></script>
+    </head>
 <body>
     <div id="cookie-consent" class="cookie-banner">
         <p>We use cookies to improve your experience. Choose your preferences below.</p>
