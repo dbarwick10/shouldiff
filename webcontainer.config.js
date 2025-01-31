@@ -858,7 +858,8 @@ export function getCacheStats() {
               app.use(cors({
                   origin: function(origin, callback) {
                       const allowedOrigins = [
-                          'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io'
+                          'https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io',
+                          'https://test.shouldiff.com'
                       ];
                       
                       if (!origin) return callback(null, true);
