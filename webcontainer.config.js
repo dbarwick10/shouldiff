@@ -883,7 +883,7 @@ export function getCacheStats() {
                 ],
                 credentials: true,
                 optionsSuccessStatus: 200
-            });
+            };
 
             app.use(cors(corsOptions));
             
