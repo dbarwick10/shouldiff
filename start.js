@@ -17,7 +17,7 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // Clone the repository
-exec('git clone https://github.com/dbarwick10/shouldiffServer.git .', 
+exec('git clone https://github.com/dbarwick10/shouldiff.git .', 
   { cwd: tempDir },
   (error) => {
     if (error) {
@@ -25,9 +25,12 @@ exec('git clone https://github.com/dbarwick10/shouldiffServer.git .',
       return;
     }
 
+    // Navigate to server directory
+    const serverDir = join(tempDir, 'server');
+    
     // Install dependencies
     console.log('Installing dependencies...');
-    exec('npm install', { cwd: tempDir }, (error) => {
+    exec('npm install', { cwd: serverDir }, (error) => {
       if (error) {
         console.error('Error installing dependencies:', error);
         return;
@@ -35,7 +38,7 @@ exec('git clone https://github.com/dbarwick10/shouldiffServer.git .',
 
       // Start the server in a new window (Windows-specific)
       console.log('Starting server in new window...');
-      exec('start cmd.exe /K npm start', { cwd: tempDir, shell: true });
+      exec('start cmd.exe /K npm start', { cwd: serverDir, shell: true });
       
       console.log('Server window opened! You can close it when you\'re done.');
       process.exit(0); // Exit this process since server runs in new window
