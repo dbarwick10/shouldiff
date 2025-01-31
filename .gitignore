@@ -12,3 +12,6 @@ node_modules/
 dist/
 package-lock.js
 test/
+
+# Ignore all .tgz files
+*.tgz
