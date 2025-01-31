@@ -12,12 +12,14 @@ console.log('Setting up Shouldiff Server...');
 
 // Create temp directory if it doesn't exist
 const tempDir = join(__dirname, 'shouldiff-temp');
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir);
+if (fs.existsSync(tempDir)) {
+    fs.rmSync(tempDir, { recursive: true });
 }
+fs.mkdirSync(tempDir);
 
-// Clone the specific branch of the repository
-exec('git clone -b testMain https://github.com/dbarwick10/shouldiff.git .', 
+// Clone the repository
+console.log('Cloning repository...');
+exec('git clone -b testMain --single-branch https://github.com/dbarwick10/shouldiff.git .', 
   { cwd: tempDir },
   (error) => {
     if (error) {
@@ -28,20 +30,31 @@ exec('git clone -b testMain https://github.com/dbarwick10/shouldiff.git .',
     // Navigate to server directory
     const serverDir = join(tempDir, 'server');
     
-    // Install dependencies
+    // Install dependencies using a specific npm command
     console.log('Installing dependencies...');
-    exec('npm install', { cwd: serverDir }, (error) => {
+    exec('npm ci --production', { cwd: serverDir }, (error) => {
       if (error) {
-        console.error('Error installing dependencies:', error);
-        return;
+        console.log('Trying alternative installation method...');
+        exec('npm install --production', { cwd: serverDir }, (error) => {
+          if (error) {
+            console.error('Error installing dependencies:', error);
+            return;
+          }
+          startServer(serverDir);
+        });
+      } else {
+        startServer(serverDir);
       }
-
-      // Start the server in a new window (Windows-specific)
-      console.log('Starting server in new window...');
-      exec('start cmd.exe /K npm start', { cwd: serverDir, shell: true });
-      
-      console.log('Server window opened! You can close it when you\'re done.');
-      process.exit(0); // Exit this process since server runs in new window
     });
   }
 );
+
+function startServer(serverDir) {
+  // Start the server in a new window (Windows-specific)
+  console.log('Starting server in new window...');
+  const cmd = 'start cmd.exe /K "cd /d "' + serverDir + '" && node server.js"';
+  exec(cmd, { shell: true });
+  
+  console.log('Server window opened! You can close it when you\'re done.');
+  process.exit(0);
+}
