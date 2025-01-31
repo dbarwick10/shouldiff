@@ -849,57 +849,64 @@ export function getCacheStats() {
       const PORT = process.env.PORT || 3000;
 
       async function startServer() {
-          try {
-              app.use((_req, res, next) => {
-                res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-                res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-                res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-                next();
-                });
-              await initializeCache();
-              console.log('Item cache initialized successfully');
+  try {
+    // Initialize cache
+    await initializeCache();
+    console.log('Item cache initialized successfully');
 
-              app.use(cors({
-                  origin: '*', 
-                  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
-                  allowedHeaders: ['Content-Type', 'Authorization'], 
-                  credentials: true, 
-                })
-              );
+    // CORS Middleware
+      app.use(
+        cors({
+          origin: '*', // Allow all origins (or specify your frontend URL, e.g., 'https://test.shouldiff.com')
+          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allow these HTTP methods
+          allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+          credentials: true, // Allow credentials (if needed)
+        })
+      );
 
-              // Handle preflight requests
-              app.options('*', cors());
+      // Log incoming requests for debugging
+      app.use((req, res, next) => {
+        console.log('Incoming request: '+ req.method + req.url);
+        console.log('Headers:', req.headers);
+        next();
+      });
 
-              app.use(express.json());
-              app.use((req, res, next) => {
+      // Handle preflight requests explicitly
+      app.options('*', (req, res) => {
+        console.log('Handling preflight request');
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.sendStatus(204); // No content for preflight requests
+      });
 
-                  res.on('finish', () => {
-                  });
+      // Body parsing middleware
+      app.use(express.json());
 
-                  next();
-              });
+      // API routes
+      app.use('/api', apiRoutes);
 
-              app.use('/api', apiRoutes);
+      // Static files
+      app.use(express.static(path.join(__dirname, '..')));
 
-              app.use(express.static(path.join(__dirname, '..')));
+      // Error handling middleware
+      app.use((err, req, res, next) => {
+        console.error('Server error:', err);
+        res.status(err.status || 500).json({ error: err.message });
+      });
 
-              app.use((err, req, res, next) => {
-                  console.error('Server error:', err);
-                  res.status(err.status || 500).json({ error: err.message });
-              });
-
-              app.listen(PORT, () => {
-                  console.log('Server running on port');
-                  console.log('Available endpoints:');
-                  console.log('  - GET /api/live-stats');
-              });
-
-              
-          } catch (error) {
-                  console.error('Failed to start server:', error);
-                  process.exit(1);
-              }
-          }
+      // Start the server
+      app.listen(PORT, () => {
+        console.log('Server running on port' + PORT);
+        console.log('Available endpoints:');
+        console.log('  - GET /api/live-stats');
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  }
           
       startServer();`
     }
