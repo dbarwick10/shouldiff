@@ -3,7 +3,7 @@
 // API Configuration
 
 export const ENDPOINTS = {
-    LIVE_STATS: `https://ygkp0q6qhoowpcc9x2rzsomajf2cls-rz3t--3000--d20a0a75.local-corp.webcontainer-api.io/api/live-stats`,
+    LIVE_STATS: `http://127.0.0.1:3000/api/live-stats`,
 };
 
 // Environment

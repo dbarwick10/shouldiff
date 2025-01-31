@@ -1,6 +1,5 @@
 import { FETCH_INTERVAL_MS, RETRY_INTERVAL_MS } from '../config/constants.js';
 import { hasValidStats } from '../utils/dataHelpers.js';
-import { ENDPOINTS } from '../config/constants.js';
 
 export class LiveStatsService {
     constructor(config = {}) {
@@ -37,13 +36,7 @@ export class LiveStatsService {
 
     async updateLiveData() {
         try {
-            const response = await fetch(ENDPOINTS.LIVE_STATS, {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                }
-                // ,credentials: 'include'
-            });
+            const response = await fetch('http://127.0.0.1:3000/api/live-stats');
             
             if (!response.ok) {
                 if (response.status === 404) {
