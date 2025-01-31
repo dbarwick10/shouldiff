@@ -3,7 +3,7 @@ import { webContainerManager } from './webcontainer-setup.js';
 export const files = {
   'package.json': {
     file: {
-      contents: JSON.stringify({
+      contents: `{
         name: "shouldiff_app",
         version: "1.0.0",
         type: "module",
@@ -17,11 +17,12 @@ export const files = {
           express: "^4.18.2",
           "node-fetch": "^3.3.2"
         }
-      }, null, 2)
+      }`,
     }
   },
   'server/server.js': {
-    content: `import express from 'express';
+    file: {
+      contents: `import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,6 +63,7 @@ async function startServer() {
 }
 
 startServer();`
+    }
   }
 };
 
