@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
@@ -9,84 +9,171 @@ import os from 'os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Use system temp directory for better cleanup
-const tempDir = join(os.tmpdir(), 'shouldiff-temp-' + Date.now());
+// Store active processes and temp directories for cleanup
+const state = {
+  serverProcess: null,
+  tempDir: null,
+  isCleaningUp: false
+};
 
-console.log('Setting up Shouldiff Server...');
-console.log('Using temporary directory:', tempDir);
+// Enhanced cleanup function
+async function cleanup(exitCode = 0) {
+  // Prevent multiple cleanup attempts
+  if (state.isCleaningUp) return;
+  state.isCleaningUp = true;
 
-try {
-    // Create fresh temp directory
-    if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true });
+  console.log('\nInitiating cleanup...');
+
+  try {
+    // Kill server process if it exists
+    if (state.serverProcess) {
+      // Try graceful shutdown first
+      state.serverProcess.kill('SIGTERM');
+      
+      // Force kill after 5 seconds if still running
+      setTimeout(() => {
+        try {
+          if (state.serverProcess) {
+            state.serverProcess.kill('SIGKILL');
+          }
+        } catch (err) {
+          // Process might already be gone
+        }
+      }, 5000);
     }
-    fs.mkdirSync(tempDir);
 
-    // Clone the repository
+    // Remove temp directory if it exists
+    if (state.tempDir && fs.existsSync(state.tempDir)) {
+      await new Promise((resolve) => {
+        // Wait a bit to ensure files are not in use
+        setTimeout(() => {
+          try {
+            fs.rmSync(state.tempDir, { recursive: true, force: true });
+            console.log('Temporary files cleaned up successfully');
+          } catch (err) {
+            console.error('Warning: Could not remove some temporary files:', err.message);
+          }
+          resolve();
+        }, 1000);
+      });
+    }
+
+    console.log('Cleanup complete');
+  } catch (err) {
+    console.error('Error during cleanup:', err);
+  } finally {
+    // Ensure process exits even if cleanup had errors
+    if (exitCode !== undefined) {
+      process.exit(exitCode);
+    }
+  }
+}
+
+// Main setup function
+async function setupServer() {
+  try {
+    console.log('Setting up Shouldiff Server...');
+    
+    // Create temp directory
+    state.tempDir = join(os.tmpdir(), 'shouldiff-temp-' + Date.now());
+    console.log('Using temporary directory:', state.tempDir);
+
+    // Ensure fresh directory
+    if (fs.existsSync(state.tempDir)) {
+      fs.rmSync(state.tempDir, { recursive: true });
+    }
+    fs.mkdirSync(state.tempDir);
+
+    // Clone repository
     console.log('\nCloning repository...');
-    exec('git clone -b testMain --single-branch https://github.com/dbarwick10/shouldiff.git .', 
-      { cwd: tempDir },
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error('Error cloning repository:', stderr);
-          return;
-        }
-        console.log(stdout);
-
-        // Check if package.json exists at the root
-        if (!fs.existsSync(join(tempDir, 'package.json'))) {
-          console.error('Error: package.json not found in the root directory.');
-          return;
-        }
-
-        // Install dependencies from the root directory
-        console.log('\nInstalling dependencies...');
-        exec('npm install --production', { cwd: tempDir }, (error, stdout, stderr) => {
+    await new Promise((resolve, reject) => {
+      exec(
+        'git clone -b testMain --single-branch https://github.com/dbarwick10/shouldiff.git .',
+        { cwd: state.tempDir },
+        (error, stdout, stderr) => {
           if (error) {
-            console.error('Error installing dependencies:', stderr);
+            reject(new Error(`Git clone failed: ${stderr}`));
             return;
           }
           console.log(stdout);
+          resolve();
+        }
+      );
+    });
 
-          // Navigate to the server directory
-          const serverDir = join(tempDir, 'server');
+    // Verify package.json exists
+    if (!fs.existsSync(join(state.tempDir, 'package.json'))) {
+      throw new Error('package.json not found in root directory');
+    }
 
-          // Check if server.js exists in the server directory
-          if (!fs.existsSync(join(serverDir, 'server.js'))) {
-            console.error('Error: server.js not found in the server directory.');
-            return;
-          }
+    // Install dependencies
+    console.log('\nInstalling dependencies...');
+    await new Promise((resolve, reject) => {
+      exec('npm install --production', { cwd: state.tempDir }, (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(`npm install failed: ${stderr}`));
+          return;
+        }
+        console.log(stdout);
+        resolve();
+      });
+    });
 
-          // Start the server from the server directory
-          console.log('\nStarting server...');
-          const server = exec('node server.js', { cwd: serverDir });
+    // Start server
+    const serverDir = join(state.tempDir, 'server');
+    if (!fs.existsSync(join(serverDir, 'server.js'))) {
+      throw new Error('server.js not found in server directory');
+    }
 
-          // Pipe the server output to console
-          server.stdout.pipe(process.stdout);
-          server.stderr.pipe(process.stderr);
+    console.log('\nStarting server...');
+    state.serverProcess = spawn('node', ['server.js'], {
+      cwd: serverDir,
+      stdio: 'pipe'
+    });
 
-          // Clear instructions for the user
-          console.log('\n----------------------------------------');
-          console.log('Server is now running!');
-          console.log('To stop the server and clean up, press Ctrl+C.');
-          console.log('----------------------------------------\n');
+    // Handle server output
+    state.serverProcess.stdout.pipe(process.stdout);
+    state.serverProcess.stderr.pipe(process.stderr);
 
-          // Handle cleanup when the process is terminated
-          const cleanup = () => {
-            console.log('\nStopping server and cleaning up...');
-            server.kill();
-            fs.rmSync(tempDir, { recursive: true, force: true });
-            console.log('Cleanup complete. Goodbye!');
-            process.exit();
-          };
+    // Monitor server process
+    state.serverProcess.on('error', (err) => {
+      console.error('Server process error:', err);
+      cleanup(1);
+    });
 
-          // Set up cleanup handlers
-          process.on('SIGINT', cleanup);  // Ctrl+C
-          process.on('SIGTERM', cleanup); // Kill
-          server.on('exit', cleanup);     // Server exit
-        });
-      }
-    );
-} catch (err) {
-    console.error('An unexpected error occurred:', err);
+    state.serverProcess.on('exit', (code) => {
+      console.log(`Server process exited with code ${code}`);
+      cleanup(code);
+    });
+
+    // Display instructions
+    console.log('\n----------------------------------------');
+    console.log('Server is now running!');
+    console.log('To stop the server and clean up, press Ctrl+C');
+    console.log('or close this window.');
+    console.log('----------------------------------------\n');
+
+  } catch (err) {
+    console.error('Setup failed:', err);
+    await cleanup(1);
+  }
 }
+
+// Set up process event handlers
+process.on('SIGINT', () => cleanup(0));  // Ctrl+C
+process.on('SIGTERM', () => cleanup(0)); // Termination request
+process.on('SIGHUP', () => cleanup(0));  // Terminal window closed
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  cleanup(1);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
+  cleanup(1);
+});
+
+// Start the server setup
+setupServer().catch(async (err) => {
+  console.error('Fatal error:', err);
+  await cleanup(1);
+});
