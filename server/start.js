@@ -27,23 +27,31 @@ async function cleanup(exitCode = 0) {
   try {
     // Kill server process if it exists
     if (state.serverProcess) {
-      // Try graceful shutdown first
-      state.serverProcess.kill('SIGTERM');
-      
-      // Force kill after 5 seconds if still running
-      setTimeout(() => {
-        try {
+      console.log('Stopping server process...');
+      await new Promise((resolve) => {
+        // Try graceful shutdown first
+        state.serverProcess.kill('SIGTERM');
+
+        // Force kill after 5 seconds if still running
+        const forceKillTimeout = setTimeout(() => {
           if (state.serverProcess) {
+            console.log('Force killing server process...');
             state.serverProcess.kill('SIGKILL');
           }
-        } catch (err) {
-          // Process might already be gone
-        }
-      }, 5000);
+          resolve();
+        }, 5000);
+
+        // Wait for the process to exit
+        state.serverProcess.on('exit', () => {
+          clearTimeout(forceKillTimeout);
+          resolve();
+        });
+      });
     }
 
     // Remove temp directory if it exists
     if (state.tempDir && fs.existsSync(state.tempDir)) {
+      console.log('Removing temporary directory...');
       await new Promise((resolve) => {
         // Wait a bit to ensure files are not in use
         setTimeout(() => {
@@ -73,7 +81,7 @@ async function cleanup(exitCode = 0) {
 async function setupServer() {
   try {
     console.log('Setting up Shouldiff Server...');
-    
+
     // Create temp directory
     state.tempDir = join(os.tmpdir(), 'shouldiff-temp-' + Date.now());
     console.log('Using temporary directory:', state.tempDir);

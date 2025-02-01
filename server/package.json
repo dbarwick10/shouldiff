@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "main": "main.js",
+  "bin": {
+    "shouldiff": "start.js"
+  },
   "scripts": {
     "start": "node server/server.js",
     "stop": "taskkill /F /IM node.exe",
