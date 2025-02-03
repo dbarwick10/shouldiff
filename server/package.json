@@ -4,7 +4,7 @@
   "type": "module",
   "main": "main.js",
   "bin": {
-    "shouldiff": "server/start.js"
+    "shouldiff": "start.js"
   },
   "scripts": {
     "start": "node server/server.js",

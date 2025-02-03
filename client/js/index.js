@@ -1,5 +1,5 @@
 import { displayAverageEventTimes } from './components/displayAverageEventTimes.js';
-import { ENDPOINTS } from "./config/constants.js"; 
+import { LOCAL_TESTING, prodURL, localURL } from "./config/constants.js"; 
 import { initializeMobileMenu } from './shared.js';
 
 
@@ -69,12 +69,6 @@ function initializeDOMElements() {
         chartLegend: document.querySelector('.chart-legend'),
         howToUseThis: document.querySelector('.how-to-use-this')
     };
-
-    console.log('Found elements:', {
-        analyzeButton: !!elements.analyzeButton,
-        loading: !!elements.loading,
-        inputSection: !!elements.inputSection
-    });
 
     if (!elements.analyzeButton || !elements.loading || !elements.inputSection) {
         throw new Error('Required DOM elements not found');
@@ -191,22 +185,18 @@ async function setupApplication() {
 }
 
 function setupEventHandlers(elements, state, loadingStates) {
-    elements.analyzeButton.addEventListener('click', async (e) => {
-        console.log('Button clicked'); // Add this debug line
-        // Prevent any default behavior
-        e.preventDefault();
-    
+    elements.analyzeButton.addEventListener('click', async () => {
         const formData = {
             summonerName: document.getElementById('summonerName').value.trim(),
             tagLine: document.getElementById('tagLine').value.trim(),
             gameMode: document.getElementById('gameMode').value
         };
-    
+
         if (!formData.summonerName || !formData.tagLine) {
             alert('Please enter both summoner name and tagline');
             return;
         }
-    
+
         await handleStats(formData, elements, state, loadingStates);
     });
 
@@ -294,7 +284,7 @@ async function handleStats(formData, elements, state, loadingStates) {
         updateUrl(formData);
 
         // Make API request
-        const response = await fetch(ENDPOINTS.STATS, {
+        const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)

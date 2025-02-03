@@ -16,7 +16,12 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
     try {
-
+        app.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+          res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          next();
+          });
         await initializeCache();
         console.log('Item cache initialized successfully');
 
@@ -41,26 +46,12 @@ async function startServer() {
         });
 
         app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log('Server running on port');
             console.log('Available endpoints:');
             console.log('  - GET /api/live-stats');
         });
 
-        process.on('SIGINT', () => {
-            console.log('Shutting down server...');
-            server.close(() => {
-                console.log('Server shut down.');
-                process.exit(0);
-            });
-        });
-
-        process.on('SIGTERM', () => {
-            console.log('Shutting down server...');
-            server.close(() => {
-                console.log('Server shut down.');
-                process.exit(0);
-            });
-        });
+        
     } catch (error) {
             console.error('Failed to start server:', error);
             process.exit(1);

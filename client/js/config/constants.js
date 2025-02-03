@@ -1,42 +1,16 @@
-// client/js/config/constants.js
-
 // API Configuration
-export const API_URL = window.API_BASE_URL || 'http://127.0.0.1:3000';
 
 export const ENDPOINTS = {
-    LIVE_STATS: `${API_URL}/api/live-stats`,
-    STATS: `${API_URL}/api/stats`
+    LIVE_STATS: `http://127.0.0.1:3000/api/live-stats`,
 };
 
 // Environment
-export const LOCAL_TESTING = window.API_BASE_URL ? true : false;
+export const LOCAL_TESTING = false;
+export const prodURL = 'https://shouldiffserver-test.onrender.com/api/stats';
+export const localURL = 'http://127.0.0.1:3001/api/stats';
 
 // Time Intervals
 export const FETCH_INTERVAL_MS = 1000;
 export const RETRY_INTERVAL_MS = 10000;
-
-// Chart Configuration
-export const CHART_TYPES = [
-    'kills',
-    'deaths',
-    'assists',
-    'kda',
-    'itemPurchases',
-    'turrets',
-    'dragons',
-    'barons',
-    'elders',
-    'atakhans',
-    'inhibitors',
-    'deathTimers',
-    'hordeKills',
-    'riftHeralds'
-];
-
-// Game Stats Configuration
-export const STAT_KEYS = [
-    'wins',
-    'losses',
-    'surrenderWins',
-    'surrenderLosses'
-];
+export const CHART_TYPES = ['kills', 'deaths', 'assists', 'kda', 'itemPurchases', 'turrets', 'dragons', 'barons', 'elders', 'atakhans', 'inhibitors', 'deathTimers', 'hordeKills', 'riftHeralds'];
+export const STAT_KEYS = ['wins', 'losses', 'surrenderWins', 'surrenderLosses'];

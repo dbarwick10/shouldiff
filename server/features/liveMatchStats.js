@@ -138,7 +138,13 @@ export async function calculateLiveStats() {
     if (killerPlayer.team === enemyTeam) {
         teamStats.enemyStats.kills.push(EventTime);
         
-        if (enemyAssists.length > 0) {
+        const enemyAssisters = Assisters.filter(assister => {
+            const assisterPlayer = allPlayers.find(p => p.riotIdGameName === assister || p.summonerName === assister);
+            return assisterPlayer?.team === enemyTeam;
+        });
+
+        // If there are enemy assisters, log the assist
+        if (enemyAssisters.length > 0) {
             teamStats.enemyStats.assists.push(EventTime);
         }
 
@@ -158,7 +164,13 @@ export async function calculateLiveStats() {
     if (killerPlayer.team === activePlayerTeam) {
         teamStats.teamStats.kills.push(EventTime);
         
-        if (teamAssists.length > 0) {
+        const teamAssisters = Assisters.filter(assister => {
+            const assisterPlayer = allPlayers.find(p => p.riotIdGameName === assister || p.summonerName === assister);
+            return assisterPlayer?.team === activePlayerTeam;
+        });
+
+        // If there are player team assisters, log the assist
+        if (teamAssisters.length > 0) {
             teamStats.teamStats.assists.push(EventTime);
         }
 
@@ -238,14 +250,14 @@ export async function calculateLiveStats() {
 
                     // Active Player stats
                     if (activePlayerName && KillerName === activePlayerName) {
-                        teamStats.playerStats.hordeKill.push(EventTime);
+                        teamStats.playerStats.hordeKills.push(EventTime);
                     }
                     if (killerPlayer?.team === activePlayerTeam) {
-                        teamStats.teamStats.hordeKill.push(EventTime);
+                        teamStats.teamStats.hordeKills.push(EventTime);
                     }
                     // Enemy Team stats tracking
                     if (killerPlayer?.team !== activePlayerTeam) {
-                        teamStats.enemyStats.hordeKill.push(EventTime);
+                        teamStats.enemyStats.hordeKills.push(EventTime);
                     }
 
                 } else if (event.EventName === "HeraldKill") {
