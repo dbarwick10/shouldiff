@@ -7,6 +7,7 @@ import 'dotenv/config';
 import apiRoutes from './api/routes.js';
 import { initializeCache } from './features/getItemsAndPrices.js';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -30,7 +31,8 @@ async function startServer() {
 
             res.on('finish', () => {
             });
-
+            res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+            res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
             next();
         });
 
