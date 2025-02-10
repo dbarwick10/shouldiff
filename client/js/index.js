@@ -33,7 +33,7 @@ function updateUrl(params) {
         if (params.summonerName) url.searchParams.append('summoner', params.summonerName);
         if (params.tagLine) url.searchParams.append('tag', cleanTagline(params.tagLine));
         if (params.region) url.searchParams.append('region', params.region);
-        url.searchParams.append('mode', params.gameMode || 'all');
+        url.searchParams.append('mode', params.gameMode || 'aram');
         
         window.history.pushState({}, '', url);
     } catch (error) {
