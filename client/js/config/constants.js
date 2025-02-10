@@ -8,7 +8,7 @@ export const ENDPOINTS = {
 
 // Environment
 export const LOCAL_TESTING = false;
-export const prodURL = 'https://shouldiffserver-test.onrender.com/api/stats';
+export const prodURL = process.env.SERVER_URL;
 export const localURL = 'http://127.0.0.1:3001/api/stats';
 
 // Time Intervals
