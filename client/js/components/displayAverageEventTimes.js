@@ -6,14 +6,23 @@ let liveStatsService = null;
 let hasShownInitialNotification = false;
 
 function injectLiveButton() {
+    // Check if live button already exists
+    const existingLiveButton = document.getElementById('toggleLiveButton');
+    if (existingLiveButton) {
+        return existingLiveButton;
+    }
+
     const fetchButton = document.getElementById('fetchStatsButton');
     if (!fetchButton) return;
 
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'button-group';
-
-    fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
-    buttonGroup.appendChild(fetchButton);
+    // Check if button group already exists
+    let buttonGroup = fetchButton.parentNode;
+    if (!buttonGroup.classList.contains('button-group')) {
+        buttonGroup = document.createElement('div');
+        buttonGroup.className = 'button-group';
+        fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
+        buttonGroup.appendChild(fetchButton);
+    }
 
     const liveButton = document.createElement('button');
     liveButton.id = 'toggleLiveButton';
