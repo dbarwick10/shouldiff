@@ -29,7 +29,7 @@ function injectLiveButton() {
     liveButton.className = 'live-button';
     liveButton.innerHTML = `
         <span class="status-indicator"></span>
-        <span class="button-text">Start Live Tracking</span>
+        <span class="button-text">Live Tracking (WIP)</span>
     `;
     buttonGroup.appendChild(liveButton);
     return liveButton;
