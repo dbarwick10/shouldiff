@@ -345,7 +345,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         // Update UI
         elements.analyzeButton.disabled = false;
-        elements.inputSection.style.display = 'block';
+        elements.inputSection.style.display = 'flex';
         elements.inputSection.classList.add('compact');
         elements.analyzeButton.textContent = 'Fetch New Stats';
 
@@ -374,7 +374,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         // Clean up and show error
         displayError(elements, state, displayMessage, details);
-        elements.inputSection.style.display = 'block';
+        elements.inputSection.style.display = 'flex';
         elements.inputSection.classList.remove('compact');
         elements.analyzeButton.disabled = false;
 
