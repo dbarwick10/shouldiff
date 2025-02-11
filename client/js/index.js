@@ -299,7 +299,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         if (!response.ok) {
             displayError(elements, state, data.error || 'An unexpected error occurred', data.details || '');
-            elements.inputSection.style.display = 'block';
+            elements.inputSection.style.display = 'flex';
             elements.analyzeButton.disabled = false;
             return;
         }
