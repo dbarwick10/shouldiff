@@ -159,7 +159,7 @@ h1.visible {
 /* Input Section */
 .input-section {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     padding: 20px;
     background-color: rgba(28, 36, 52, 0.85);
     border-radius: 8px;
@@ -1041,7 +1041,7 @@ h2 {
 
 /* Add to your statStyle.css */
 .button-group {
-    /* display: flex; */
+    display: flex;
     gap: 10px;
     align-items: center;
 }
