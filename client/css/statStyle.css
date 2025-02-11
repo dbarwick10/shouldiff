@@ -1041,7 +1041,7 @@ h2 {
 
 /* Add to your statStyle.css */
 .button-group {
-    display: flex;
+    /* display: flex; */
     gap: 10px;
     align-items: center;
 }
@@ -1050,7 +1050,7 @@ h2 {
     background: rgba(13, 13, 18, 0.6);
     border: 2px solid #7289da;
     color: #a0aec0;
-    display: flex;
+    /* display: flex; */
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
