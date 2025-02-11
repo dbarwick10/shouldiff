@@ -8,7 +8,7 @@ function getUrlParams() {
     return {
         summonerName: params.get('summoner') || '',
         tagLine: params.get('tag') || '',
-        gameMode: params.get('mode') || 'all'
+        gameMode: params.get('mode') || 'aram'
     };
 }
 
@@ -53,7 +53,7 @@ function updateFormInputs(params) {
         if (elements.summonerName) elements.summonerName.value = params.summonerName || '';
         if (elements.tagLine) elements.tagLine.value = cleanTagline(params.tagLine || '');
         if (elements.region) elements.region.value = params.region || 'americas';
-        if (elements.gameMode) elements.gameMode.value = params.gameMode || 'all';
+        if (elements.gameMode) elements.gameMode.value = params.gameMode || 'aram';
     } catch (error) {
         console.error('Error updating form inputs:', error);
     }
@@ -207,7 +207,7 @@ function setupEventHandlers(elements, state, loadingStates) {
                 const currentParams = {
                     summonerName: document.getElementById('summonerName')?.value || '',
                     tagLine: document.getElementById('tagLine')?.value || '',
-                    gameMode: document.getElementById('gameMode')?.value || 'all'
+                    gameMode: document.getElementById('gameMode')?.value || 'aram'
                 };
                 updateUrl(currentParams);
             });
