@@ -966,6 +966,18 @@ h2 {
     color: #a0aec0;
     margin-bottom: 1rem;
     font-size: 1.1rem;
+    padding-top: 10px;
+}
+
+.contact-content a {
+    color: #7289da;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.contact-content a:hover {
+    color: #d4af37;
 }
 
 .email-link {
