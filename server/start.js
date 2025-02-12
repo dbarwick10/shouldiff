@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
 import os from 'os';
+import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -18,7 +19,6 @@ const state = {
 
 // Enhanced cleanup function
 async function cleanup(exitCode = 0) {
-  // Prevent multiple cleanup attempts
   if (state.isCleaningUp) return;
   state.isCleaningUp = true;
 
@@ -53,7 +53,6 @@ async function cleanup(exitCode = 0) {
     if (state.tempDir && fs.existsSync(state.tempDir)) {
       console.log('Removing temporary directory...');
       await new Promise((resolve) => {
-        // Wait a bit to ensure files are not in use
         setTimeout(() => {
           try {
             fs.rmSync(state.tempDir, { recursive: true, force: true });
@@ -70,10 +69,31 @@ async function cleanup(exitCode = 0) {
   } catch (err) {
     console.error('Error during cleanup:', err);
   } finally {
-    // Ensure process exits even if cleanup had errors
     if (exitCode !== undefined) {
       process.exit(exitCode);
     }
+  }
+}
+
+// Handle process termination signals
+function setupSignalHandlers() {
+  const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+  signals.forEach((signal) => {
+    process.on(signal, () => {
+      console.log(`Received ${signal}, shutting down...`);
+      cleanup(0);
+    });
+  });
+
+  // Windows-specific handling
+  if (process.platform === 'win32') {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.on('SIGINT', () => cleanup(0));
+    rl.on('SIGTERM', () => cleanup(0));
   }
 }
 
@@ -168,17 +188,7 @@ async function setupServer() {
 }
 
 // Set up process event handlers
-process.on('SIGINT', () => cleanup(0));  // Ctrl+C
-process.on('SIGTERM', () => cleanup(0)); // Termination request
-process.on('SIGHUP', () => cleanup(0));  // Terminal window closed
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
-  cleanup(1);
-});
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled rejection:', err);
-  cleanup(1);
-});
+setupSignalHandlers();
 
 // Start the server setup
 setupServer().catch(async (err) => {

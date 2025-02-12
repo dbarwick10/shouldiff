@@ -5,34 +5,66 @@ let isTracking = false;
 let liveStatsService = null;
 let hasShownInitialNotification = false;
 
+function showSecurityModal({ title, content, primaryButton, secondaryButton }) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'security-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>${title}</h2>
+                <div class="modal-body">${content}</div>
+                <div class="modal-footer">
+                    <button class="primary-button">${primaryButton}</button>
+                    <button class="secondary-button">${secondaryButton}</button>
+                </div>
+            </div>
+        `;
+
+        const primaryBtn = modal.querySelector('.primary-button');
+        const secondaryBtn = modal.querySelector('.secondary-button');
+
+        primaryBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            resolve(true);
+        });
+
+        secondaryBtn.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            resolve(false);
+        });
+
+        document.body.appendChild(modal);
+    });
+}
+
 function injectLiveButton() {
-    // // Check if live button already exists
-    // const existingLiveButton = document.getElementById('toggleLiveButton');
-    // if (existingLiveButton) {
-    //     return existingLiveButton;
-    // }
+    // Check if live button already exists
+    const existingLiveButton = document.getElementById('toggleLiveButton');
+    if (existingLiveButton) {
+        return existingLiveButton;
+    }
 
-    // const fetchButton = document.getElementById('fetchStatsButton');
-    // if (!fetchButton) return;
+    const fetchButton = document.getElementById('fetchStatsButton');
+    if (!fetchButton) return;
 
-    // // Check if button group already exists
-    // let buttonGroup = fetchButton.parentNode;
-    // if (!buttonGroup.classList.contains('button-group')) {
-    //     buttonGroup = document.createElement('div');
-    //     buttonGroup.className = 'button-group';
-    //     fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
-    //     buttonGroup.appendChild(fetchButton);
-    // }
+    // Check if button group already exists
+    let buttonGroup = fetchButton.parentNode;
+    if (!buttonGroup.classList.contains('button-group')) {
+        buttonGroup = document.createElement('div');
+        buttonGroup.className = 'button-group';
+        fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
+        buttonGroup.appendChild(fetchButton);
+    }
 
-    // const liveButton = document.createElement('button');
-    // liveButton.id = 'toggleLiveButton';
-    // liveButton.className = 'live-button';
-    // liveButton.innerHTML = `
-    //     <span class="status-indicator"></span>
-    //     <span class="button-text">Live Tracking (WIP)</span>
-    // `;
-    // buttonGroup.appendChild(liveButton);
-    // return liveButton;
+    const liveButton = document.createElement('button');
+    liveButton.id = 'toggleLiveButton';
+    liveButton.className = 'live-button';
+    liveButton.innerHTML = `
+        <span class="status-indicator"></span>
+        <span class="button-text">Live Tracking (WIP)</span>
+    `;
+    buttonGroup.appendChild(liveButton);
+    return liveButton;
 }
 
 function showNotification(message, isError = false) {
@@ -43,13 +75,34 @@ function showNotification(message, isError = false) {
         document.body.appendChild(notification);
     }
 
-    notification.textContent = message;
+    // Allow HTML content in the notification
+    notification.innerHTML = message;
+
+    // Style the notification
     notification.style.display = 'block';
     notification.style.borderColor = isError ? '#e74c3c' : '#7289da';
+    notification.style.padding = '10px';
+    notification.style.backgroundColor = '#2c2f33';
+    notification.style.color = '#ffffff';
+    notification.style.borderRadius = '5px';
+    notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+
+    // Style the code block inside the notification
+    const codeBlock = notification.querySelector('.code-block');
+    if (codeBlock) {
+        codeBlock.style.display = 'block';
+        codeBlock.style.marginTop = '10px';
+        codeBlock.style.padding = '8px';
+        codeBlock.style.backgroundColor = '#23272a';
+        codeBlock.style.color = '#ffffff';
+        codeBlock.style.borderRadius = '3px';
+        codeBlock.style.fontFamily = 'monospace';
+        codeBlock.style.whiteSpace = 'pre-wrap';
+    }
 
     setTimeout(() => {
         notification.style.display = 'none';
-    }, 3000);
+    }, 20000);  // Hide notification after 20 seconds
 }
 
 function stopTracking() {
@@ -72,6 +125,35 @@ async function setupLiveTracking(chartManager) {
             button.classList.add('active');
             buttonText.textContent = 'Connecting...';
             
+            const confirmed = await showSecurityModal({
+                title: 'Enable Live Game Tracking',
+                content: `
+                    <p>To track live game stats, this app needs to run a local server that:</p>
+                    <ul>
+                        <li>Connects to the League Client API</li>
+                        <li>Runs only while tracking is enabled</li>
+                        <li>Can be stopped at any time</li>
+                    </ul>
+                    <p>The code is open source and available at: 
+                       <a href="https://github.com/dbarwick10/shouldiff" target="_blank">github.com/dbarwick10/shouldiff</a></p>
+                `,
+                primaryButton: 'Download & Run Stats Server',
+                secondaryButton: 'Cancel'
+            });
+
+            if (!confirmed) {
+                button.classList.remove('active');
+                buttonText.textContent = 'Start Live Tracking';
+                return;
+            }
+
+            if (confirmed) {
+                showNotification(`
+                    To enable live tracking, run the following command in your terminal/Powershell:
+                    <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
+                `);
+            }
+            
             try {
                 if (!liveStatsService) {
                     liveStatsService = new LiveStatsService({
@@ -92,14 +174,13 @@ async function setupLiveTracking(chartManager) {
                     await liveStatsService.startPolling();
                     isTracking = true;
                 } catch (err) {
-                    // Throw the error up to be caught by the outer catch block
                     throw new Error('Failed to fetch');
                 }
                 
             } catch (error) {
                 console.error('Failed to start live tracking:', error);
                 
-                console.log('Error caught:', error.message); // Debug log
+                console.log('Error caught:', error.message);
                 if (error.message === 'Failed to fetch' || 
                     error.message.includes('NetworkError') ||
                     error.message.includes('ECONNREFUSED')) {
@@ -107,7 +188,6 @@ async function setupLiveTracking(chartManager) {
                     buttonText.textContent = 'Learn More';
                     showNotification('Server unavailable. Click Learn More for details.', true);
                     
-                    // Replace button with new one to reset event listeners
                     const newButton = button.cloneNode(true);
                     button.parentNode.replaceChild(newButton, button);
                     newButton.addEventListener('click', () => {
