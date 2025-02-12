@@ -14,7 +14,8 @@ const __dirname = dirname(__filename);
 const state = {
   serverProcess: null,
   tempDir: null,
-  isCleaningUp: false
+  isCleaningUp: false,
+  cleanupFile: null // File to track cleanup state
 };
 
 // Enhanced cleanup function
@@ -65,6 +66,11 @@ async function cleanup(exitCode = 0) {
       });
     }
 
+    // Remove cleanup file if it exists
+    if (state.cleanupFile && fs.existsSync(state.cleanupFile)) {
+      fs.unlinkSync(state.cleanupFile);
+    }
+
     console.log('Cleanup complete');
   } catch (err) {
     console.error('Error during cleanup:', err);
@@ -94,13 +100,46 @@ function setupSignalHandlers() {
 
     rl.on('SIGINT', () => cleanup(0));
     rl.on('SIGTERM', () => cleanup(0));
+
+    // Detect terminal window closure on Windows
+    process.on('exit', () => {
+      if (!state.isCleaningUp) {
+        console.log('Terminal window closed, initiating cleanup...');
+        cleanup(0);
+      }
+    });
   }
+}
+
+// Create a cleanup file to track abrupt termination
+function createCleanupFile() {
+  state.cleanupFile = join(os.tmpdir(), `shouldiff-cleanup-${process.pid}.lock`);
+  fs.writeFileSync(state.cleanupFile, 'cleanup pending');
+}
+
+// Check for orphaned cleanup files on startup
+function checkForOrphanedCleanup() {
+  const tempDir = os.tmpdir();
+  const files = fs.readdirSync(tempDir);
+  files.forEach((file) => {
+    if (file.startsWith('shouldiff-cleanup-')) {
+      const filePath = join(tempDir, file);
+      console.log(`Found orphaned cleanup file: ${filePath}`);
+      fs.unlinkSync(filePath); // Clean up orphaned files
+    }
+  });
 }
 
 // Main setup function
 async function setupServer() {
   try {
     console.log('Setting up Shouldiff Server...');
+
+    // Check for orphaned cleanup files
+    checkForOrphanedCleanup();
+
+    // Create cleanup file
+    createCleanupFile();
 
     // Create temp directory
     state.tempDir = join(os.tmpdir(), 'shouldiff-temp-' + Date.now());
