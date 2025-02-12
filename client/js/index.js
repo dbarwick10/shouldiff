@@ -8,7 +8,7 @@ function getUrlParams() {
     return {
         summonerName: params.get('summoner') || '',
         tagLine: params.get('tag') || '',
-        gameMode: params.get('mode') || 'all'
+        gameMode: params.get('mode') || 'aram'
     };
 }
 
@@ -33,7 +33,7 @@ function updateUrl(params) {
         if (params.summonerName) url.searchParams.append('summoner', params.summonerName);
         if (params.tagLine) url.searchParams.append('tag', cleanTagline(params.tagLine));
         if (params.region) url.searchParams.append('region', params.region);
-        url.searchParams.append('mode', params.gameMode || 'all');
+        url.searchParams.append('mode', params.gameMode || 'aram');
         
         window.history.pushState({}, '', url);
     } catch (error) {
@@ -53,7 +53,7 @@ function updateFormInputs(params) {
         if (elements.summonerName) elements.summonerName.value = params.summonerName || '';
         if (elements.tagLine) elements.tagLine.value = cleanTagline(params.tagLine || '');
         if (elements.region) elements.region.value = params.region || 'americas';
-        if (elements.gameMode) elements.gameMode.value = params.gameMode || 'all';
+        if (elements.gameMode) elements.gameMode.value = params.gameMode || 'aram';
     } catch (error) {
         console.error('Error updating form inputs:', error);
     }
@@ -207,7 +207,7 @@ function setupEventHandlers(elements, state, loadingStates) {
                 const currentParams = {
                     summonerName: document.getElementById('summonerName')?.value || '',
                     tagLine: document.getElementById('tagLine')?.value || '',
-                    gameMode: document.getElementById('gameMode')?.value || 'all'
+                    gameMode: document.getElementById('gameMode')?.value || 'aram'
                 };
                 updateUrl(currentParams);
             });
@@ -299,7 +299,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         if (!response.ok) {
             displayError(elements, state, data.error || 'An unexpected error occurred', data.details || '');
-            elements.inputSection.style.display = 'block';
+            elements.inputSection.style.display = 'flex';
             elements.analyzeButton.disabled = false;
             return;
         }
@@ -345,7 +345,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         // Update UI
         elements.analyzeButton.disabled = false;
-        elements.inputSection.style.display = 'block';
+        elements.inputSection.style.display = 'flex';
         elements.inputSection.classList.add('compact');
         elements.analyzeButton.textContent = 'Fetch New Stats';
 
@@ -374,7 +374,7 @@ async function handleStats(formData, elements, state, loadingStates) {
 
         // Clean up and show error
         displayError(elements, state, displayMessage, details);
-        elements.inputSection.style.display = 'block';
+        elements.inputSection.style.display = 'flex';
         elements.inputSection.classList.remove('compact');
         elements.analyzeButton.disabled = false;
 
