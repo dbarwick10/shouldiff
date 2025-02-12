@@ -27,13 +27,17 @@ function showSecurityModal({ title, content, primaryButton, secondaryButton }) {
         primaryBtn.addEventListener('click', () => {
             // Update the modal content with the command to run
             modalBody.innerHTML = `
-                <p>To enable live tracking, run the following command in your Terminal or Powershell:</p>
-                <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
-                <p>Once complete, click "OK" to start connecting or "Cancel" to exit.</p>
+                <ol>
+                    <li>To enable live tracking, copy, paste and run the following command into your Terminal or Powershell:</li>
+                    <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
+                    <li>Start a game of League of Legends</li>
+                    <li>Track your live game stats compared to your historical stats</li>
+                </ol>
+                <p>Once complete, click "Connect" to start or "Cancel" to exit</p>
             `;
 
             // Change the primary button text to "OK"
-            primaryBtn.textContent = 'OK';
+            primaryBtn.textContent = 'Connect';
 
             // Remove previous event listeners to avoid stacking
             primaryBtn.replaceWith(primaryBtn.cloneNode(true));
@@ -115,7 +119,7 @@ function showNotification(message, isError = false) {
 
     setTimeout(() => {
         notification.style.display = 'none';
-    }, 20000);  // Hide notification after 20 seconds
+    }, 10000);  // Hide notification after 20 seconds
 }
 
 function stopTracking() {
@@ -141,10 +145,10 @@ async function setupLiveTracking(chartManager) {
             const confirmed = await showSecurityModal({
                 title: 'Enable Live Game Tracking',
                 content: `
-                    <p>To track live game stats, this app needs to run a local server that:</p>
+                    <p>To track live game stats, this webpage needs to run a local server that:</p>
                     <ul>
                         <li>Connects to the League Client API</li>
-                        <li>Runs only while tracking is enabled</li>
+                        <li>Runs while you are in a League of Legends game</li>
                         <li>Can be stopped at any time</li>
                     </ul>
                     <p>The code is open source and available at: 
