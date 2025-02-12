@@ -6,24 +6,33 @@ let liveStatsService = null;
 let hasShownInitialNotification = false;
 
 function injectLiveButton() {
-    const fetchButton = document.getElementById('fetchStatsButton');
-    if (!fetchButton) return;
+    // // Check if live button already exists
+    // const existingLiveButton = document.getElementById('toggleLiveButton');
+    // if (existingLiveButton) {
+    //     return existingLiveButton;
+    // }
 
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'button-group';
+    // const fetchButton = document.getElementById('fetchStatsButton');
+    // if (!fetchButton) return;
 
-    fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
-    buttonGroup.appendChild(fetchButton);
+    // // Check if button group already exists
+    // let buttonGroup = fetchButton.parentNode;
+    // if (!buttonGroup.classList.contains('button-group')) {
+    //     buttonGroup = document.createElement('div');
+    //     buttonGroup.className = 'button-group';
+    //     fetchButton.parentNode.insertBefore(buttonGroup, fetchButton);
+    //     buttonGroup.appendChild(fetchButton);
+    // }
 
-    const liveButton = document.createElement('button');
-    liveButton.id = 'toggleLiveButton';
-    liveButton.className = 'live-button';
-    liveButton.innerHTML = `
-        <span class="status-indicator"></span>
-        <span class="button-text">Start Live Tracking</span>
-    `;
-    buttonGroup.appendChild(liveButton);
-    return liveButton;
+    // const liveButton = document.createElement('button');
+    // liveButton.id = 'toggleLiveButton';
+    // liveButton.className = 'live-button';
+    // liveButton.innerHTML = `
+    //     <span class="status-indicator"></span>
+    //     <span class="button-text">Live Tracking (WIP)</span>
+    // `;
+    // buttonGroup.appendChild(liveButton);
+    // return liveButton;
 }
 
 function showNotification(message, isError = false) {

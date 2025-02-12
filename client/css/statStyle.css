@@ -159,7 +159,7 @@ h1.visible {
 /* Input Section */
 .input-section {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     padding: 20px;
     background-color: rgba(28, 36, 52, 0.85);
     border-radius: 8px;
@@ -1050,7 +1050,7 @@ h2 {
     background: rgba(13, 13, 18, 0.6);
     border: 2px solid #7289da;
     color: #a0aec0;
-    display: flex;
+    /* display: flex; */
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
