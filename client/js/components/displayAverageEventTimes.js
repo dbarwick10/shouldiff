@@ -22,15 +22,41 @@ function showSecurityModal({ title, content, primaryButton, secondaryButton }) {
 
         const primaryBtn = modal.querySelector('.primary-button');
         const secondaryBtn = modal.querySelector('.secondary-button');
+        const modalBody = modal.querySelector('.modal-body');
 
         primaryBtn.addEventListener('click', () => {
-            document.body.removeChild(modal);
-            resolve(true);
+            // Update the modal content with the command to run
+            modalBody.innerHTML = `
+                <p>To enable live tracking, run the following command in your Terminal or Powershell:</p>
+                <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
+                <p>Once complete, click "OK" to start connecting or "Cancel" to exit.</p>
+            `;
+
+            // Change the primary button text to "OK"
+            primaryBtn.textContent = 'OK';
+
+            // Remove previous event listeners to avoid stacking
+            primaryBtn.replaceWith(primaryBtn.cloneNode(true));
+            secondaryBtn.replaceWith(secondaryBtn.cloneNode(true));
+
+            // Add new event listeners for the updated modal
+            const newPrimaryBtn = modal.querySelector('.primary-button');
+            const newSecondaryBtn = modal.querySelector('.secondary-button');
+
+            newPrimaryBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true); // Resolve with true to indicate confirmation
+            });
+
+            newSecondaryBtn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false); // Resolve with false to indicate cancellation
+            });
         });
 
         secondaryBtn.addEventListener('click', () => {
             document.body.removeChild(modal);
-            resolve(false);
+            resolve(false); // Resolve with false to indicate cancellation
         });
 
         document.body.appendChild(modal);
@@ -87,19 +113,6 @@ function showNotification(message, isError = false) {
     notification.style.borderRadius = '5px';
     notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
 
-    // Style the code block inside the notification
-    const codeBlock = notification.querySelector('.code-block');
-    if (codeBlock) {
-        codeBlock.style.display = 'block';
-        codeBlock.style.marginTop = '10px';
-        codeBlock.style.padding = '8px';
-        codeBlock.style.backgroundColor = '#23272a';
-        codeBlock.style.color = '#ffffff';
-        codeBlock.style.borderRadius = '3px';
-        codeBlock.style.fontFamily = 'monospace';
-        codeBlock.style.whiteSpace = 'pre-wrap';
-    }
-
     setTimeout(() => {
         notification.style.display = 'none';
     }, 20000);  // Hide notification after 20 seconds
@@ -137,7 +150,7 @@ async function setupLiveTracking(chartManager) {
                     <p>The code is open source and available at: 
                        <a href="https://github.com/dbarwick10/shouldiff" target="_blank">github.com/dbarwick10/shouldiff</a></p>
                 `,
-                primaryButton: 'Download & Run Stats Server',
+                primaryButton: 'Continue',
                 secondaryButton: 'Cancel'
             });
 
@@ -147,12 +160,12 @@ async function setupLiveTracking(chartManager) {
                 return;
             }
 
-            if (confirmed) {
-                showNotification(`
-                    To enable live tracking, run the following command in your terminal/Powershell:
-                    <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
-                `);
-            }
+            // if (confirmed) {
+            //     showNotification(`
+            //         To enable live tracking, run the following command in your terminal/Powershell:
+            //         <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
+            //     `);
+            // }
             
             try {
                 if (!liveStatsService) {
