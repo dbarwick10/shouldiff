@@ -29,7 +29,7 @@ function showSecurityModal({ title, content, primaryButton, secondaryButton }) {
             modalBody.innerHTML = `
                 <ol>
                     <li>To enable live tracking, copy, paste and run the following command into your Terminal or Powershell:</li>
-                    <div class="code-block">npx https://github.com/dbarwick10/shouldiff/releases/download/v0.0.1/shouldiff_app-1.0.0.tgz</div>
+                    <div class="code-block">npx https://github.com/dbarwick10/ShouldiffLiveServer/releases/download/v1/shouldiff_app-1.0.0.tgz</div>
                     <li>Start a game of League of Legends</li>
                     <li>Track your live game stats compared to your historical stats</li>
                 </ol>
@@ -152,7 +152,7 @@ async function setupLiveTracking(chartManager) {
                         <li>Can be stopped at any time</li>
                     </ul>
                     <p>The code is open source and available at: 
-                       <a href="https://github.com/dbarwick10/shouldiff" target="_blank">github.com/dbarwick10/shouldiff</a></p>
+                       <a href="https://github.com/dbarwick10/ShouldiffLiveServer" target="_blank">github.com/dbarwick10/shouldiff</a></p>
                 `,
                 primaryButton: 'Continue',
                 secondaryButton: 'Cancel'
