@@ -151,8 +151,8 @@ async function setupLiveTracking(chartManager) {
                         <li>Runs while you are in a League of Legends game</li>
                         <li>Can be stopped at any time</li>
                     </ul>
-                    <p>The code is open source and available at: 
-                       <a href="https://github.com/dbarwick10/ShouldiffLiveServer" target="_blank">github.com/dbarwick10/shouldiff</a></p>
+                    <p>The server code is open source and available on 
+                       <a href="https://github.com/dbarwick10/ShouldiffLiveServer" target="_blank">github</a></p>
                 `,
                 primaryButton: 'Continue',
                 secondaryButton: 'Cancel'
