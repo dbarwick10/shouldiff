@@ -2,11 +2,11 @@ import { displayAverageEventTimes } from './components/displayAverageEventTimes.
 import { LOCAL_TESTING, prodURL, localURL } from "./config/constants.js"; 
 import { initializeMobileMenu } from './shared.js';
 
-
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
     return {
-        summonerName: params.get('summoner') || '',
+        // Use decodeURIComponent to properly handle spaces and special characters
+        summonerName: params.get('summoner') ? decodeURIComponent(params.get('summoner')) : '',
         tagLine: params.get('tag') || '',
         gameMode: params.get('mode') || 'aram'
     };
@@ -30,9 +30,16 @@ function updateUrl(params) {
         const url = new URL(window.location.href);
         url.search = '';
         
-        if (params.summonerName) url.searchParams.append('summoner', params.summonerName);
-        if (params.tagLine) url.searchParams.append('tag', cleanTagline(params.tagLine));
-        if (params.region) url.searchParams.append('region', params.region);
+        // Properly encode the summoner name to handle spaces
+        if (params.summonerName) {
+            url.searchParams.append('summoner', encodeURIComponent(params.summonerName));
+        }
+        if (params.tagLine) {
+            url.searchParams.append('tag', cleanTagline(params.tagLine));
+        }
+        if (params.region) {
+            url.searchParams.append('region', params.region);
+        }
         url.searchParams.append('mode', params.gameMode || 'aram');
         
         window.history.pushState({}, '', url);
@@ -40,6 +47,7 @@ function updateUrl(params) {
         console.error('Error updating URL:', error);
     }
 }
+
 
 function updateFormInputs(params) {
     try {
@@ -50,10 +58,19 @@ function updateFormInputs(params) {
             gameMode: document.getElementById('gameMode')
         };
 
-        if (elements.summonerName) elements.summonerName.value = params.summonerName || '';
-        if (elements.tagLine) elements.tagLine.value = cleanTagline(params.tagLine || '');
-        if (elements.region) elements.region.value = params.region || 'americas';
-        if (elements.gameMode) elements.gameMode.value = params.gameMode || 'aram';
+        // Handle spaces in summoner name
+        if (elements.summonerName) {
+            elements.summonerName.value = params.summonerName || '';
+        }
+        if (elements.tagLine) {
+            elements.tagLine.value = cleanTagline(params.tagLine || '');
+        }
+        if (elements.region) {
+            elements.region.value = params.region || 'americas';
+        }
+        if (elements.gameMode) {
+            elements.gameMode.value = params.gameMode || 'aram';
+        }
     } catch (error) {
         console.error('Error updating form inputs:', error);
     }
