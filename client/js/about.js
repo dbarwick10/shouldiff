@@ -1,6 +1,5 @@
 import { initializeMobileMenu } from './shared.js';
 
-
 document.addEventListener('DOMContentLoaded', function() {
 
     initializeMobileMenu();
@@ -38,12 +37,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function cleanTagline(tagline) {
         if (!tagline) return '';
-        return tagline.replace(/^[#%23]+/, '');
+        // First remove leading hash character if present
+        tagline = tagline.replace(/^#/, '');
+        
+        // Check if this is a URL-encoded string that needs decoding
+        if (tagline.match(/%[0-9A-F]{2}/i)) {
+            try {
+                return decodeURIComponent(tagline);
+            } catch (e) {
+                console.error('Error decoding tagline:', e);
+                return tagline;
+            }
+        }
+        
+        return tagline;
     }
 
     fetchStatsButton.addEventListener('click', function() {
-        const summonerName = encodeURIComponent(summonerNameInput.value.trim());
-        const tagLine = encodeURIComponent(tagLineInput.value.trim());
+        const summonerName = summonerNameInput.value.trim();
+        const tagLine = tagLineInput.value.trim();
         const gameMode = gameModeSelect.value;
 
         if (!summonerName || !tagLine) {
