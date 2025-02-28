@@ -4,17 +4,43 @@ import { initializeMobileMenu } from './shared.js';
 
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
+    
+    // Get the raw values
+    let tagLine = params.get('tag') || '';
+    
+    // Decode the tagLine if it appears to be URL-encoded
+    if (tagLine && tagLine.match(/%[0-9A-F]{2}/i)) {
+        try {
+            tagLine = decodeURIComponent(tagLine);
+            console.log('Decoded tagLine from URL:', tagLine);
+        } catch (e) {
+            console.error('Error decoding tagLine:', e);
+        }
+    }
+    
     return {
-        // Use decodeURIComponent to properly handle spaces and special characters
-        summonerName: params.get('summoner') ? decodeURIComponent(params.get('summoner')) : '',
-        tagLine: params.get('tag') || '',
-        gameMode: params.get('mode') || 'aram'
+        summonerName: params.get('summoner') || '',
+        tagLine: tagLine,
+        gameMode: params.get('mode') || 'all'
     };
 }
 
 function cleanTagline(tagline) {
     if (!tagline) return '';
-    return tagline.replace(/^[#%23]/, '');
+    // First remove leading hash character if present
+    tagline = tagline.replace(/^#/, '');
+    
+    // Check if this is a URL-encoded string that needs decoding
+    if (tagline.match(/%[0-9A-F]{2}/i)) {
+        try {
+            return decodeURIComponent(tagline);
+        } catch (e) {
+            console.error('Error decoding tagline:', e);
+            return tagline;
+        }
+    }
+    
+    return tagline;
 }
 
 function showLoading() {
@@ -28,26 +54,20 @@ function hideLoading() {
 function updateUrl(params) {
     try {
         const url = new URL(window.location.href);
+        // Clear existing search parameters
         url.search = '';
         
-        // Properly encode the summoner name to handle spaces
-        if (params.summonerName) {
-            url.searchParams.append('summoner', encodeURIComponent(params.summonerName));
-        }
-        if (params.tagLine) {
-            url.searchParams.append('tag', cleanTagline(params.tagLine));
-        }
-        if (params.region) {
-            url.searchParams.append('region', params.region);
-        }
-        url.searchParams.append('mode', params.gameMode || 'aram');
+        // Add parameters properly using searchParams
+        if (params.summonerName) url.searchParams.append('summoner', params.summonerName);
+        if (params.tagLine) url.searchParams.append('tag', cleanTagline(params.tagLine));
+        if (params.region) url.searchParams.append('region', params.region);
+        url.searchParams.append('mode', params.gameMode || 'all');
         
-        window.history.pushState({}, '', url);
+        window.history.pushState({}, '', url.toString());
     } catch (error) {
         console.error('Error updating URL:', error);
     }
 }
-
 
 function updateFormInputs(params) {
     try {
@@ -300,11 +320,26 @@ async function handleStats(formData, elements, state, loadingStates) {
         // Update URL with current parameters
         updateUrl(formData);
 
+        // Prepare API request data - ensuring we keep the entire tag intact
+        // Prepare API request data
+        const apiRequestData = {
+            summonerName: formData.summonerName,
+            tagLine: formData.tagLine, // This should now be properly decoded
+            gameMode: formData.gameMode
+        };
+
+        // Debug log to verify what we're sending
+        console.log('Sending API request with data:', JSON.stringify(apiRequestData));
+
         // Make API request
         const response = await fetch(LOCAL_TESTING ? localURL : prodURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+            headers: { 
+                'Content-Type': 'application/json',
+                // Add this header to ensure proper character encoding
+                'Accept-Charset': 'UTF-8'
+            },
+            body: JSON.stringify(apiRequestData)
         });
 
         let data;
@@ -387,6 +422,10 @@ async function handleStats(formData, elements, state, loadingStates) {
             } catch (e) {
                 details = error.message;
             }
+        } else {
+            // Log the complete error for debugging
+            console.error('Full error:', error);
+            details = error.message;
         }
 
         // Clean up and show error
